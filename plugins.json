@@ -1,92 +1,62 @@
 [
   {
-    "name": "4KFilmIzlesene",
+    "iconUrl": "https://www.google.com/s2/favicons?domain=www.4kfilmizlesene.org&sz=%size%",
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/UmayTrade/Mytv",
+    "fileSize": 11825,
+    "status": 1,
+    "language": "tr",
+    "authors": ["nikyokki"],
+    "tvTypes": ["Movie"],
+    "version": 6,
+    "internalName": "4KFilmIzlesene",
+    "description": "En yeni ve sorunsuz ⚡ Full HD Film izle keyfi her yerde sizinle!",
     "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/4KFilmIzlesene.cs3",
-    "version": 1,
-    "status": 1
+    "name": "4KFilmIzlesene"
   },
   {
-    "name": "BelgeselX",
+    "iconUrl": "https://www.google.com/s2/favicons?domain=belgeselx.com&sz=%size%",
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/UmayTrade/Mytv",
+    "fileSize": 20311,
+    "status": 1,
+    "language": "tr",
+    "authors": ["keyiflerolsun", "JustRelaxable", "nikyokki"],
+    "tvTypes": ["Documentary"],
+    "version": 6,
+    "internalName": "BelgeselX",
+    "description": "En yeni belgeselleri 1080p kalitesinde izle.",
     "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/BelgeselX.cs3",
-    "version": 1,
-    "status": 1
+    "name": "BelgeselX"
   },
   {
-    "name": "DMax",
+    "iconUrl": "https://www.dmax.com.tr/favicon.ico",
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/UmayTrade/Mytv",
+    "fileSize": 13243,
+    "status": 1,
+    "language": "tr",
+    "authors": ["nikyokki"],
+    "tvTypes": ["TvSeries"],
+    "version": 2,
+    "internalName": "DMax",
+    "description": "DMAX dizi ve programlarını HD kalitesinde izleyin.",
     "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/DMax.cs3",
-    "version": 1,
-    "status": 1
+    "name": "DMax"
   },
   {
-    "name": "DiziBox",
+    "iconUrl": "https://www.google.com/s2/favicons?domain=www.dizibox.de&sz=%size%",
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/UmayTrade/Mytv",
+    "fileSize": 22767,
+    "status": 1,
+    "language": "tr",
+    "authors": ["keyiflerolsun", "nikyokki"],
+    "tvTypes": ["TvSeries"],
+    "version": 10,
+    "internalName": "DiziBox",
+    "description": "Yabancı dizileri full HD izleyin.",
     "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/DiziBox.cs3",
-    "version": 1,
-    "status": 1
-  },
-  {
-    "name": "DiziGom",
-    "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/DiziGom.cs3",
-    "version": 1,
-    "status": 1
-  },
-  {
-    "name": "DiziMag",
-    "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/DiziMag.cs3",
-    "version": 1,
-    "status": 1
-  },
-  {
-    "name": "DiziMom",
-    "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/DiziMom.cs3",
-    "version": 1,
-    "status": 1
-  },
-  {
-    "name": "DiziPal",
-    "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/DiziPal.cs3",
-    "version": 1,
-    "status": 1
-  },
-  {
-    "name": "DiziPalOrj",
-    "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/DiziPalOrj.cs3",
-    "version": 1,
-    "status": 1
-  },
-  {
-    "name": "DiziYou",
-    "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/DiziYou.cs3",
-    "version": 1,
-    "status": 1
-  },
-  {
-    "name": "Filmatek",
-    "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/Filmatek.cs3",
-    "version": 1,
-    "status": 1
-  },
-  {
-    "name": "Filmmirasim",
-    "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/Filmmirasim.cs3",
-    "version": 1,
-    "status": 1
-  },
-  {
-    "name": "Full4kizle",
-    "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/Full4kizle.cs3",
-    "version": 1,
-    "status": 1
-  },
-  {
-    "name": "Streamed",
-    "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/Streamed.cs3",
-    "version": 1,
-    "status": 1
-  },
-  {
-    "name": "TVGarden",
-    "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/TVGarden.cs3",
-    "version": 1,
-    "status": 1
+    "name": "DiziBox"
   }
 ]
