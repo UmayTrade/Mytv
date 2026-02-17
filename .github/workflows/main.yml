@@ -1,0 +1,30 @@
+name: Mytv Build Pipeline
+
+on:
+  push:
+    branches: [ "main", "master", "builds*" ] # Hangi dallarda çalışacağını buradan seçebilirsin
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Depoyu Çekme (Hata veren kısım burasıydı)
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          # Eğer belirli bir branch çekmek istiyorsan buraya yazabilirsin.
+          # Boş bırakırsan tetiklenen branch'i çeker.
+          fetch-depth: 1 
+
+      # 2. Örnek: Node.js veya Java kurulumu (Projenin diline göre burayı güncelleyebiliriz)
+      - name: Set up Environment
+        run: echo "Ortam hazırlanıyor..."
+
+      # 3. Örnek: Build komutu
+      - name: Build Project
+        run: |
+          echo "Build işlemi başlatıldı: UmayTrade/Mytv"
+          # Buraya gerçek build komutlarını (npm run build, ./gradlew build vb.) ekleyebilirsin.
