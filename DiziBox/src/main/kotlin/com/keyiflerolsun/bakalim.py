@@ -7,7 +7,7 @@ from re              import search
 from Kekik.Sifreleme import CryptoJS
 
 oturum = CloudScraper()
-istek  = oturum.get("https://www.dizibox.de/hello-tomorrow-1-sezon-1-bolum-izle/")
+istek  = oturum.get("https://www.dizibox.live/hello-tomorrow-1-sezon-1-bolum-izle/")
 secici = Selector(istek.text)
 
 iframe = secici.css("div#video-area iframe::attr(src)").get()
