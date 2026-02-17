@@ -55,7 +55,7 @@
         "tvTypes": ["Movie", "TvSeries"],
         "version": 6,
         "internalName": "DiziGom",
-        "description": "T\u00fcrk\u00e7e altyaz\u0131l\u0131 yabanc\u0131 dizi izle, T\u00fcm yabanc\u0131, kore, netflix dizilerin yeni ve eski sezonlar\u0131n\u0131 orijinal dilinde dizigom1 alt yaz\u0131l\u0131 film izleyebilir, sadece t\u00fcrk\u00e7e altyaz\u0131l\u0131 en iyi yabanc\u0131 diziler ve filmler hakk\u0131nda yorum yapabilirsiniz.",
+        "description": "Türkçe altyazılı yabancı dizi izle. Tüm yabancı, Kore ve Netflix dizilerinin yeni ve eski sezonlarını orijinal dilinde izleyebilir, en iyi yabancı diziler ve filmler hakkında yorum yapabilirsiniz.",
         "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/DiziGom.cs3",
         "name": "DiziGom"
     },
@@ -70,7 +70,7 @@
         "tvTypes": ["Live"],
         "version": 6,
         "internalName": "DiziMag",
-        "description": ""En son \u00e7\u0131kan yabanc\u0131 dizi ve filmleri DiziMag fark\u0131yla full hd 1080p kalitede izle. Dizimag Geni\u015f ve g\u00fcncel ar\u015fiviyle dizi ve filmlerin tad\u0131n\u0131 \u00e7\u0131kart\u0131n."",
+        "description": "En son çıkan yabancı dizi ve filmleri DiziMag farkıyla full HD 1080p kalitede izle. Geniş ve güncel arşiviyle dizi ve filmlerin tadını çıkarın.",
         "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/DiziMag.cs3",
         "name": "DiziMag"
     },
@@ -85,12 +85,12 @@
         "tvTypes": ["TvSeries"],
         "version": 7,
         "internalName": "DiziMom",
-        "description": "Binlerce yerli yabanc\u0131 dizi ar\u015fivi, t\u00fcm sezonlar, kesintisiz b\u00f6l\u00fcmler. Sadece dizi izle, Dizimom heryerde seninle!",
+        "description": "Binlerce yerli yabancı dizi arşivi, tüm sezonlar ve kesintisiz bölümler. Sadece dizi izle, Dizimom her yerde seninle!",
         "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/DiziMom.cs3",
         "name": "DiziMom"
     },
     {
-        "iconUrl": "https://www.google.com/s2/favicons?domain=https://dizipal683.com&sz=%size%",
+        "iconUrl": "https://www.google.com/s2/favicons?domain=dizipal683.com&sz=%size%",
         "apiVersion": 1,
         "repositoryUrl": "https://github.com/nikyokki/nik-cloudstream",
         "fileSize": 22760,
@@ -100,12 +100,12 @@
         "tvTypes": ["TvSeries"],
         "version": 1,
         "internalName": "DiziPal",
-        "description": "en yeni dizileri g\u00fcvenli ve h\u0131zl\u0131 \u015fekilde sunar.",
+        "description": "En yeni dizileri güvenli ve hızlı şekilde sunar.",
         "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/DiziPal.cs3",
         "name": "DiziPal"
     },
     {
-        "iconUrl": "https://www.google.com/s2/favicons?domain=https://dizipal683.com&sz=%size%",
+        "iconUrl": "https://www.google.com/s2/favicons?domain=dizipal683.com&sz=%size%",
         "apiVersion": 1,
         "repositoryUrl": "https://github.com/nikyokki/nik-cloudstream",
         "fileSize": 22767,
@@ -115,7 +115,7 @@
         "tvTypes": ["TvSeries"],
         "version": 10,
         "internalName": "DiziPalOrj",
-        "description": "en yeni dizileri g\u00fcvenli ve h\u0131zl\u0131 \u015fekilde sunar..",
+        "description": "En yeni dizileri güvenli ve hızlı şekilde sunar.",
         "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/DiziPalOrj.cs3",
         "name": "DiziPalOrj"
     },
@@ -130,7 +130,7 @@
         "tvTypes": ["Movie"],
         "version": 9,
         "internalName": "DiziYou",
-        "description": "Diziyou en kaliteli T\u00fcrk\u00e7e dublaj ve altyaz\u0131l\u0131 yabanc\u0131 dizi izleme sitesidir. G\u00fcncel ve efsanevi dizileri 1080p Full HD kalitede izlemek i\u00e7in hemen t\u0131kla!",
+        "description": "Diziyou en kaliteli Türkçe dublaj ve altyazılı yabancı dizi izleme sitesidir. Güncel ve efsanevi dizileri 1080p Full HD kalitede izlemek için hemen tıkla!",
         "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/DiziYou.cs3",
         "name": "DiziYou"
     },
@@ -146,7 +146,7 @@
         "version": 11,
         "internalName": "Filmatek",
         "description": "En güncel Kore dizileri izleme sitesi.",
-        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/Filmatek.cs3,
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/Filmatek.cs3",
         "name": "Filmatek"
     },
     {
