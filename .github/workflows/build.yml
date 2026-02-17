@@ -1,4 +1,4 @@
-name: Build & Releas
+name: Build & Release
 
 concurrency:
   group: build
