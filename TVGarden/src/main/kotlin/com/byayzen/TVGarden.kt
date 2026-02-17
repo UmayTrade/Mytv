@@ -10,7 +10,7 @@ import org.json.JSONObject
 import java.net.URLDecoder
 
 class TVGarden : MainAPI() {
-    override var mainUrl = "https://famelack.com"
+    override var mainUrl = "https://famelack.com/tr"
     override var name = "TVGarden"
     override val hasMainPage = true
     override var lang = "en"
