@@ -1,32 +1,133 @@
-- name: Build Plugins
-  run: |
-    cd $GITHUB_WORKSPACE/src
-    chmod +x gradlew
-    ./gradlew make
+name: Build & Release
 
-    mkdir -p $GITHUB_WORKSPACE/builds
+concurrency:
+  group: build
+  cancel-in-progress: true
 
-    # cs3 dosyalarını kopyala
-    find . -type f -name "*.cs3" -exec cp {} $GITHUB_WORKSPACE/builds \;
+on:
+  push:
+    branches:
+      - master
+      - main
+    paths-ignore:
+      - "*.md"
 
-    cd $GITHUB_WORKSPACE/builds
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
-    # plugins.json oluştur
-    echo "[" > plugins.json
+    steps:
+      # ----------------------------
+      # Checkout Source
+      # ----------------------------
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-    first=true
-    for file in *.cs3; do
-      if [ "$first" = true ]; then
-        first=false
-      else
-        echo "," >> plugins.json
-      fi
+      # ----------------------------
+      # Setup Java 21
+      # ----------------------------
+      - name: Setup JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
 
-      echo "  {" >> plugins.json
-      echo "    \"name\": \"${file%.cs3}\"," >> plugins.json
-      echo "    \"url\": \"https://raw.githubusercontent.com/${{ github.repository }}/builds/$file\"" >> plugins.json
-      echo -n "  }" >> plugins.json
-    done
+      # ----------------------------
+      # Setup Android SDK
+      # ----------------------------
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v2
 
-    echo "" >> plugins.json
-    echo "]" >> plugins.json
+      # ----------------------------
+      # Build Plugins
+      # ----------------------------
+      - name: Build Plugins
+        run: |
+          chmod +x gradlew
+          ./gradlew make
+
+      # ----------------------------
+      # Prepare builds folder
+      # ----------------------------
+      - name: Collect build outputs
+        run: |
+          mkdir builds
+          find . -type f -name "*.cs3" -exec cp {} builds \;
+
+      # ----------------------------
+      # Generate plugins.json
+      # ----------------------------
+      - name: Generate plugins.json
+        run: |
+          cd builds
+          echo "[" > plugins.json
+          first=true
+          for file in *.cs3; do
+            if [ "$first" = true ]; then
+              first=false
+            else
+              echo "," >> plugins.json
+            fi
+
+            echo "  {" >> plugins.json
+            echo "    \"name\": \"${file%.cs3}\"," >> plugins.json
+            echo "    \"url\": \"https://raw.githubusercontent.com/${{ github.repository }}/builds/$file\"" >> plugins.json
+            echo -n "  }" >> plugins.json
+          done
+          echo "" >> plugins.json
+          echo "]" >> plugins.json
+
+      # ----------------------------
+      # Push to builds branch
+      # ----------------------------
+      - name: Push builds branch
+        run: |
+          cd builds
+          git init
+          git checkout -B builds
+          git config user.email "actions@github.com"
+          git config user.name "GitHub Actions"
+
+          git add .
+          git commit -m "Build $GITHUB_SHA" || exit 0
+
+          git remote add origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+          git push origin builds --force
+
+      # ----------------------------
+      # Create Version Tag
+      # ----------------------------
+      - name: Create Tag
+        id: tag
+        run: |
+          VERSION="v$(date +'%Y.%m.%d.%H%M%S')"
+          git tag $VERSION
+          git push origin $VERSION
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      # ----------------------------
+      # Create GitHub Release
+      # ----------------------------
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.version }}
+          name: Release ${{ steps.tag.outputs.version }}
+          body: |
+            Automated build release.
+            Commit: ${{ github.sha }}
+          files: builds/*.cs3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # ----------------------------
+      # Upload Artifact
+      # ----------------------------
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: plugins
+          path: builds/
