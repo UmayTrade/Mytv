@@ -1,21 +1,21 @@
-[
     {
-        "iconUrl": "https://raw.githubusercontent.com/Kraptor123/Cs-Karma/refs/heads/master/.github/logo/faviconAyzen.png",
+        "iconUrl": "https://www.google.com/s2/favicons?domain=animecix.net&sz=%size%",
         "apiVersion": 1,
-        "repositoryUrl": "https://github.com/Kraptor123/Cs-Karma",
-        "fileSize": 24013,
+        "repositoryUrl": "https://github.com/keyiflerolsun/Kekik-cloudstream",
+        "fileSize": 21262,
         "status": 1,
         "language": "tr",
         "authors": [
-            "kraptor"
+            "keyiflerolsun",
+            "inatchii",
+            "JustRelaxable"
         ],
         "tvTypes": [
-            "Live"
+            "Anime"
         ],
-        "version": 6,
-        "internalName": "DizipalOrj",
-        "description": "DizipalOrj ile canl\u0131 seyirin doruklar\u0131.",
+        "version": 7,
+        "internalName": "DiziPalOrj",
+        "description": "DiziPalOrj, animeleri ke\u015ffedebilece\u011finiz ve animeler hakk\u0131nda her \u015feyi \u00f6\u011frenebilece\u011finiz bir payla\u015f\u0131m platformudur.",
         "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/DiziPalOrj.cs3",
-        "name": "DizipalOrj"
+        "name": "DiziPalOrj"
     },
-   ]
