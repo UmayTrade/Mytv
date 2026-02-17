@@ -18,12 +18,12 @@ iframe = iframe.replace("king.php?v=", "king.php?wmode=opaque&v=")
 #     "isTrustedUser" : "true",
 #     "dbxu"          : "1722403730363"
 # })
-oturum.headers.update({"Referer": "https://www.dizibox.de/hello-tomorrow-1-sezon-1-bolum-izle/"})
+oturum.headers.update({"Referer": "https://www.dizibox.live/hello-tomorrow-1-sezon-1-bolum-izle/"})
 istek  = oturum.get(iframe)
 secici = Selector(istek.text)
 iframe = secici.css("div#Player iframe::attr(src)").get()
 
-oturum.headers.update({"Referer": "https://www.dizibox.de/"})
+oturum.headers.update({"Referer": "https://www.dizibox.live/"})
 istek     = oturum.get(iframe)
 cryptData = search(r"CryptoJS\.AES\.decrypt\(\"(.*)\",\"", istek.text).group(1)
 cryptPass = search(r"\",\"(.*)\"\);", istek.text).group(1)
