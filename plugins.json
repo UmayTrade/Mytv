@@ -15,17 +15,17 @@
         "name": "4KFilmIzlesene"
     },
     {
-        "iconUrl": "https://www.google.com/s2/favicons?domain=animecix.net&sz=%size%",
+        "iconUrl": "https://www.google.com/s2/favicons?domain=belgeselx.com&sz=%size%",
         "apiVersion": 1,
         "repositoryUrl": "https://github.com/nikyokki/nik-cloudstream",
         "fileSize": 23212,
         "status": 1,
         "language": "tr",
         "authors": ["keyiflerolsun", "inatchii", "JustRelaxable", "nikyokki"],
-        "tvTypes": ["Anime"],
+        "tvTypes": ["Documentary"],
         "version": 11,
         "internalName": "BelgeselX",
-        "description": "BelgeselX, belgeselleri keşfedebileceğiniz ve belgeseller hakkında her şeyi öğrenebileceğiniz bir paylaşım platformudur.",
+        "description": "En yeni belgeseller, Türkçe altyazılı ya da dublaj olarak 1080p kalitesinde HD belgesel izle.",
         "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/BelgeselX.cs3",
         "name": "BelgeselX"
     },
@@ -45,22 +45,22 @@
         "name": "DiziBox"
     },
     {
-        "iconUrl": "https://www.google.com/s2/favicons?domain=belgeselx.com&sz=%size%",
+        "iconUrl": "https://www.google.com/s2/favicons?domain=dizigom1.co&sz=%size%",
         "apiVersion": 1,
         "repositoryUrl": "https://github.com/nikyokki/nik-cloudstream",
         "fileSize": 20311,
         "status": 1,
         "language": "tr",
         "authors": ["keyiflerolsun", "JustRelaxable", "nikyokki"],
-        "tvTypes": ["Documentary"],
+        "tvTypes": ["Movie", "TvSeries"],
         "version": 6,
-        "internalName": "BelgeselX",
-        "description": "En yeni belgeseller, Türkçe altyazılı ya da dublaj olarak 1080p kalitesinde HD belgesel izle.",
-        "url": "https://raw.githubusercontent.com/nikyokki/nik-cloudstream/builds/BelgeselX.cs3",
-        "name": "BelgeselX"
+        "internalName": "DiziGom",
+        "description": "T\u00fcrk\u00e7e altyaz\u0131l\u0131 yabanc\u0131 dizi izle, T\u00fcm yabanc\u0131, kore, netflix dizilerin yeni ve eski sezonlar\u0131n\u0131 orijinal dilinde dizigom1 alt yaz\u0131l\u0131 film izleyebilir, sadece t\u00fcrk\u00e7e altyaz\u0131l\u0131 en iyi yabanc\u0131 diziler ve filmler hakk\u0131nda yorum yapabilirsiniz.",
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/DiziGom.cs3",
+        "name": "DiziGom"
     },
     {
-        "iconUrl": "https://www.google.com/s2/favicons?domain=tr.canlitv.team&sz=%size%",
+        "iconUrl": "https://www.google.com/s2/favicons?domain=dizimag.net&sz=%size%",
         "apiVersion": 1,
         "repositoryUrl": "https://github.com/nikyokki/nik-cloudstream",
         "fileSize": 18449,
@@ -69,28 +69,28 @@
         "authors": ["Adippe", "keyiflerolsun", "nikyokki"],
         "tvTypes": ["Live"],
         "version": 6,
-        "internalName": "CanliTV",
-        "description": "Canlı TV",
-        "url": "https://raw.githubusercontent.com/nikyokki/nik-cloudstream/builds/CanliTV.cs3",
-        "name": "CanliTV"
+        "internalName": "DiziMag",
+        "description": ""En son \u00e7\u0131kan yabanc\u0131 dizi ve filmleri DiziMag fark\u0131yla full hd 1080p kalitede izle. Dizimag Geni\u015f ve g\u00fcncel ar\u015fiviyle dizi ve filmlerin tad\u0131n\u0131 \u00e7\u0131kart\u0131n."",
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/DiziMag.cs3",
+        "name": "DiziMag"
     },
     {
-        "iconUrl": "https://www.google.com/s2/favicons?domain=cizgimax.online&sz=%size%",
+        "iconUrl": "https://www.google.com/s2/favicons?domain=www.dizimom.tv&sz=%size%",
         "apiVersion": 1,
         "repositoryUrl": "https://github.com/nikyokki/nik-cloudstream",
         "fileSize": 18491,
         "status": 1,
         "language": "tr",
         "authors": ["keyiflerolsun", "nikyokki"],
-        "tvTypes": ["Cartoon"],
+        "tvTypes": ["TvSeries"],
         "version": 7,
-        "internalName": "CizgiMax",
-        "description": "ÇizgiMax ile çizgi film izlemek artık daha kolay, donmadan full HD ve reklamsız bir sitedir.",
-        "url": "https://raw.githubusercontent.com/nikyokki/nik-cloudstream/builds/CizgiMax.cs3",
-        "name": "CizgiMax"
+        "internalName": "DiziMom",
+        "description": "Binlerce yerli yabanc\u0131 dizi ar\u015fivi, t\u00fcm sezonlar, kesintisiz b\u00f6l\u00fcmler. Sadece dizi izle, Dizimom heryerde seninle!",
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/DiziMom.cs3",
+        "name": "DiziMom"
     },
     {
-        "iconUrl": "https://www.google.com/s2/favicons?domain=ddizi.im&sz=%size%",
+        "iconUrl": "https://www.google.com/s2/favicons?domain=https://dizipal683.com&sz=%size%",
         "apiVersion": 1,
         "repositoryUrl": "https://github.com/nikyokki/nik-cloudstream",
         "fileSize": 22760,
@@ -99,13 +99,13 @@
         "authors": ["yunus60", "GitLatte", "patr0nq"],
         "tvTypes": ["TvSeries"],
         "version": 1,
-        "internalName": "DDizi",
-        "description": "Ddizi, güncel ve eski dizileri en iyi görüntü kalitesiyle sunar.",
-        "url": "https://raw.githubusercontent.com/nikyokki/nik-cloudstream/builds/DDizi.cs3",
-        "name": "DDizi"
+        "internalName": "DiziPal",
+        "description": "en yeni dizileri g\u00fcvenli ve h\u0131zl\u0131 \u015fekilde sunar.",
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/DiziPal.cs3",
+        "name": "DiziPal"
     },
     {
-        "iconUrl": "https://www.google.com/s2/favicons?domain=www.dizibox.de&sz=%size%",
+        "iconUrl": "https://www.google.com/s2/favicons?domain=https://dizipal683.com&sz=%size%",
         "apiVersion": 1,
         "repositoryUrl": "https://github.com/nikyokki/nik-cloudstream",
         "fileSize": 22767,
@@ -114,13 +114,13 @@
         "authors": ["keyiflerolsun", "nikyokki"],
         "tvTypes": ["TvSeries"],
         "version": 10,
-        "internalName": "DiziBox",
-        "description": "Yabancı dizilerin yeni ve eski sezonlarını full HD izleyebileceğiniz elit site.",
-        "url": "https://raw.githubusercontent.com/nikyokki/nik-cloudstream/builds/DiziBox.cs3",
-        "name": "DiziBox"
+        "internalName": "DiziPalOrj",
+        "description": "en yeni dizileri g\u00fcvenli ve h\u0131zl\u0131 \u015fekilde sunar..",
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/DiziPalOrj.cs3",
+        "name": "DiziPalOrj"
     },
     {
-        "iconUrl": "https://www.google.com/s2/favicons?domain=dizigom1.co&sz=%size%",
+        "iconUrl": "https://www.google.com/s2/favicons?domain=www.diziyou.co&sz=%size%",
         "apiVersion": 1,
         "repositoryUrl": "https://github.com/nikyokki/nik-cloudstream",
         "fileSize": 18639,
@@ -129,13 +129,13 @@
         "authors": ["nikyokki"],
         "tvTypes": ["Movie"],
         "version": 9,
-        "internalName": "DiziGom",
-        "description": "Türkçe altyazılı yabancı dizi ve filmler.",
-        "url": "https://raw.githubusercontent.com/nikyokki/nik-cloudstream/builds/DiziGom.cs3",
-        "name": "DiziGom"
+        "internalName": "DiziYou",
+        "description": "Diziyou en kaliteli T\u00fcrk\u00e7e dublaj ve altyaz\u0131l\u0131 yabanc\u0131 dizi izleme sitesidir. G\u00fcncel ve efsanevi dizileri 1080p Full HD kalitede izlemek i\u00e7in hemen t\u0131kla!",
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/DiziYou.cs3",
+        "name": "DiziYou"
     },
     {
-        "iconUrl": "https://www.google.com/s2/favicons?domain=dizikorea.vip&sz=%size%",
+        "iconUrl": "https://pbs.twimg.com/profile_images/3624000219/fcf8e2995ef4bb5bf0a68da9e8deb8c6_400x400.jpeg",
         "apiVersion": 1,
         "repositoryUrl": "https://github.com/nikyokki/nik-cloudstream",
         "fileSize": 19230,
@@ -144,10 +144,10 @@
         "authors": ["keyiflerolsun", "nikyokki"],
         "tvTypes": ["AsianDrama"],
         "version": 11,
-        "internalName": "DiziKorea",
+        "internalName": "Filmatek",
         "description": "En güncel Kore dizileri izleme sitesi.",
-        "url": "https://raw.githubusercontent.com/nikyokki/nik-cloudstream/builds/DiziKorea.cs3",
-        "name": "DiziKorea"
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/Filmatek.cs3,
+        "name": "Filmatek"
     },
     {
         "iconUrl": "https://www.google.com/s2/favicons?domain=dizilla.club&sz=%size%",
@@ -159,9 +159,9 @@
         "authors": ["keyiflerolsun", "nikyokki"],
         "tvTypes": ["TvSeries"],
         "version": 25,
-        "internalName": "Dizilla",
+        "internalName": "Full4kizle",
         "description": "Yabancı dizileri Türkçe dublaj ve altyazılı 1080P kalite izleyin.",
-        "url": "https://raw.githubusercontent.com/nikyokki/nik-cloudstream/builds/Dizilla.cs3",
-        "name": "Dizilla"
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/Full4kizle.cs3",
+        "name": "Full4kizle"
     }
 ]
