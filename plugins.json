@@ -35,10 +35,10 @@
             "Anime"
         ],
         "version": 11,
-        "internalName": "AnimeciX",
-        "description": "AnimeciX, animeleri ke\u015ffedebilece\u011finiz ve animeler hakk\u0131nda her \u015feyi \u00f6\u011frenebilece\u011finiz bir payla\u015f\u0131m platformudur.",
-        "url": "https://raw.githubusercontent.com/nikyokki/nik-cloudstream/builds/AnimeciX.cs3",
-        "name": "AnimeciX"
+        "internalName": "BelgeselX",
+        "description": "BelgeselX, belgeselleri ke\u015ffedebilece\u011finiz ve belgeseller hakk\u0131nda her \u015feyi \u00f6\u011frenebilece\u011finiz bir payla\u015f\u0131m platformudur.",
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/BelgeselX.cs3",
+        "name": "BelgeselX"
     },
     {
         "iconUrl": "https://www.google.com/s2/favicons?domain=asyawatch.com&sz=%size%",
@@ -55,10 +55,10 @@
             "TvSeries"
         ],
         "version": 6,
-        "internalName": "AsyaWatch",
-        "description": "Asyawatch",
-        "url": "https://raw.githubusercontent.com/nikyokki/nik-cloudstream/builds/AsyaWatch.cs3",
-        "name": "AsyaWatch"
+        "internalName": "DiziBox",
+        "description": "DiziBox",
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/DiziBox.cs3,
+        "name": "DiziBox"
     },
     {
         "iconUrl": "https://www.google.com/s2/favicons?domain=belgeselx.com&sz=%size%",
@@ -68,7 +68,7 @@
         "status": 1,
         "language": "tr",
         "authors": [
-            "keyiflerolsun",
+        "    "keyiflerolsun",
             "JustRelaxable",
             "nikyokki"
         ],
