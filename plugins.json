@@ -6,15 +6,11 @@
         "fileSize": 11825,
         "status": 1,
         "language": "tr",
-        "authors": [
-            "nikyokki"
-        ],
-        "tvTypes": [
-            "Movie"
-        ],
+        "authors": ["nikyokki"],
+        "tvTypes": ["Movie"],
         "version": 6,
         "internalName": "4KFilmIzlesene",
-        "description": "En yeni ve sorunsuz \u26a1  Full HD Film izle keyfi her yerde sizinle ! 4K ve 1080p online film izleme fark\u0131yla 4KFilmizlesene&amp;#039;nin Tad\u0131n\u0131 \u00c7\u0131kart.",
+        "description": "En yeni ve sorunsuz ⚡ Full HD Film izle keyfi her yerde sizinle! 4K ve 1080p online film izleme farkıyla 4KFilmizlesene'nin tadını çıkar.",
         "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/4KFilmIzlesene.cs3",
         "name": "4KFilmIzlesene"
     },
@@ -25,18 +21,11 @@
         "fileSize": 23212,
         "status": 1,
         "language": "tr",
-        "authors": [
-            "keyiflerolsun",
-            "inatchii",
-            "JustRelaxable",
-            "nikyokki"
-        ],
-        "tvTypes": [
-            "Anime"
-        ],
+        "authors": ["keyiflerolsun", "inatchii", "JustRelaxable", "nikyokki"],
+        "tvTypes": ["Anime"],
         "version": 11,
         "internalName": "BelgeselX",
-        "description": "BelgeselX, belgeselleri ke\u015ffedebilece\u011finiz ve belgeseller hakk\u0131nda her \u015feyi \u00f6\u011frenebilece\u011finiz bir payla\u015f\u0131m platformudur.",
+        "description": "BelgeselX, belgeselleri keşfedebileceğiniz ve belgeseller hakkında her şeyi öğrenebileceğiniz bir paylaşım platformudur.",
         "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/BelgeselX.cs3",
         "name": "BelgeselX"
     },
@@ -47,17 +36,12 @@
         "fileSize": 30151,
         "status": 1,
         "language": "tr",
-        "authors": [
-            "nikyokki"
-        ],
-        "tvTypes": [
-            "Movie",
-            "TvSeries"
-        ],
+        "authors": ["nikyokki"],
+        "tvTypes": ["Movie", "TvSeries"],
         "version": 6,
         "internalName": "DiziBox",
         "description": "DiziBox",
-        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/DiziBox.cs3,
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/DiziBox.cs3",
         "name": "DiziBox"
     },
     {
@@ -67,17 +51,11 @@
         "fileSize": 20311,
         "status": 1,
         "language": "tr",
-        "authors": [
-        "    "keyiflerolsun",
-            "JustRelaxable",
-            "nikyokki"
-        ],
-        "tvTypes": [
-            "Documentary"
-        ],
+        "authors": ["keyiflerolsun", "JustRelaxable", "nikyokki"],
+        "tvTypes": ["Documentary"],
         "version": 6,
         "internalName": "BelgeselX",
-        "description": "En yeni belgeseller, t\u00fcrk\u00e7e altyaz\u0131l\u0131 yada dublaj olarak 1080p kalitesinde HD belgesel izle.",
+        "description": "En yeni belgeseller, Türkçe altyazılı ya da dublaj olarak 1080p kalitesinde HD belgesel izle.",
         "url": "https://raw.githubusercontent.com/nikyokki/nik-cloudstream/builds/BelgeselX.cs3",
         "name": "BelgeselX"
     },
@@ -88,17 +66,11 @@
         "fileSize": 18449,
         "status": 1,
         "language": "tr",
-        "authors": [
-            "Adippe",
-            "keyiflerolsun",
-            "nikyokki"
-        ],
-        "tvTypes": [
-            "Live"
-        ],
+        "authors": ["Adippe", "keyiflerolsun", "nikyokki"],
+        "tvTypes": ["Live"],
         "version": 6,
         "internalName": "CanliTV",
-        "description": "Canl\u0131 TV",
+        "description": "Canlı TV",
         "url": "https://raw.githubusercontent.com/nikyokki/nik-cloudstream/builds/CanliTV.cs3",
         "name": "CanliTV"
     },
@@ -109,16 +81,11 @@
         "fileSize": 18491,
         "status": 1,
         "language": "tr",
-        "authors": [
-            "keyiflerolsun",
-            "nikyokki"
-        ],
-        "tvTypes": [
-            "Cartoon"
-        ],
+        "authors": ["keyiflerolsun", "nikyokki"],
+        "tvTypes": ["Cartoon"],
         "version": 7,
         "internalName": "CizgiMax",
-        "description": "\u00c7izgiMax ile \u00c7izgi Film izlemek art\u0131k daha kolay, donmadan full hd ve reklams\u0131z bir sitedir, i\u00e7erisinde 700 den fazla \u00e7izgi film olan, Bu site bu i\u015fi profesyonelce yap\u0131yor.",
+        "description": "ÇizgiMax ile çizgi film izlemek artık daha kolay, donmadan full HD ve reklamsız bir sitedir.",
         "url": "https://raw.githubusercontent.com/nikyokki/nik-cloudstream/builds/CizgiMax.cs3",
         "name": "CizgiMax"
     },
@@ -129,17 +96,11 @@
         "fileSize": 22760,
         "status": 1,
         "language": "tr",
-        "authors": [
-            "yunus60",
-            "GitLatte",
-            "patr0nq"
-        ],
-        "tvTypes": [
-            "TvSeries"
-        ],
+        "authors": ["yunus60", "GitLatte", "patr0nq"],
+        "tvTypes": ["TvSeries"],
         "version": 1,
         "internalName": "DDizi",
-        "description": "Ddizi, dizi izle, dizi seyret, ddizi.im - G\u00fcncel ve eski dizileri en iyi g\u00f6r\u00fcnt\u00fc kalitesiyle bulabilece\u011finiz dizi izleme sitesi.",
+        "description": "Ddizi, güncel ve eski dizileri en iyi görüntü kalitesiyle sunar.",
         "url": "https://raw.githubusercontent.com/nikyokki/nik-cloudstream/builds/DDizi.cs3",
         "name": "DDizi"
     },
@@ -150,16 +111,11 @@
         "fileSize": 22767,
         "status": 1,
         "language": "tr",
-        "authors": [
-            "keyiflerolsun",
-            "nikyokki"
-        ],
-        "tvTypes": [
-            "TvSeries"
-        ],
+        "authors": ["keyiflerolsun", "nikyokki"],
+        "tvTypes": ["TvSeries"],
         "version": 10,
         "internalName": "DiziBox",
-        "description": "Yabanc\u0131 Dizi izle, T\u00fcm yabanc\u0131 dizilerin yeni ve eski sezonlar\u0131n\u0131 full hd izleyebilece\u011finiz elit site.",
+        "description": "Yabancı dizilerin yeni ve eski sezonlarını full HD izleyebileceğiniz elit site.",
         "url": "https://raw.githubusercontent.com/nikyokki/nik-cloudstream/builds/DiziBox.cs3",
         "name": "DiziBox"
     },
@@ -170,35 +126,26 @@
         "fileSize": 18639,
         "status": 1,
         "language": "tr",
-        "authors": [
-            "nikyokki"
-        ],
-        "tvTypes": [
-            "Movie"
-        ],
+        "authors": ["nikyokki"],
+        "tvTypes": ["Movie"],
         "version": 9,
         "internalName": "DiziGom",
-        "description": "T\u00fcrk\u00e7e altyaz\u0131l\u0131 yabanc\u0131 dizi izle, T\u00fcm yabanc\u0131, kore, netflix dizilerin yeni ve eski sezonlar\u0131n\u0131 orijinal dilinde dizigom1 alt yaz\u0131l\u0131 film izleyebilir, sadece t\u00fcrk\u00e7e altyaz\u0131l\u0131 en iyi yabanc\u0131 diziler ve filmler hakk\u0131nda yorum yapabilirsiniz.",
+        "description": "Türkçe altyazılı yabancı dizi ve filmler.",
         "url": "https://raw.githubusercontent.com/nikyokki/nik-cloudstream/builds/DiziGom.cs3",
         "name": "DiziGom"
     },
     {
-        "iconUrl": "https://www.google.com/s2/favicons?domain=https://dizikorea.vip&sz=%size%",
+        "iconUrl": "https://www.google.com/s2/favicons?domain=dizikorea.vip&sz=%size%",
         "apiVersion": 1,
         "repositoryUrl": "https://github.com/nikyokki/nik-cloudstream",
         "fileSize": 19230,
         "status": 1,
         "language": "tr",
-        "authors": [
-            "keyiflerolsun",
-            "nikyokki"
-        ],
-        "tvTypes": [
-            "AsianDrama"
-        ],
+        "authors": ["keyiflerolsun", "nikyokki"],
+        "tvTypes": ["AsianDrama"],
         "version": 11,
         "internalName": "DiziKorea",
-        "description": "En G\u00fcncel Kore Dizileri izleme Sitesi",
+        "description": "En güncel Kore dizileri izleme sitesi.",
         "url": "https://raw.githubusercontent.com/nikyokki/nik-cloudstream/builds/DiziKorea.cs3",
         "name": "DiziKorea"
     },
@@ -209,116 +156,12 @@
         "fileSize": 33015,
         "status": 1,
         "language": "tr",
-        "authors": [
-            "keyiflerolsun",
-            "nikyokki"
-        ],
-        "tvTypes": [
-            "TvSeries"
-        ],
+        "authors": ["keyiflerolsun", "nikyokki"],
+        "tvTypes": ["TvSeries"],
         "version": 25,
         "internalName": "Dizilla",
-        "description": "Dizilla t\u00fcm yabanc\u0131 dizileri \u00fccretsiz olarak T\u00fcrk\u00e7e Dublaj ve altyaz\u0131l\u0131 se\u00e7enekleri ile 1080P kalite izleyebilece\u011finiz yeni nesil yabanc\u0131 dizi izleme siteniz.",
+        "description": "Yabancı dizileri Türkçe dublaj ve altyazılı 1080P kalite izleyin.",
         "url": "https://raw.githubusercontent.com/nikyokki/nik-cloudstream/builds/Dizilla.cs3",
         "name": "Dizilla"
-    },
-    {
-        "iconUrl": "https://www.google.com/s2/favicons?domain=dizimag.net&sz=%size%",
-        "apiVersion": 1,
-        "repositoryUrl": "https://github.com/nikyokki/nik-cloudstream",
-        "fileSize": 26515,
-        "status": 1,
-        "language": "tr",
-        "authors": [
-            "nikyokki"
-        ],
-        "tvTypes": [
-            "TvSeries"
-        ],
-        "version": 17,
-        "internalName": "DiziMag",
-        "description": "En son \u00e7\u0131kan yabanc\u0131 dizi ve filmleri DiziMag fark\u0131yla full hd 1080p kalitede izle. Dizimag Geni\u015f ve g\u00fcncel ar\u015fiviyle dizi ve filmlerin tad\u0131n\u0131 \u00e7\u0131kart\u0131n.",
-        "url": "https://raw.githubusercontent.com/nikyokki/nik-cloudstream/builds/DiziMag.cs3",
-        "name": "DiziMag"
-    },
-    {
-        "iconUrl": "https://www.google.com/s2/favicons?domain=www.dizimom.tv&sz=%size%",
-        "apiVersion": 1,
-        "repositoryUrl": "https://github.com/nikyokki/nik-cloudstream",
-        "fileSize": 30575,
-        "status": 1,
-        "language": "tr",
-        "authors": [
-            "keyiflerolsun",
-            "nikyokki"
-        ],
-        "tvTypes": [
-            "TvSeries"
-        ],
-        "version": 27,
-        "internalName": "DiziMom",
-        "description": "Binlerce yerli yabanc\u0131 dizi ar\u015fivi, t\u00fcm sezonlar, kesintisiz b\u00f6l\u00fcmler. Sadece dizi izle, Dizimom heryerde seninle!",
-        "url": "https://raw.githubusercontent.com/nikyokki/nik-cloudstream/builds/DiziMom.cs3",
-        "name": "DiziMom"
-    },
-    {
-        "iconUrl": "https://www.google.com/s2/favicons?domain=https://dizipal683.com&sz=%size%",
-        "apiVersion": 1,
-        "repositoryUrl": "https://github.com/nikyokki/nik-cloudstream",
-        "fileSize": 19207,
-        "status": 1,
-        "language": "tr",
-        "authors": [
-            "keyiflerolsun",
-            "muratcesmecioglu"
-        ],
-        "tvTypes": [
-            "TvSeries",
-            "Movie"
-        ],
-        "version": 46,
-        "internalName": "DiziPal",
-        "description": "en yeni dizileri g\u00fcvenli ve h\u0131zl\u0131 \u015fekilde sunar.",
-        "url": "https://raw.githubusercontent.com/nikyokki/nik-cloudstream/builds/DiziPal.cs3",
-        "name": "DiziPal"
-    },
-    {
-        "iconUrl": "https://www.google.com/s2/favicons?domain=www.diziyou.co&sz=%size%",
-        "apiVersion": 1,
-        "repositoryUrl": "https://github.com/nikyokki/nik-cloudstream",
-        "fileSize": 14528,
-        "status": 1,
-        "language": "tr",
-        "authors": [
-            "keyiflerolsun",
-            "nikyokki"
-        ],
-        "tvTypes": [
-            "TvSeries"
-        ],
-        "version": 18,
-        "internalName": "DiziYou",
-        "description": "Diziyou en kaliteli T\u00fcrk\u00e7e dublaj ve altyaz\u0131l\u0131 yabanc\u0131 dizi izleme sitesidir. G\u00fcncel ve efsanevi dizileri 1080p Full HD kalitede izlemek i\u00e7in hemen t\u0131kla!",
-        "url": "https://raw.githubusercontent.com/nikyokki/nik-cloudstream/builds/DiziYou.cs3",
-        "name": "DiziYou"
-    },
-    {
-        "iconUrl": "https://www.dmax.com.tr/favicon.ico",
-        "apiVersion": 1,
-        "repositoryUrl": "https://github.com/nikyokki/nik-cloudstream",
-        "fileSize": 13243,
-        "status": 1,
-        "language": "tr",
-        "authors": [
-            "nikyokki"
-        ],
-        "tvTypes": [
-            "TvSeries"
-        ],
-        "version": 2,
-        "internalName": "DMax",
-        "description": "DMAX dizi ve programlar\u0131n\u0131 takip etmek i\u00e7in ziyaret edin. DMAX dizi ve programlar\u0131n\u0131 tek par\u00e7a ve hd kalitesiyle izleyin.",
-        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/DMax.cs3",
-        "name": "DMax"
-    }    
+    }
 ]
