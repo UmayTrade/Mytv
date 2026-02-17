@@ -54,8 +54,17 @@ jobs:
       # ----------------------------
       - name: Collect build outputs
         run: |
+          rm -rf builds
           mkdir builds
           find . -type f -name "*.cs3" -exec cp {} builds \;
+
+      # ----------------------------
+      # Debug (kontrol amaçlı)
+      # ----------------------------
+      - name: Debug builds folder
+        run: |
+          echo "Build klasörü içeriği:"
+          ls -la builds
 
       # ----------------------------
       # Generate plugins.json
@@ -63,8 +72,11 @@ jobs:
       - name: Generate plugins.json
         run: |
           cd builds
+          shopt -s nullglob
+
           echo "[" > plugins.json
           first=true
+
           for file in *.cs3; do
             if [ "$first" = true ]; then
               first=false
@@ -77,8 +89,12 @@ jobs:
             echo "    \"url\": \"https://raw.githubusercontent.com/${{ github.repository }}/builds/$file\"" >> plugins.json
             echo -n "  }" >> plugins.json
           done
+
           echo "" >> plugins.json
           echo "]" >> plugins.json
+
+          echo "Oluşturulan plugins.json:"
+          cat plugins.json
 
       # ----------------------------
       # Push to builds branch
