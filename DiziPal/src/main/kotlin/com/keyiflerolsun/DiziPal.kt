@@ -7,7 +7,7 @@ import org.jsoup.nodes.Element
 
 class DiziPal : MainAPI() {
 
-    override var mainUrl = "https://dizipal1539.com" // AKTİF DOMAIN
+    override var mainUrl = "https://dizipal1539.com"
     override var name = "DiziPal"
     override var lang = "tr"
 
@@ -17,15 +17,7 @@ class DiziPal : MainAPI() {
 
     override val mainPage = mainPageOf(
         "$mainUrl/yabanci-dizi-izle" to "Diziler",
-        "$mainUrl/hd-film-izle" to "Filmler",
-        "$mainUrl/anime" to "Anime",
-    )
-
-    // 🔒 CDN BYPASS HEADER
-    private val posterHeaders = mapOf(
-        "Referer" to mainUrl,
-        "User-Agent" to USER_AGENT,
-        "Origin" to mainUrl
+        "$mainUrl/hd-film-izle" to "Filmler"
     )
 
     // ================= MAIN PAGE =================
@@ -33,7 +25,7 @@ class DiziPal : MainAPI() {
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
 
         val url = if (page == 1) request.data
-        else request.data + "/page/$page"
+        else "${request.data}/page/$page"
 
         val document = app.get(url).document
 
@@ -53,7 +45,7 @@ class DiziPal : MainAPI() {
         }
     }
 
-    override suspend fun quickSearch(query: String): List<SearchResponse> = search(query)
+    override suspend fun quickSearch(query: String) = search(query)
 
     // ================= POSTER FIX =================
 
@@ -62,7 +54,6 @@ class DiziPal : MainAPI() {
         var poster = selectFirst("img")?.attr("data-src")
             ?: selectFirst("img")?.attr("data-original")
             ?: selectFirst("img")?.attr("data-lazy-src")
-            ?: selectFirst("img")?.attr("srcset")?.split(" ")?.firstOrNull()
             ?: selectFirst("img")?.attr("src")
 
         if (poster.isNullOrBlank()) return null
@@ -74,29 +65,20 @@ class DiziPal : MainAPI() {
         return fixUrl(poster)
     }
 
-    // ================= SEARCH PARSER =================
-
     private fun Element.toSearchResult(): SearchResponse? {
 
         val link = selectFirst("a") ?: return null
-
-        val title =
-            link.attr("title").ifBlank {
-                selectFirst("img")?.attr("alt")
-            } ?: return null
-
+        val title = link.attr("title").ifBlank { link.text() }
         val href = fixUrlNull(link.attr("href")) ?: return null
         val poster = getPoster()
 
         return if (href.contains("/film/")) {
             newMovieSearchResponse(title, href, TvType.Movie) {
                 this.posterUrl = poster
-                this.posterHeaders = posterHeaders
             }
         } else {
             newTvSeriesSearchResponse(title, href, TvType.TvSeries) {
                 this.posterUrl = poster
-                this.posterHeaders = posterHeaders
             }
         }
     }
@@ -107,72 +89,31 @@ class DiziPal : MainAPI() {
 
         val document = app.get(url).document
 
-        val title = document.selectFirst("h1, h5")?.text()?.trim() ?: return null
+        val title = document.selectFirst("h1")?.text() ?: return null
         val poster = document.getPoster()
-        val plot = document.selectFirst("div.summary p, p")?.text()?.trim()
-
-        val year = Regex("(19|20)\\d{2}")
-            .find(document.text())
-            ?.value
-            ?.toIntOrNull()
-
-        val rating = Regex("""(\d\.\d)""")
-            .find(document.text())
-            ?.value
-
-        val tags = document.select("a[href*='tur'], a[href*='genre']")
-            .map { it.text() }
-            .distinct()
-
-        val duration = Regex("""(\d+)\s*dak""")
-            .find(document.text())
-            ?.groupValues?.getOrNull(1)
-            ?.toIntOrNull()
+        val plot = document.selectFirst("p")?.text()
 
         return if (url.contains("/dizi/")) {
 
             val episodes = document.select("a[href*='/bolum/']").mapNotNull {
 
                 val epUrl = fixUrl(it.attr("href"))
-                val epText = it.text()
-
-                val season = Regex("""(\d+)\.\s*Sezon""")
-                    .find(epText)
-                    ?.groupValues?.getOrNull(1)
-                    ?.toIntOrNull()
-
-                val episode = Regex("""(\d+)\.\s*Böl""")
-                    .find(epText)
-                    ?.groupValues?.getOrNull(1)
-                    ?.toIntOrNull()
 
                 newEpisode(epUrl) {
-                    this.name = epText
-                    this.season = season
-                    this.episode = episode
+                    this.name = it.text()
                 }
             }
 
             newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodes) {
                 this.posterUrl = poster
-                this.posterHeaders = posterHeaders
                 this.plot = plot
-                this.year = year
-                this.tags = tags
-                this.duration = duration
-                this.score = Score.from10(rating)
             }
 
         } else {
 
             newMovieLoadResponse(title, url, TvType.Movie, url) {
                 this.posterUrl = poster
-                this.posterHeaders = posterHeaders
                 this.plot = plot
-                this.year = year
-                this.tags = tags
-                this.duration = duration
-                this.score = Score.from10(rating)
             }
         }
     }
@@ -188,50 +129,24 @@ class DiziPal : MainAPI() {
 
         val document = app.get(data).document
 
-        val iframeRaw = document.selectFirst("iframe")?.attr("src")
-            ?: document.selectFirst("iframe")?.attr("data-src")
+        val iframe = document.selectFirst("iframe")?.attr("src")
             ?: return false
 
-        val iframeUrl = fixUrl(iframeRaw)
+        val iframeUrl = fixUrl(iframe)
 
-        val response = app.get(
-            iframeUrl,
-            referer = mainUrl,
-            headers = mapOf(
-                "User-Agent" to USER_AGENT,
-                "Referer" to mainUrl
-            )
-        )
+        val body = app.get(iframeUrl).text
 
-        val body = response.text
-
-        // Direkt m3u8
+        // m3u8 regex
         Regex("""https?:\/\/[^"' ]+\.m3u8[^"' ]*""")
             .findAll(body)
             .map { it.value }
             .distinct()
-            .forEach { streamUrl ->
+            .forEach {
 
                 M3u8Helper.generateM3u8(
                     source = name,
                     name = name,
-                    streamUrl = streamUrl,
-                    referer = mainUrl
-                ).forEach(callback)
-
-                return true
-            }
-
-        // JWPlayer file:
-        Regex("""file\s*:\s*["']([^"']+)""")
-            .find(body)
-            ?.groupValues?.getOrNull(1)
-            ?.let { streamUrl ->
-
-                M3u8Helper.generateM3u8(
-                    source = name,
-                    name = name,
-                    streamUrl = fixUrl(streamUrl),
+                    streamUrl = it,
                     referer = mainUrl
                 ).forEach(callback)
 
@@ -240,22 +155,21 @@ class DiziPal : MainAPI() {
 
         // Base64 fallback
         Regex("""["']([A-Za-z0-9+/=]{100,})["']""")
-            .findAll(body)
-            .forEach { match ->
+            .find(body)
+            ?.groupValues?.getOrNull(1)
+            ?.let {
                 try {
-                    val decoded = String(Base64.decode(match.groupValues[1], Base64.DEFAULT))
+                    val decoded = String(Base64.decode(it, Base64.DEFAULT))
                     Regex("""https?:\/\/[^"' ]+\.m3u8[^"' ]*""")
                         .find(decoded)
                         ?.groupValues?.getOrNull(0)
                         ?.let { streamUrl ->
-
                             M3u8Helper.generateM3u8(
                                 source = name,
                                 name = name,
                                 streamUrl = streamUrl,
                                 referer = mainUrl
                             ).forEach(callback)
-
                             return true
                         }
                 } catch (_: Exception) {}
