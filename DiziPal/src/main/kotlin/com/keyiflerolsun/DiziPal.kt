@@ -19,9 +19,7 @@ class DiziPal : MainAPI() {
     // ---------------- SEARCH ----------------
 
     override suspend fun search(query: String): List<SearchResponse> {
-        val url = "$mainUrl/?s=$query"
-
-        val document = app.get(url).document
+        val document = app.get("$mainUrl/?s=$query").document
 
         return document.select("div.post-item").mapNotNull {
             val title = it.selectFirst("h3")?.text() ?: return@mapNotNull null
@@ -42,7 +40,6 @@ class DiziPal : MainAPI() {
         val title = document.selectFirst("h1")?.text() ?: return null
         val poster = document.selectFirst("img")?.attr("src")
 
-        // Episode list boş olsa bile vermek zorundayız
         val episodes = mutableListOf<Episode>()
 
         document.select("div.episode-item a").forEach {
@@ -71,17 +68,15 @@ class DiziPal : MainAPI() {
     ): Boolean {
 
         val document = app.get(data).document
-
         val iframe = document.selectFirst("iframe")?.attr("src") ?: return false
 
         callback.invoke(
             newExtractorLink(
-                source = name,
-                name = name,
-                url = iframe,
-                referer = data,
-                quality = Qualities.Unknown.value,
-                isM3u8 = iframe.contains(".m3u8")
+                name,
+                name,
+                iframe,
+                data,
+                Qualities.Unknown.value
             )
         )
 
