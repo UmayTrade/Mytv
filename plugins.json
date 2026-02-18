@@ -78,7 +78,7 @@
         "version": 6,
         "internalName": "BelgeselX",
         "description": "En yeni belgeseller, t\u00fcrk\u00e7e altyaz\u0131l\u0131 yada dublaj olarak 1080p kalitesinde HD belgesel izle.",
-        "url": "https://raw.githubusercontent.com/nikyokki/nik-cloudstream/builds/BelgeselX.cs3",
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/BelgeselX.cs3",
         "name": "BelgeselX"
     },
     {
@@ -160,7 +160,7 @@
         "version": 10,
         "internalName": "DiziBox",
         "description": "Yabanc\u0131 Dizi izle, T\u00fcm yabanc\u0131 dizilerin yeni ve eski sezonlar\u0131n\u0131 full hd izleyebilece\u011finiz elit site.",
-        "url": "https://raw.githubusercontent.com/nikyokki/nik-cloudstream/builds/DiziBox.cs3",
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/DiziBox.cs3",
         "name": "DiziBox"
     },
     {
@@ -179,7 +179,7 @@
         "version": 9,
         "internalName": "DiziGom",
         "description": "T\u00fcrk\u00e7e altyaz\u0131l\u0131 yabanc\u0131 dizi izle, T\u00fcm yabanc\u0131, kore, netflix dizilerin yeni ve eski sezonlar\u0131n\u0131 orijinal dilinde dizigom1 alt yaz\u0131l\u0131 film izleyebilir, sadece t\u00fcrk\u00e7e altyaz\u0131l\u0131 en iyi yabanc\u0131 diziler ve filmler hakk\u0131nda yorum yapabilirsiniz.",
-        "url": "https://raw.githubusercontent.com/nikyokki/nik-cloudstream/builds/DiziGom.cs3",
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/DiziGom.cs3",
         "name": "DiziGom"
     },
     {
@@ -258,7 +258,7 @@
         "version": 27,
         "internalName": "DiziMom",
         "description": "Binlerce yerli yabanc\u0131 dizi ar\u015fivi, t\u00fcm sezonlar, kesintisiz b\u00f6l\u00fcmler. Sadece dizi izle, Dizimom heryerde seninle!",
-        "url": "https://raw.githubusercontent.com/nikyokki/nik-cloudstream/builds/DiziMom.cs3",
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/DiziMom.cs3",
         "name": "DiziMom"
     },
     {
@@ -299,7 +299,7 @@
         "version": 18,
         "internalName": "DiziYou",
         "description": "Diziyou en kaliteli T\u00fcrk\u00e7e dublaj ve altyaz\u0131l\u0131 yabanc\u0131 dizi izleme sitesidir. G\u00fcncel ve efsanevi dizileri 1080p Full HD kalitede izlemek i\u00e7in hemen t\u0131kla!",
-        "url": "https://raw.githubusercontent.com/nikyokki/nik-cloudstream/builds/DiziYou.cs3",
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/DiziYou.cs3",
         "name": "DiziYou"
     },
     {
@@ -318,7 +318,7 @@
         "version": 2,
         "internalName": "DMax",
         "description": "DMAX dizi ve programlar\u0131n\u0131 takip etmek i\u00e7in ziyaret edin. DMAX dizi ve programlar\u0131n\u0131 tek par\u00e7a ve hd kalitesiyle izleyin.",
-        "url": "https://raw.githubusercontent.com/nikyokki/nik-cloudstream/builds/DMax.cs3",
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/DMax.cs3",
         "name": "DMax"
     },
     {
@@ -336,10 +336,10 @@
             "TvSeries"
         ],
         "version": 5,
-        "internalName": "FilmIzleIlk",
-        "description": "Filmizleilk.com Yerli ve Yabanc\u0131 en son Film ve Dizileri Full HD 1080p Bluray Tek Part Full izle",
-        "url": "https://raw.githubusercontent.com/nikyokki/nik-cloudstream/builds/FilmIzleIlk.cs3",
-        "name": "FilmIzleIlk"
+        "internalName": "Filmatek",
+        "description": "Filmatek.com Yerli ve Yabanc\u0131 en son Film ve Dizileri Full HD 1080p Bluray Tek Part Full izle",
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/Filmatek.cs3",
+        "name": "Filmatek"
     },
     {
         "iconUrl": "https://www.google.com/s2/favicons?domain=filmizlesene.plus&sz=%size%",
@@ -355,10 +355,10 @@
             "Movie"
         ],
         "version": 3,
-        "internalName": "Film\u0130zlesene",
-        "description": "Filmizlesene ile h\u0131zl\u0131 film izleme f\u0131rsat\u0131n\u0131 yakala, en yeni ve iyi filmleri Full HD 1080p kalitesiyle online ve bedava izle",
-        "url": "https://raw.githubusercontent.com/nikyokki/nik-cloudstream/builds/Film\u0130zlesene.cs3",
-        "name": "Film\u0130zlesene"
+        "internalName": "Filmmirasım",
+        "description": "Filmmirasım",
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/Filmmirasım.cs3",
+        "name": "Filmmirasım"
     },
     {
         "iconUrl": "https://www.google.com/s2/favicons?domain=filmkovasi.tv&sz=%size%",
@@ -374,10 +374,10 @@
             "Movie"
         ],
         "version": 3,
-        "internalName": "FilmKovasi",
-        "description": "Film Kovasi \u26a1 ile en g\u00fcncel ve sorunsuz Full HD Film izle keyfi her yerde seninle! 1080p online film izleme ayr\u0131cal\u0131\u011f\u0131yla Film Kovas\u0131'n\u0131n Tad\u0131n\u0131 \u00c7\u0131kar\u0131n.",
-        "url": "https://raw.githubusercontent.com/nikyokki/nik-cloudstream/builds/FilmKovasi.cs3",
-        "name": "FilmKovasi"
+        "internalName": "Full4kizle",
+        "description": "Full4kizle \u26a1 ile en g\u00fcncel ve sorunsuz Full HD Film izle keyfi her yerde seninle! 1080p online film izleme ayr\u0131cal\u0131\u011f\u0131yla Film Kovas\u0131'n\u0131n Tad\u0131n\u0131 \u00c7\u0131kar\u0131n.",
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/Full4kizle.cs3",
+        "name": "Full4kizle"
     },
     {
         "iconUrl": "https://www.google.com/s2/favicons?domain=filmmakinesi.film&sz=%size%",
@@ -880,7 +880,7 @@
         "version": 1,
         "internalName": "TLC",
         "description": "TLC TV dizi ve programlar\u0131n\u0131 takip etmek i\u00e7in ziyaret edin. TLC TV dizi ve programlar\u0131n\u0131 tek par\u00e7a ve hd kalitesiyle izleyin.",
-        "url": "https://raw.githubusercontent.com/nikyokki/nik-cloudstream/builds/TLC.cs3",
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/TLC.cs3",
         "name": "TLC"
     },
     {
@@ -933,13 +933,13 @@
             "nikyokki"
         ],
         "tvTypes": [
-            "Movie"
+            "Live"
         ],
         "version": 6,
-        "internalName": "UgurFilm",
-        "description": "Yabanc\u0131 film izle, T\u00fcrk\u00e7e dublaj ve T\u00fcrk\u00e7e altyaz\u0131l\u0131 film se\u00e7enekleriyle 720p ve 1080p HD kalitesinde film izle - U\u011fur Film full hd film izle.",
-        "url": "https://raw.githubusercontent.com/nikyokki/nik-cloudstream/builds/UgurFilm.cs3",
-        "name": "UgurFilm"
+        "internalName": "Streamed",
+        "description": "Streamed.",
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/Streamed.cs3",
+        "name": "Streamed"
     },
     {
         "iconUrl": "https://www.google.com/s2/favicons?domain=tr.canlitv.team&sz=%size%",
@@ -955,10 +955,10 @@
             "Live"
         ],
         "version": 2,
-        "internalName": "vavooSpor",
-        "description": "vavooSpor",
-        "url": "https://raw.githubusercontent.com/nikyokki/nik-cloudstream/builds/vavooSpor.cs3",
-        "name": "vavooSpor"
+        "internalName": "NeonSpor",
+        "description": "NeonSpor",
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/NeonSpor.cs3",
+        "name": "NeonSpor"
     },
     {
         "iconUrl": "https://www.google.com/s2/favicons?domain=webteizle2.com&sz=%size%",
