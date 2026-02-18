@@ -6,7 +6,7 @@
   "plugins": [
     {
       "name": "Mytv Eklentileri",
-      "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/refs/heads/master/plugins.json"
+      "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/refs/heads/master/plugins1.json"
     }
   ]
 }
