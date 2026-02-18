@@ -1,20 +1,5 @@
 [
     {
-        "iconUrl": "https://www.google.com/s2/favicons?domain=www.4kfilmizlesene.org&sz=%size%",
-        "apiVersion": 1,
-        "repositoryUrl": "https://github.com/nikyokki/nik-cloudstream",
-        "fileSize": 11825,
-        "status": 1,
-        "language": "tr",
-        "authors": ["nikyokki"],
-        "tvTypes": ["Movie"],
-        "version": 6,
-        "internalName": "4KFilmIzlesene",
-        "description": "En yeni ve sorunsuz ⚡ Full HD Film izle keyfi her yerde sizinle! 4K ve 1080p online film izleme farkıyla 4KFilmizlesene'nin tadını çıkar.",
-        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/4KFilmIzlesene.cs3",
-        "name": "4KFilmIzlesene"
-    },
-    {
         "iconUrl": "https://www.google.com/s2/favicons?domain=belgeselx.com&sz=%size%",
         "apiVersion": 1,
         "repositoryUrl": "https://github.com/nikyokki/nik-cloudstream",
@@ -58,21 +43,6 @@
         "description": "Türkçe altyazılı yabancı dizi izle. Tüm yabancı, Kore ve Netflix dizilerinin yeni ve eski sezonlarını orijinal dilinde izleyebilir, en iyi yabancı diziler ve filmler hakkında yorum yapabilirsiniz.",
         "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/DiziGom.cs3",
         "name": "DiziGom"
-    },
-    {
-        "iconUrl": "https://www.google.com/s2/favicons?domain=dizimag.net&sz=%size%",
-        "apiVersion": 1,
-        "repositoryUrl": "https://github.com/nikyokki/nik-cloudstream",
-        "fileSize": 18449,
-        "status": 1,
-        "language": "tr",
-        "authors": ["Adippe", "keyiflerolsun", "nikyokki"],
-        "tvTypes": ["Live"],
-        "version": 6,
-        "internalName": "DiziMag",
-        "description": "En son çıkan yabancı dizi ve filmleri DiziMag farkıyla full HD 1080p kalitede izle. Geniş ve güncel arşiviyle dizi ve filmlerin tadını çıkarın.",
-        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/DiziMag.cs3",
-        "name": "DiziMag"
     },
     {
         "iconUrl": "https://www.google.com/s2/favicons?domain=www.dizimom.tv&sz=%size%",
@@ -163,36 +133,6 @@
         "description": "Yabancı dizileri Türkçe dublaj ve altyazılı 1080P kalite izleyin.",
         "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/Full4kizle.cs3",
         "name": "Full4kizle"
-    },
-    {
-        "iconUrl": "https://www.google.com/s2/favicons?domain=www.filmizleilk.com&sz=%size%",
-        "apiVersion": 1,
-        "repositoryUrl": "https://github.com/nikyokki/nik-cloudstream",
-        "fileSize": 19230,
-        "status": 1,
-        "language": "tr",
-        "authors": ["keyiflerolsun", "nikyokki"],
-        "tvTypes": ["Movie", "TvSeries"],
-        "version": 11,
-        "internalName": "FilmIzleIlk",
-        "description": "Filmizleilk.com Yerli ve Yabancı en son Film ve Dizileri Full HD 1080p Bluray Tek Part Full izle.",
-        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/FilmIzleIlk.cs3",
-        "name": "FilmIzleIlk"
-    },
-    {
-        "iconUrl": "https://filmmakinesi.film/favicon.ico",
-        "apiVersion": 1,
-        "repositoryUrl": "https://github.com/nikyokki/nik-cloudstream",
-        "fileSize": 33015,
-        "status": 1,
-        "language": "tr",
-        "authors": ["keyiflerolsun", "nikyokki"],
-        "tvTypes": ["TvSeries"],
-        "version": 25,
-        "internalName": "FilmMakinesi",
-        "description": "Film Makinesi, en yeni ve en güncel filmleri sitemizde full HD kalite farkı ile izleyebilirsiniz. HD film izle denildiğinde akla gelen en kaliteli film izleme sitesi.",
-        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/FilmMakinesi.cs3",
-        "name": "FilmMakinesi"
     },
     {
         "iconUrl": "https://www.google.com/s2/favicons?domain=www.filmizleilk.com&sz=%size%",
