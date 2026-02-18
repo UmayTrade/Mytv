@@ -16,8 +16,8 @@ class DiziPal : MainAPI() {
     override val supportedTypes = setOf(TvType.TvSeries, TvType.Movie)
 
     override val mainPage = mainPageOf(
-        "$mainUrl/diziler" to "Diziler",
-        "$mainUrl/filmler" to "Filmler"
+        "$mainUrl/yabanci-dizi-izle" to "Diziler",
+        "$mainUrl/hd-film-izle" to "Filmler"
     )
 
     // ================= MAIN PAGE =================
