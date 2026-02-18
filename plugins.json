@@ -193,5 +193,35 @@
         "description": "YFilm Makinesi, en yeni ve en g\u00fcncel filmleri sitemizde full HD kalite fark\u0131 ile izleyebilirsiniz. HD film izle denildi\u011finde akla gelen en kaliteli film izleme sitesi.",
         "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/FilmMakinesi.cs3",
         "name": "FilmMakinesi"
-    }
+    },
+            {
+        "iconUrl": "https://www.google.com/s2/favicons?domain=www.filmizleilk.com&sz=%size%",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/nikyokki/nik-cloudstream",
+        "fileSize": 19230,
+        "status": 1,
+        "language": "tr",
+        "authors": ["kraptor", "byAyzen"],
+        "tvTypes": ["live"],
+        "version": 11,
+        "internalName": "Streamed",
+        "description": "Streamedile uluslarasi mac yayinlarini izleyebilirsiniz.",
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/Streamed.cs3",
+        "name": "Streamed"
+    },
+    {
+        "iconUrl": "https://avatars.githubusercontent.com/u/168250776?v=4",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/nikyokki/nik-cloudstream",
+        "fileSize": 33015,
+        "status": 1,
+        "language": "tr",
+        "authors": ["keyiflerolsun", "nikyokki"],
+        "tvTypes": ["Live"],
+        "version": 25,
+        "internalName": "TVGarden",
+        "description": "Tv Yayinlarini izleyebilirsiniz.",
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/TVGarden.cs3",
+        "name": "FTVGarden"
+    },
 ]
