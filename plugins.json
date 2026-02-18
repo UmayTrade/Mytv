@@ -163,5 +163,35 @@
         "description": "Yabancı dizileri Türkçe dublaj ve altyazılı 1080P kalite izleyin.",
         "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/Full4kizle.cs3",
         "name": "Full4kizle"
+    },
+        {
+        "iconUrl": "https://www.google.com/s2/favicons?domain=www.filmizleilk.com&sz=%size%",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/nikyokki/nik-cloudstream",
+        "fileSize": 19230,
+        "status": 1,
+        "language": "tr",
+        "authors": ["keyiflerolsun", "nikyokki"],
+        "tvTypes": ["Movie", "TvSeries"],
+        "version": 11,
+        "internalName": "FilmIzleIlk",
+        "description": "Filmizleilk.com Yerli ve Yabanc\u0131 en son Film ve Dizileri Full HD 1080p Bluray Tek Part Full izle.",
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/FilmIzleIlk.cs3",
+        "name": "FilmIzleIlk"
+    },
+    {
+        "iconUrl": "https://www.google.com/s2/favicons?domain=filmmakinesi.film&sz=%size%",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/nikyokki/nik-cloudstream",
+        "fileSize": 33015,
+        "status": 1,
+        "language": "tr",
+        "authors": ["keyiflerolsun", "nikyokki"],
+        "tvTypes": ["TvSeries"],
+        "version": 25,
+        "internalName": "FilmMakinesi",
+        "description": "YFilm Makinesi, en yeni ve en g\u00fcncel filmleri sitemizde full HD kalite fark\u0131 ile izleyebilirsiniz. HD film izle denildi\u011finde akla gelen en kaliteli film izleme sitesi.",
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/FilmMakinesi.cs3",
+        "name": "FilmMakinesi"
     }
 ]
