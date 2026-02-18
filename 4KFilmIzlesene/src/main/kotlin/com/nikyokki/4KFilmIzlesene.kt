@@ -1,6 +1,6 @@
 
 
-package com.nikyokki
+package com.UmayTrade
 
 import android.util.Log
 import com.lagradost.cloudstream3.HomePageResponse
