@@ -3,7 +3,10 @@
   "name": "Sessiz",
   "description": "Plugins Across All Categories and Languages.",
   "manifestVersion": 1,
-  "pluginLists": [
-    "https://raw.githubusercontent.com/UmayTrade/Mytv/refs/heads/master/plugins.json"
+  "plugins": [
+    {
+      "name": "Mytv Eklentileri",
+      "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/refs/heads/master/plugins.json"
+    }
   ]
 }
