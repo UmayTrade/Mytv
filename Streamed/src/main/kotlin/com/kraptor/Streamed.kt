@@ -13,7 +13,7 @@ import kotlinx.coroutines.*
 
 class Streamed() : MainAPI() {
     override var mainUrl = "https://streamed.st"
-    override var name = "Streamed"
+    override var name = "3LL3M3"
     override val hasMainPage = true
     override var lang = "en"
     override val hasQuickSearch = true
