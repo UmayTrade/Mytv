@@ -1,12 +1,8 @@
 {
-  "iconUrl": "https://raw.githubusercontent.com/Kraptor123/Cs-Karma/refs/heads/master/.github/logo/cskarma.png",
-  "name": "Sessiz",
-  "description": "Plugins Across All Categories and Languages.",
-  "manifestVersion": 1,
-  "plugins": [
-    {
-      "name": "Mytv Eklentileri",
-      "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/refs/heads/master/plugins.json"
-    }
-  ]
+    "name": "Nikyokki",
+    "description": "Türkçe içerikli eklenti havuzu",
+    "manifestVersion": 1,
+    "pluginLists": [
+      "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/plugins.json"
+    ]
 }
