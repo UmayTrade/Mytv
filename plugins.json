@@ -13,9 +13,9 @@
             "Live"
         ],
         "version": 12,
-        "internalName": "NeonSpor",
-        "description": "(A\u00e7\u0131lmayan Spor Kanallar \u0130\u00e7in VPN Gerekebilir.) NeonSpor eklentisi.",
-        "url": "https://raw.githubusercontent.com/sarapcanagii/Pitipitii/builds/NeonSpor.cs3",
-        "name": "NeonSpor"
+        "internalName": "UmayCanli",
+        "description": "UmayCanli eklentisi.",
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/UmayCanli.cs3",
+        "name": "UmayCanli"
     }
 ]
