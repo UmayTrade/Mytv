@@ -2,6 +2,7 @@ package com.keyiflerolsun
 
 import android.util.Base64
 import com.lagradost.cloudstream3.*
+import com.lagradost.cloudstream3.Score
 import com.lagradost.cloudstream3.utils.*
 import org.jsoup.nodes.Element
 
@@ -50,7 +51,7 @@ class DiziPal : MainAPI() {
 
     override suspend fun quickSearch(query: String) = search(query)
 
-    // ================= SEARCH RESULT PARSER =================
+    // ================= SEARCH PARSER =================
 
     private fun Element.toSearchResult(): SearchResponse? {
 
@@ -88,16 +89,15 @@ class DiziPal : MainAPI() {
 
         val plot = document.selectFirst("p")?.text()
 
-        // ⭐ Yeni Score API (IMDB 8.4 → Score(84))
+        // ⭐ Yeni Score API
         val imdbText = document.selectFirst(".imdb")?.text()
 
-        val scoreValue = imdbText
+        val score = imdbText
             ?.replace(",", ".")
             ?.toDoubleOrNull()
             ?.times(10)
             ?.toInt()
-
-        val score = scoreValue?.let { Score(it) }
+            ?.let { Score.fromInt(it) }
 
         return if (url.contains("/dizi/")) {
 
@@ -105,7 +105,8 @@ class DiziPal : MainAPI() {
                 .select("a[href*='/bolum/']")
                 .mapNotNull {
 
-                    val epUrl = fixUrlNull(it.attr("href")) ?: return@mapNotNull null
+                    val epUrl = fixUrlNull(it.attr("href"))
+                        ?: return@mapNotNull null
 
                     newEpisode(epUrl) {
                         this.name = it.text()
@@ -168,7 +169,7 @@ class DiziPal : MainAPI() {
                 return true
             }
 
-        // 2️⃣ Base64 decode fallback
+        // 2️⃣ Base64 fallback
         Regex("""["']([A-Za-z0-9+/=]{120,})["']""")
             .find(body)
             ?.groupValues
