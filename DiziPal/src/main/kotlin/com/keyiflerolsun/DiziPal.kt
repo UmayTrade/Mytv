@@ -50,7 +50,7 @@ class DiziPal : MainAPI() {
 
     override suspend fun quickSearch(query: String) = search(query)
 
-    // ================= PARSER =================
+    // ================= SEARCH RESULT PARSER =================
 
     private fun Element.toSearchResult(): SearchResponse? {
 
@@ -88,13 +88,16 @@ class DiziPal : MainAPI() {
 
         val plot = document.selectFirst("p")?.text()
 
-        // ⭐ Yeni SCORE sistemi (IMDB 8.5 → 85)
+        // ⭐ Yeni Score API (IMDB 8.4 → Score(84))
         val imdbText = document.selectFirst(".imdb")?.text()
-        val score = imdbText
+
+        val scoreValue = imdbText
             ?.replace(",", ".")
             ?.toDoubleOrNull()
             ?.times(10)
             ?.toInt()
+
+        val score = scoreValue?.let { Score(it) }
 
         return if (url.contains("/dizi/")) {
 
@@ -125,7 +128,7 @@ class DiziPal : MainAPI() {
         }
     }
 
-    // ================= LOAD LINKS =================
+    // ================= STREAM EXTRACTION =================
 
     override suspend fun loadLinks(
         data: String,
