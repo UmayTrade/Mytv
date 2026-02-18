@@ -19,46 +19,22 @@ class DiziPal : MainAPI() {
         "$mainUrl/yabanci-dizi-izle" to "Diziler",
         "$mainUrl/hd-film-izle" to "Filmler",
         "$mainUrl/anime" to "Anime",
-        "$mainUrl/kanal/exxen" to "Exxen",
-        "$mainUrl/kanal/disney" to "Disney+",
-        "$mainUrl/kanal/netflix" to "Netflix",
-        "$mainUrl/kanal/amazon" to "Amazon",
-        "$mainUrl/kanal/apple-tv" to "Apple TV+",
-        "$mainUrl/kanal/max" to "Max",
-        "$mainUrl/kanal/hulu" to "Hulu",
-        "$mainUrl/kanal/tod" to "TOD",
-        "$mainUrl/kanal/tabii" to "tabii",
     )
 
     // ================= MAIN PAGE =================
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
-        val document = app.get(request.data).document
+
+        val url = if (page == 1) request.data
+        else request.data + "/page/$page"
+
+        val document = app.get(url).document
 
         val home = document.select("article, li").mapNotNull {
             it.toSearchResult()
         }
 
         return newHomePageResponse(request.name, home)
-    }
-
-    private fun Element.toSearchResult(): SearchResponse? {
-        val title = selectFirst("a")?.attr("title")
-            ?: selectFirst("img")?.attr("alt")
-            ?: return null
-
-        val href = fixUrlNull(selectFirst("a")?.attr("href")) ?: return null
-        val poster = fixUrlNull(selectFirst("img")?.attr("src"))
-
-        return if (href.contains("/film/")) {
-            newMovieSearchResponse(title, href, TvType.Movie) {
-                this.posterUrl = poster
-            }
-        } else {
-            newTvSeriesSearchResponse(title, href, TvType.TvSeries) {
-                this.posterUrl = poster
-            }
-        }
     }
 
     // ================= SEARCH =================
@@ -72,29 +48,105 @@ class DiziPal : MainAPI() {
 
     override suspend fun quickSearch(query: String): List<SearchResponse> = search(query)
 
+    // ================= SEARCH PARSER =================
+
+    private fun Element.toSearchResult(): SearchResponse? {
+
+        val link = selectFirst("a") ?: return null
+
+        val title =
+            link.attr("title").ifBlank {
+                selectFirst("img")?.attr("alt")
+            } ?: return null
+
+        val href = fixUrlNull(link.attr("href")) ?: return null
+
+        val img = selectFirst("img")
+
+        val poster = fixUrlNull(
+            img?.attr("data-src")
+                ?: img?.attr("data-original")
+                ?: img?.attr("data-lazy-src")
+                ?: img?.attr("srcset")?.split(" ")?.firstOrNull()
+                ?: img?.attr("src")
+        )
+
+        return if (href.contains("/film/")) {
+            newMovieSearchResponse(title, href, TvType.Movie) {
+                this.posterUrl = poster
+            }
+        } else {
+            newTvSeriesSearchResponse(title, href, TvType.TvSeries) {
+                this.posterUrl = poster
+            }
+        }
+    }
+
     // ================= LOAD =================
 
     override suspend fun load(url: String): LoadResponse? {
+
         val document = app.get(url).document
 
-        val title = document.selectFirst("h1, h5")?.text() ?: return null
-        val poster = fixUrlNull(document.selectFirst("img")?.attr("src"))
-        val plot = document.selectFirst("p")?.text()
+        val title = document.selectFirst("h1, h5")?.text()?.trim() ?: return null
+
+        val poster = fixUrlNull(
+            document.selectFirst("img")?.attr("data-src")
+                ?: document.selectFirst("img")?.attr("src")
+        )
+
+        val plot = document.selectFirst("div.summary p, p")?.text()?.trim()
+
+        val year = Regex("(19|20)\\d{2}")
+            .find(document.text())
+            ?.value
+            ?.toIntOrNull()
+
+        val rating = Regex("""(\d\.\d)""")
+            .find(document.text())
+            ?.value
+
+        val tags = document.select("a[href*='tur'], a[href*='genre']")
+            .map { it.text() }
+            .distinct()
+
+        val duration = Regex("""(\d+)\s*dak""")
+            .find(document.text())
+            ?.groupValues?.getOrNull(1)
+            ?.toIntOrNull()
 
         return if (url.contains("/dizi/")) {
 
-            val episodes = document.select("a[href*='/bolum/']").map {
-                val epName = it.text()
+            val episodes = document.select("a[href*='/bolum/']").mapNotNull {
+
                 val epUrl = fixUrl(it.attr("href"))
 
+                val epText = it.text()
+
+                val season = Regex("""(\d+)\.\s*Sezon""")
+                    .find(epText)
+                    ?.groupValues?.getOrNull(1)
+                    ?.toIntOrNull()
+
+                val episode = Regex("""(\d+)\.\s*Böl""")
+                    .find(epText)
+                    ?.groupValues?.getOrNull(1)
+                    ?.toIntOrNull()
+
                 newEpisode(epUrl) {
-                    this.name = epName
+                    this.name = epText
+                    this.season = season
+                    this.episode = episode
                 }
             }
 
             newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodes) {
                 this.posterUrl = poster
                 this.plot = plot
+                this.year = year
+                this.tags = tags
+                this.duration = duration
+                this.score = Score.from10(rating)
             }
 
         } else {
@@ -102,6 +154,10 @@ class DiziPal : MainAPI() {
             newMovieLoadResponse(title, url, TvType.Movie, url) {
                 this.posterUrl = poster
                 this.plot = plot
+                this.year = year
+                this.tags = tags
+                this.duration = duration
+                this.score = Score.from10(rating)
             }
         }
     }
@@ -123,7 +179,7 @@ class DiziPal : MainAPI() {
 
         val iframeUrl = fixUrl(iframeRaw)
 
-        val iframeResponse = app.get(
+        val response = app.get(
             iframeUrl,
             referer = mainUrl,
             headers = mapOf(
@@ -132,7 +188,7 @@ class DiziPal : MainAPI() {
             )
         )
 
-        var body = iframeResponse.text
+        val body = response.text
 
         // 1️⃣ Direkt m3u8
         Regex("""https?:\/\/[^"' ]+\.m3u8[^"' ]*""")
@@ -151,7 +207,7 @@ class DiziPal : MainAPI() {
                 return true
             }
 
-        // 2️⃣ JWPlayer file
+        // 2️⃣ JWPlayer file:
         Regex("""file\s*:\s*["']([^"']+)""")
             .find(body)
             ?.groupValues?.getOrNull(1)
@@ -167,7 +223,7 @@ class DiziPal : MainAPI() {
                 return true
             }
 
-        // 3️⃣ Base64 decode denemesi
+        // 3️⃣ Base64 decode
         Regex("""["']([A-Za-z0-9+/=]{100,})["']""")
             .findAll(body)
             .forEach { match ->
