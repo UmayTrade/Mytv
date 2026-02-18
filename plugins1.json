@@ -1,0 +1,82 @@
+[
+  {
+    "name": "4KFilmIzlesene",
+    "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/4KFilmIzlesene.cs3",
+    "description": "En yeni ve sorunsuz ⚡ Full HD Film izle! 4K ve 1080p farkıyla.",
+    "language": "tr",
+    "version": 6,
+    "tvTypes": ["Movie"],
+    "authors": ["nikyokki"],
+    "iconUrl": "https://www.google.com/s2/favicons?domain=www.4kfilmizlesene.org&sz=64"
+  },
+  {
+    "name": "BelgeselX",
+    "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/BelgeselX.cs3",
+    "description": "En yeni belgeseller, Türkçe altyazılı veya dublaj 1080p.",
+    "language": "tr",
+    "version": 11,
+    "tvTypes": ["Documentary"],
+    "authors": ["keyiflerolsun", "nikyokki"],
+    "iconUrl": "https://www.google.com/s2/favicons?domain=belgeselx.com&sz=64"
+  },
+  {
+    "name": "DiziBox",
+    "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/DiziBox.cs3",
+    "description": "Güncel dizi ve film arşivi.",
+    "language": "tr",
+    "version": 6,
+    "tvTypes": ["Movie", "TvSeries"],
+    "authors": ["nikyokki"],
+    "iconUrl": "https://www.google.com/s2/favicons?domain=asyawatch.com&sz=64"
+  },
+  {
+    "name": "DiziGom",
+    "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/DiziGom.cs3",
+    "description": "Türkçe altyazılı yabancı, Kore ve Netflix dizileri.",
+    "language": "tr",
+    "version": 6,
+    "tvTypes": ["Movie", "TvSeries"],
+    "authors": ["keyiflerolsun", "nikyokki"],
+    "iconUrl": "https://www.google.com/s2/favicons?domain=dizigom1.co&sz=64"
+  },
+  {
+    "name": "DiziPalOrj",
+    "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/DiziPalOrj.cs3",
+    "description": "En yeni dizileri güvenli ve hızlı şekilde sunar.",
+    "language": "tr",
+    "version": 10,
+    "tvTypes": ["TvSeries"],
+    "authors": ["keyiflerolsun", "nikyokki"],
+    "iconUrl": "https://www.google.com/s2/favicons?domain=dizipal683.com&sz=64"
+  },
+  {
+    "name": "FilmMakinesi",
+    "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/FilmMakinesi.cs3",
+    "description": "HD film izleme sitesi, en güncel kaynaklar.",
+    "language": "tr",
+    "version": 25,
+    "tvTypes": ["TvSeries", "Movie"],
+    "authors": ["keyiflerolsun", "nikyokki"],
+    "iconUrl": "https://filmmakinesi.film/favicon.ico"
+  },
+  {
+    "name": "Streamed",
+    "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/Streamed.cs3",
+    "description": "Uluslararası canlı maç yayınları.",
+    "language": "tr",
+    "version": 11,
+    "tvTypes": ["Live"],
+    "authors": ["kraptor", "byAyzen"],
+    "iconUrl": "https://www.google.com/s2/favicons?domain=www.filmizleilk.com&sz=64"
+  },
+  {
+    "name": "TVGarden",
+    "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/TVGarden.cs3",
+    "description": "Canlı TV yayınları.",
+    "language": "tr",
+    "version": 25,
+    "tvTypes": ["Live"],
+    "authors": ["keyiflerolsun", "nikyokki"],
+    "iconUrl": "https://avatars.githubusercontent.com/u/168250776?v=4"
+  }
+]
