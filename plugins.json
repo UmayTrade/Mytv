@@ -18,7 +18,7 @@
         "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/UmayCanli.cs3",
         "name": "UmayCanli"
     },
-        {
+    {
         "iconUrl": "https://www.google.com/s2/favicons?domain=belgeselx.com&sz=%size%",
         "apiVersion": 1,
         "repositoryUrl": "https://github.com/UmayTrade/Mytv",
@@ -37,4 +37,4 @@
         "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/BelgeselX.cs3",
         "name": "BelgeselX"
     },
-   ]
+]
