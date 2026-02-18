@@ -6,6 +6,7 @@ import com.lagradost.cloudstream3.utils.*
 import com.lagradost.cloudstream3.utils.AppUtils.parseJson
 import com.lagradost.cloudstream3.utils.AppUtils.toJson
 import java.io.InputStream
+import java.io.ByteArrayInputStream
 
 class NeonSpor : MainAPI() {
     override var mainUrl          = "https://raw.githubusercontent.com/UmayTrade/extensions/refs/heads/master/umaylist.m3u"
@@ -20,18 +21,17 @@ class NeonSpor : MainAPI() {
         val rawText = app.get(mainUrl).text
         val kanallar = IptvPlaylistParser().parseM3U(rawText)
         
-        // Liste boşsa boş response dön, çökme
         if (kanallar.items.isEmpty()) return newHomePageResponse(emptyList(), false)
 
         return newHomePageResponse(
             kanallar.items.groupBy { it.attributes["group-title"] }.map { group ->
                 val title = group.key ?: "Genel"
                 val show  = group.value.map { kanal ->
-                    val streamurl   = kanal.url.toString()
-                    val channelname = kanal.title.toString()
-                    val posterurl   = kanal.attributes["tvg-logo"].toString()
-                    val chGroup     = kanal.attributes["group-title"].toString()
-                    val nation      = kanal.attributes["tvg-country"].toString()
+                    val streamurl   = kanal.url ?: ""
+                    val channelname = kanal.title ?: "İsimsiz"
+                    val posterurl   = kanal.attributes["tvg-logo"] ?: ""
+                    val chGroup     = kanal.attributes["group-title"] ?: ""
+                    val nation      = kanal.attributes["tvg-country"] ?: ""
 
                     newLiveSearchResponse(
                         channelname,
@@ -50,14 +50,12 @@ class NeonSpor : MainAPI() {
 
     override suspend fun search(query: String): List<SearchResponse> {
         val kanallar = IptvPlaylistParser().parseM3U(app.get(mainUrl).text)
-        if (kanallar.items.isEmpty()) return emptyList()
-
-        return kanallar.items.filter { it.title.toString().lowercase().contains(query.lowercase()) }.map { kanal ->
-            val streamurl   = kanal.url.toString()
-            val channelname = kanal.title.toString()
-            val posterurl   = kanal.attributes["tvg-logo"].toString()
-            val chGroup     = kanal.attributes["group-title"].toString()
-            val nation      = kanal.attributes["tvg-country"].toString()
+        return kanallar.items.filter { it.title?.lowercase()?.contains(query.lowercase()) == true }.map { kanal ->
+            val streamurl   = kanal.url ?: ""
+            val channelname = kanal.title ?: ""
+            val posterurl   = kanal.attributes["tvg-logo"] ?: ""
+            val chGroup     = kanal.attributes["group-title"] ?: ""
+            val nation      = kanal.attributes["tvg-country"] ?: ""
 
             newLiveSearchResponse(
                 channelname,
@@ -74,28 +72,22 @@ class NeonSpor : MainAPI() {
 
     override suspend fun load(url: String): LoadResponse {
         val loadData = fetchDataFromUrlOrJson(url)
-        val nation: String = if (loadData.group == "NSFW") {
-            "⚠️🔞🔞🔞 » ${loadData.group} | ${loadData.nation} « 🔞🔞🔞⚠️"
-        } else {
-            "» ${loadData.group} | ${loadData.nation} «"
-        }
-    
         val plot = "Açılmayan kanallar için VPN gerekebilir."
         val kanallar = IptvPlaylistParser().parseM3U(app.get(mainUrl).text)
         val recommendations = mutableListOf<LiveSearchResponse>()
     
         for (kanal in kanallar.items) {
-            if (kanal.attributes["group-title"].toString() == loadData.group) {
-                val rcChannelName = kanal.title.toString()
+            if (kanal.attributes["group-title"] == loadData.group) {
+                val rcChannelName = kanal.title ?: continue
                 if (rcChannelName == loadData.title) continue
 
                 recommendations.add(newLiveSearchResponse(
                     rcChannelName,
-                    LoadData(kanal.url.toString(), rcChannelName, kanal.attributes["tvg-logo"].toString(), kanal.attributes["group-title"].toString(), kanal.attributes["tvg-country"].toString()).toJson(),
+                    LoadData(kanal.url ?: "", rcChannelName, kanal.attributes["tvg-logo"] ?: "", kanal.attributes["group-title"] ?: "", kanal.attributes["tvg-country"] ?: "").toJson(),
                     type = TvType.Live
                 ) {
-                    this.posterUrl = kanal.attributes["tvg-logo"].toString()
-                    this.lang = kanal.attributes["tvg-country"].toString()
+                    this.posterUrl = kanal.attributes["tvg-logo"]
+                    this.lang = kanal.attributes["tvg-country"]
                 })
             }
         }
@@ -111,8 +103,6 @@ class NeonSpor : MainAPI() {
     override suspend fun loadLinks(data: String, isCasting: Boolean, subtitleCallback: (SubtitleFile) -> Unit, callback: (ExtractorLink) -> Unit): Boolean {
         val loadData = fetchDataFromUrlOrJson(data)
         val kanallar = IptvPlaylistParser().parseM3U(app.get(mainUrl).text)
-        
-        // first yerine firstOrNull kullanarak çökme engellendi
         val kanal = kanallar.items.firstOrNull { it.url == loadData.url } ?: return false
 
         callback.invoke(
@@ -133,76 +123,79 @@ class NeonSpor : MainAPI() {
     data class LoadData(val url: String, val title: String, val poster: String, val group: String, val nation: String)
 
     private suspend fun fetchDataFromUrlOrJson(data: String): LoadData {
-        if (data.startsWith("{")) {
-            return parseJson<LoadData>(data)
+        return if (data.startsWith("{")) {
+            parseJson<LoadData>(data)
         } else {
             val kanallar = IptvPlaylistParser().parseM3U(app.get(mainUrl).text)
-            // Güvenli arama
-            val kanal = kanallar.items.firstOrNull { it.url == data } 
-                ?: return LoadData(data, "Unknown", "", "", "")
-
-            return LoadData(
-                kanal.url.toString(),
-                kanal.title.toString(),
-                kanal.attributes["tvg-logo"].toString(),
-                kanal.attributes["group-title"].toString(),
-                kanal.attributes["tvg-country"].toString()
+            val kanal = kanallar.items.firstOrNull { it.url == data }
+            LoadData(
+                kanal?.url ?: data,
+                kanal?.title ?: "Unknown",
+                kanal?.attributes?.get("tvg-logo") ?: "",
+                kanal?.attributes?.get("group-title") ?: "",
+                kanal?.attributes?.get("tvg-country") ?: ""
             )
         }
     }
 }
 
-// IptvPlaylistParser sınıfındaki düzeltme:
+// --- YARDIMCI MODELLER ---
+
+data class Playlist(val items: List<PlaylistItem> = emptyList())
+
+data class PlaylistItem(
+    val title: String? = null,
+    val attributes: Map<String, String> = emptyMap(),
+    val headers: Map<String, String> = emptyMap(),
+    val url: String? = null,
+    val userAgent: String? = null
+)
+
+// --- PARSER SINIFI ---
+
 class IptvPlaylistParser {
-    // ... (Diğer metodlar aynı)
+    companion object {
+        const val EXT_M3U     = "#EXTM3U"
+        const val EXT_INF     = "#EXTINF"
+        const val EXT_VLC_OPT = "#EXTVLCOPT"
+    }
+
+    fun parseM3U(content: String): Playlist {
+        return parseM3U(content.byteInputStream())
+    }
 
     fun parseM3U(input: InputStream): Playlist {
         val reader = input.bufferedReader()
         val firstLine = reader.readLine()
-        if (firstLine == null || !firstLine.isExtendedM3u()) {
-            return Playlist(emptyList()) // Hata atmak yerine boş liste dönmek daha güvenli
+        if (firstLine == null || !firstLine.startsWith(EXT_M3U)) {
+            return Playlist(emptyList())
         }
 
-        val playlistItems: MutableList<PlaylistItem> = mutableListOf()
-        var currentIndex = 0
+        val playlistItems = mutableListOf<PlaylistItem>()
+        var currentItem: PlaylistItem? = null
         var line: String? = reader.readLine()
 
         while (line != null) {
-            if (line.isNotEmpty()) {
-                if (line.startsWith(EXT_INF)) {
-                    val title = line.getTitle()
-                    val attributes = line.getAttributes()
-                    playlistItems.add(PlaylistItem(title, attributes))
-                } else if (line.startsWith(EXT_VLC_OPT)) {
-                    // Liste boş değilse işlem yap
-                    if (playlistItems.isNotEmpty()) {
-                        val item = playlistItems[currentIndex]
-                        val userAgent = item.userAgent ?: line.getTagValue("http-user-agent")
-                        val referrer = line.getTagValue("http-referrer")
-                        val headers = mutableMapOf<String, String>()
-                        if (userAgent != null) headers["user-agent"] = userAgent
-                        if (referrer != null) headers["referrer"] = referrer
-
-                        playlistItems[currentIndex] = item.copy(
-                            userAgent = userAgent,
-                            headers = headers
-                        )
+            val trimmedLine = line.trim()
+            if (trimmedLine.isNotEmpty()) {
+                if (trimmedLine.startsWith(EXT_INF)) {
+                    val title = trimmedLine.split(",").lastOrNull()?.replace("\"", "")?.trim()
+                    val attributes = getAttributes(trimmedLine)
+                    currentItem = PlaylistItem(title = title, attributes = attributes)
+                } else if (trimmedLine.startsWith(EXT_VLC_OPT)) {
+                    currentItem?.let {
+                        val userAgent = getTagValue(trimmedLine, "http-user-agent") ?: it.userAgent
+                        val referrer = getTagValue(trimmedLine, "http-referrer")
+                        val newHeaders = it.headers.toMutableMap()
+                        userAgent?.let { ua -> newHeaders["user-agent"] = ua }
+                        referrer?.let { ref -> newHeaders["referrer"] = ref }
+                        currentItem = it.copy(userAgent = userAgent, headers = newHeaders)
                     }
-                } else if (!line.startsWith("#")) {
-                    // URL Satırı
-                    if (playlistItems.isNotEmpty()) {
-                        val item = playlistItems[currentIndex]
-                        val url = line.getUrl()
-                        val userAgent = line.getUrlParameter("user-agent")
-                        val referrer = line.getUrlParameter("referer")
-                        val urlHeaders = if (referrer != null) { item.headers + mapOf("referrer" to referrer) } else item.headers
-
-                        playlistItems[currentIndex] = item.copy(
-                            url = url,
-                            headers = item.headers + urlHeaders,
-                            userAgent = userAgent ?: item.userAgent
-                        )
-                        currentIndex++
+                } else if (!trimmedLine.startsWith("#")) {
+                    currentItem?.let {
+                        val url = trimmedLine.split("|").firstOrNull()?.trim()
+                        playlistItems.add(it.copy(url = url))
+                        currentItem = null // Reset for next item
                     }
                 }
             }
@@ -210,5 +203,18 @@ class IptvPlaylistParser {
         }
         return Playlist(playlistItems)
     }
-    // ... (Yardımcı extension metodları aynı kalabilir)
+
+    private fun getAttributes(line: String): Map<String, String> {
+        val attributes = mutableMapOf<String, String>()
+        val regex = Regex("([\\w-]+)=\"([^\"]*)\"")
+        regex.findAll(line).forEach { match ->
+            attributes[match.groupValues[1]] = match.groupValues[2]
+        }
+        return attributes
+    }
+
+    private fun getTagValue(line: String, key: String): String? {
+        val regex = Regex("$key=(.*)", RegexOption.IGNORE_CASE)
+        return regex.find(line)?.groups?.get(1)?.value?.replace("\"", "")?.trim()
+    }
 }
