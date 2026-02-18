@@ -16,11 +16,12 @@ class DiziPal : MainAPI() {
         TvType.Movie
     )
 
+    // ---------------- SEARCH ----------------
+
     override suspend fun search(query: String): List<SearchResponse> {
         val url = "$mainUrl/?s=$query"
-        val html = RequestHelper.get(url, mainUrl) ?: return emptyList()
 
-        val document = Jsoup.parse(html)
+        val document = app.get(url).document
 
         return document.select("div.post-item").mapNotNull {
             val title = it.selectFirst("h3")?.text() ?: return@mapNotNull null
@@ -33,17 +34,34 @@ class DiziPal : MainAPI() {
         }
     }
 
+    // ---------------- LOAD ----------------
+
     override suspend fun load(url: String): LoadResponse? {
-        val html = RequestHelper.get(url, mainUrl) ?: return null
-        val document = Jsoup.parse(html)
+        val document = app.get(url).document
 
         val title = document.selectFirst("h1")?.text() ?: return null
         val poster = document.selectFirst("img")?.attr("src")
 
-        return newTvSeriesLoadResponse(title, url, TvType.TvSeries) {
+        // Episode list boş olsa bile vermek zorundayız
+        val episodes = mutableListOf<Episode>()
+
+        document.select("div.episode-item a").forEach {
+            val epName = it.text()
+            val epLink = it.attr("href")
+
+            episodes.add(
+                newEpisode(epLink) {
+                    this.name = epName
+                }
+            )
+        }
+
+        return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodes) {
             this.posterUrl = poster
         }
     }
+
+    // ---------------- LINKS ----------------
 
     override suspend fun loadLinks(
         data: String,
@@ -52,19 +70,18 @@ class DiziPal : MainAPI() {
         callback: (ExtractorLink) -> Unit
     ): Boolean {
 
-        val html = RequestHelper.get(data, mainUrl) ?: return false
-        val document = Jsoup.parse(html)
+        val document = app.get(data).document
 
         val iframe = document.selectFirst("iframe")?.attr("src") ?: return false
 
         callback.invoke(
-            ExtractorLink(
-                name,
-                name,
-                iframe,
-                data,
-                Qualities.Unknown.value,
-                iframe.contains(".m3u8")
+            newExtractorLink(
+                source = name,
+                name = name,
+                url = iframe,
+                referer = data,
+                quality = Qualities.Unknown.value,
+                isM3u8 = iframe.contains(".m3u8")
             )
         )
 
