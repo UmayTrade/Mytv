@@ -4,8 +4,6 @@ import CryptoJS
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.lagradost.cloudstream3.*
-import com.lagradost.cloudstream3.LoadResponse.Companion.addActors
-import com.lagradost.cloudstream3.LoadResponse.Companion.addTrailer
 import com.lagradost.cloudstream3.utils.*
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
@@ -18,34 +16,22 @@ class DiziMag : MainAPI() {
     override val hasMainPage = true
     override var lang = "tr"
     override val hasQuickSearch = true
-    override val hasChromecastSupport = true
-    override val hasDownloadSupport = true
     override val supportedTypes = setOf(TvType.TvSeries, TvType.Movie)
-
-    override var sequentialMainPage = true
-    override var sequentialMainPageDelay = 200L
-    override var sequentialMainPageScrollDelay = 200L
 
     override val mainPage = mainPageOf(
         "$mainUrl/dizi/tur/aile" to "Aile",
         "$mainUrl/dizi/tur/aksiyon-macera" to "Aksiyon-Macera",
-        "$mainUrl/dizi/tur/animasyon" to "Animasyon",
-        "$mainUrl/dizi/tur/belgesel" to "Belgesel",
-        "$mainUrl/dizi/tur/bilim-kurgu-fantazi" to "Bilim Kurgu",
         "$mainUrl/dizi/tur/dram" to "Dram",
-        "$mainUrl/dizi/tur/gizem" to "Gizem",
-        "$mainUrl/dizi/tur/komedi" to "Komedi",
-        "$mainUrl/dizi/tur/savas-politik" to "Savaş Politik",
-        "$mainUrl/dizi/tur/suc" to "Suç"
+        "$mainUrl/dizi/tur/komedi" to "Komedi"
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
         val doc = app.get("${request.data}/$page").document
-        val items = doc.select("div.poster-long").mapNotNull { it.toSearchResult() }
-        return newHomePageResponse(request.name, items)
+        val list = doc.select("div.poster-long").mapNotNull { it.toSearch() }
+        return newHomePageResponse(request.name, list)
     }
 
-    private fun Element.toSearchResult(): SearchResponse? {
+    private fun Element.toSearch(): SearchResponse? {
         val title = selectFirst("h2")?.text() ?: return null
         val href = fixUrlNull(selectFirst("a")?.attr("href")) ?: return null
         val poster = fixUrlNull(selectFirst("img")?.attr("data-src"))
@@ -62,23 +48,21 @@ class DiziMag : MainAPI() {
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
-        val res = app.post(
+        val html = app.post(
             "$mainUrl/search",
             data = mapOf("query" to query),
-            headers = mapOf("X-Requested-With" to "XMLHttpRequest"),
             referer = mainUrl
         ).body.string()
 
-        val doc = Jsoup.parse(res)
-        return doc.select("ul li").mapNotNull { it.toSearchResult() }
+        val doc = Jsoup.parse(html)
+        return doc.select("ul li").mapNotNull { it.toSearch() }
     }
 
     override suspend fun load(url: String): LoadResponse? {
         val doc = app.get(url, referer = mainUrl).document
-
-        val title = doc.selectFirst("div.page-title h1 a")?.text() ?: return null
-        val poster = fixUrlNull(doc.selectFirst("div.series-profile-image img")?.attr("src"))
-        val plot = doc.selectFirst("div.series-profile-summary p")?.text()
+        val title = doc.selectFirst("h1")?.text() ?: return null
+        val poster = fixUrlNull(doc.selectFirst("img")?.attr("src"))
+        val plot = doc.selectFirst("div.series-profile-summary")?.text()
 
         if (url.contains("/dizi/")) {
 
@@ -87,9 +71,9 @@ class DiziMag : MainAPI() {
 
             doc.select("div.series-profile-episode-list").forEach { sezon ->
                 var ep = 1
-                sezon.select("li").forEach { bolum ->
-                    val epName = bolum.selectFirst("a")?.text() ?: return@forEach
-                    val epHref = fixUrlNull(bolum.selectFirst("a")?.attr("href")) ?: return@forEach
+                sezon.select("li a").forEach { a ->
+                    val epName = a.text()
+                    val epHref = fixUrlNull(a.attr("href")) ?: return@forEach
 
                     episodes.add(
                         newEpisode(epHref) {
@@ -123,15 +107,10 @@ class DiziMag : MainAPI() {
         callback: (ExtractorLink) -> Unit
     ): Boolean {
 
-        val headers = mapOf(
-            "User-Agent" to USER_AGENT,
-            "Referer" to mainUrl
-        )
-
-        val doc = app.get(data, headers = headers).document
+        val doc = app.get(data, referer = mainUrl).document
         val iframe = fixUrlNull(doc.selectFirst("iframe")?.attr("src")) ?: return false
 
-        val iframeDoc = app.get(iframe, headers = headers, referer = mainUrl).document
+        val iframeDoc = app.get(iframe, referer = mainUrl).document
 
         iframeDoc.select("script").forEach { script ->
             if (script.data().contains("bePlayer")) {
@@ -156,24 +135,15 @@ class DiziMag : MainAPI() {
                         JsonData::class.java
                     )
 
-                    jsonData.strSubtitles.forEach { sub ->
-                        subtitleCallback.invoke(
-                            SubtitleFile(
-                                sub.label,
-                                "https://epikplayer.xyz${sub.file}"
-                            )
-                        )
-                    }
-
                     callback.invoke(
                         newExtractorLink(
-                            source = name,
-                            name = name,
-                            url = jsonData.videoLocation,
+                            name,
+                            name,
+                            jsonData.videoLocation,
                             ExtractorLinkType.M3U8
                         ) {
-                            headers = mapOf("Referer" to iframe)
-                            quality = Qualities.Unknown.value
+                            this.referer = iframe
+                            this.quality = Qualities.Unknown.value
                         }
                     )
                 }
@@ -185,7 +155,7 @@ class DiziMag : MainAPI() {
     }
 }
 
-/* -------------------- MODELS -------------------- */
+/* MODELS */
 
 data class Cipher(
     val ct: String,
@@ -195,13 +165,5 @@ data class Cipher(
 
 data class JsonData(
     @JsonProperty("videoLocation")
-    val videoLocation: String,
-
-    @JsonProperty("strSubtitles")
-    val strSubtitles: List<Subtitle>
-)
-
-data class Subtitle(
-    val file: String,
-    val label: String
+    val videoLocation: String
 )
