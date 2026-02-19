@@ -12,6 +12,10 @@ class DiziMag : MainAPI() {
     override var lang = "tr"
     override val supportedTypes = setOf(TvType.TvSeries, TvType.Movie)
 
+    override var sequentialMainPage = true
+    override var sequentialMainPageDelay = 250L
+    override var sequentialMainPageScrollDelay = 250L
+
     override val mainPage = mainPageOf(
         "$mainUrl/kategori/aile" to "Aile",
         "$mainUrl/kategori/aksiyon-macera" to "Aksiyon-Macera",
@@ -26,15 +30,15 @@ class DiziMag : MainAPI() {
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
-        val doc = app.get("${request.data}/$page").document
+        val doc = app.get("${request.data}/page/$page", referer = mainUrl).document
         val list = doc.select("div.poster-long").mapNotNull { it.toSearch() }
         return newHomePageResponse(request.name, list)
     }
 
     private fun Element.toSearch(): SearchResponse? {
         val title = selectFirst("div.poster-long-subject h2")?.text() ?: return null
-        val href = fixUrlNull(selectFirst("a")?.attr("href")) ?: return null
-        val poster = fixUrlNull(selectFirst("img")?.attr("data-src"))
+        val href = fixUrlNull(selectFirst("div.poster-long-subject a")?.attr("href")) ?: return null
+        val poster = fixUrlNull(selectFirst("div.poster-long-image img")?.attr("data-src"))
 
         return if (href.contains("/dizi/")) {
             newTvSeriesSearchResponse(title, href, TvType.TvSeries) {
@@ -50,11 +54,50 @@ class DiziMag : MainAPI() {
     override suspend fun load(url: String): LoadResponse? {
         val doc = app.get(url, referer = mainUrl).document
 
-        val title = doc.selectFirst("h1")?.text() ?: return null
-        val poster = fixUrlNull(doc.selectFirst("img")?.attr("src"))
+        val title = doc.selectFirst("div.page-title h1 a")?.text()
+            ?: doc.selectFirst("h1")?.text()
+            ?: return null
 
-        return newMovieLoadResponse(title, url, TvType.Movie, url) {
-            posterUrl = poster
+        val poster = fixUrlNull(
+            doc.selectFirst("div.series-profile-image img")?.attr("src")
+        )
+
+        val plot = doc.selectFirst("div.series-profile-summary p")?.text()
+
+        if (url.contains("/dizi/")) {
+
+            val episodes = mutableListOf<Episode>()
+            var seasonNumber = 1
+
+            doc.select("div.series-profile-episode-list").forEach { seasonBlock ->
+                var episodeNumber = 1
+
+                seasonBlock.select("li").forEach { ep ->
+                    val epName = ep.selectFirst("h6.truncate a")?.text() ?: return@forEach
+                    val epHref = fixUrlNull(ep.selectFirst("a")?.attr("href")) ?: return@forEach
+
+                    episodes.add(
+                        newEpisode(epHref) {
+                            name = epName
+                            season = seasonNumber
+                            episode = episodeNumber++
+                        }
+                    )
+                }
+                seasonNumber++
+            }
+
+            return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodes) {
+                posterUrl = poster
+                this.plot = plot
+            }
+
+        } else {
+
+            return newMovieLoadResponse(title, url, TvType.Movie, url) {
+                posterUrl = poster
+                this.plot = plot
+            }
         }
     }
 
