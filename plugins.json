@@ -37,7 +37,7 @@
         "version": 11,
         "internalName": "AnimeciX",
         "description": "AnimeciX, animeleri ke\u015ffedebilece\u011finiz ve animeler hakk\u0131nda her \u015feyi \u00f6\u011frenebilece\u011finiz bir payla\u015f\u0131m platformudur.",
-        "url": "https://raw.githubusercontent.com/nikyokki/nik-cloudstream/builds/AnimeciX.cs3",
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/AnimeciX.cs3",
         "name": "AnimeciX"
     },
     {
@@ -97,10 +97,10 @@
             "Live"
         ],
         "version": 6,
-        "internalName": "CanliTV",
-        "description": "Canl\u0131 TV",
-        "url": "https://raw.githubusercontent.com/nikyokki/nik-cloudstream/builds/CanliTV.cs3",
-        "name": "CanliTV"
+        "internalName": "UmayCanli",
+        "description": "UmayCanli",
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/UmayCanli.cs3",
+        "name": "UmayCanli"
     },
     {
         "iconUrl": "https://www.google.com/s2/favicons?domain=cizgimax.online&sz=%size%",
@@ -119,7 +119,7 @@
         "version": 7,
         "internalName": "CizgiMax",
         "description": "\u00c7izgiMax ile \u00c7izgi Film izlemek art\u0131k daha kolay, donmadan full hd ve reklams\u0131z bir sitedir, i\u00e7erisinde 700 den fazla \u00e7izgi film olan, Bu site bu i\u015fi profesyonelce yap\u0131yor.",
-        "url": "https://raw.githubusercontent.com/nikyokki/nik-cloudstream/builds/CizgiMax.cs3",
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/CizgiMax.cs3",
         "name": "CizgiMax"
     },
     {
@@ -219,7 +219,7 @@
         "version": 25,
         "internalName": "Dizilla",
         "description": "Dizilla t\u00fcm yabanc\u0131 dizileri \u00fccretsiz olarak T\u00fcrk\u00e7e Dublaj ve altyaz\u0131l\u0131 se\u00e7enekleri ile 1080P kalite izleyebilece\u011finiz yeni nesil yabanc\u0131 dizi izleme siteniz.",
-        "url": "https://raw.githubusercontent.com/nikyokki/nik-cloudstream/builds/Dizilla.cs3",
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/Dizilla.cs3",
         "name": "Dizilla"
     },
     {
@@ -476,7 +476,7 @@
         "version": 11,
         "internalName": "FullHDFilmizlesene",
         "description": "Sinema zevkini evinize kadar getirdik. T\u00fcrkiye'nin lider Film sitesinde, en yeni filmleri Full HD izleyin.",
-        "url": "https://raw.githubusercontent.com/nikyokki/nik-cloudstream/builds/FullHDFilmizlesene.cs3",
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/FullHDFilmizlesene.cs3",
         "name": "FullHDFilmizlesene"
     },
     {
@@ -617,7 +617,7 @@
         "version": 6,
         "internalName": "KoreanTurk",
         "description": "G\u00fcney Kore sevdal\u0131lar\u0131n\u0131n vazge\u00e7emedi\u011fi ve T\u00fcrkiye'nin en \u00e7ok ziyaret edilen G\u00fcney Kore Portal\u0131; Koreant\u00fcrk'e ho\u015fgeldiniz!",
-        "url": "https://raw.githubusercontent.com/nikyokki/nik-cloudstream/builds/KoreanTurk.cs3",
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/KoreanTurk.cs3",
         "name": "KoreanTurk"
     },
     {
@@ -638,7 +638,7 @@
         "version": 11,
         "internalName": "KultFilmler",
         "description": "K\u00fclt Filmler \u00f6zenle en iyi filmleri derler ve iyi bir altyaz\u0131l\u0131 film izleme deneyimi sunmay\u0131 ama\u00e7lar",
-        "url": "https://raw.githubusercontent.com/nikyokki/nik-cloudstream/builds/KultFilmler.cs3",
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/KultFilmler.cs3",
         "name": "KultFilmler"
     },
     {
@@ -801,7 +801,7 @@
         "version": 13,
         "internalName": "SinemaCX",
         "description": "G\u00fcncel ve en iyi yabanc\u0131 filmleri y\u00fcksek g\u00f6r\u00fcnt\u00fc kalitesinde, T\u00fcrk\u00e7e dublaj ve altyaz\u0131 se\u00e7enekleriyle filmleri full izleyin.",
-        "url": "https://raw.githubusercontent.com/nikyokki/nik-cloudstream/builds/SinemaCX.cs3",
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/SinemaCX.cs3",
         "name": "SinemaCX"
     },
     {
@@ -899,7 +899,7 @@
         "version": 3,
         "internalName": "TurkAnime",
         "description": "T\u00fcrk Anime TV - T\u00fcrkiye'nin Online Anime izleme sitesi.",
-        "url": "https://raw.githubusercontent.com/nikyokki/nik-cloudstream/builds/TurkAnime.cs3",
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/TurkAnime.cs3",
         "name": "TurkAnime"
     },
     {
@@ -977,7 +977,7 @@
         "version": 59,
         "internalName": "WebteIzle",
         "description": "Her t\u00fcrl\u00fc filmi ister dublaj ister altyaz\u0131l\u0131, en kaliteli bir \u015fekilde izleyebilece\u011finiz ar\u015fivi en geni\u015f ger\u00e7ek film izleme siteniz.",
-        "url": "https://raw.githubusercontent.com/nikyokki/nik-cloudstream/builds/WebteIzle.cs3",
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/WebteIzle.cs3",
         "name": "WebteIzle"
     },
     {
