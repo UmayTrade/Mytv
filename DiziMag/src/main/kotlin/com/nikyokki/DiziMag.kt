@@ -3,7 +3,6 @@ package com.nikyokki
 import CryptoJS
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.lagradost.api.Log
 import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.LoadResponse.Companion.addActors
 import com.lagradost.cloudstream3.LoadResponse.Companion.addTrailer
@@ -24,8 +23,8 @@ class DiziMag : MainAPI() {
     override val supportedTypes = setOf(TvType.TvSeries, TvType.Movie)
 
     override var sequentialMainPage = true
-    override var sequentialMainPageDelay = 250L
-    override var sequentialMainPageScrollDelay = 250L
+    override var sequentialMainPageDelay = 200L
+    override var sequentialMainPageScrollDelay = 200L
 
     override val mainPage = mainPageOf(
         "$mainUrl/dizi/tur/aile" to "Aile",
@@ -37,16 +36,16 @@ class DiziMag : MainAPI() {
         "$mainUrl/dizi/tur/gizem" to "Gizem",
         "$mainUrl/dizi/tur/komedi" to "Komedi",
         "$mainUrl/dizi/tur/savas-politik" to "Savaş Politik",
-        "$mainUrl/dizi/tur/suc" to "Suç",
+        "$mainUrl/dizi/tur/suc" to "Suç"
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
         val doc = app.get("${request.data}/$page").document
-        val home = doc.select("div.poster-long").mapNotNull { it.toSearch() }
-        return newHomePageResponse(request.name, home)
+        val items = doc.select("div.poster-long").mapNotNull { it.toSearchResult() }
+        return newHomePageResponse(request.name, items)
     }
 
-    private fun Element.toSearch(): SearchResponse? {
+    private fun Element.toSearchResult(): SearchResponse? {
         val title = selectFirst("h2")?.text() ?: return null
         val href = fixUrlNull(selectFirst("a")?.attr("href")) ?: return null
         val poster = fixUrlNull(selectFirst("img")?.attr("data-src"))
@@ -66,21 +65,19 @@ class DiziMag : MainAPI() {
         val res = app.post(
             "$mainUrl/search",
             data = mapOf("query" to query),
-            headers = mapOf(
-                "X-Requested-With" to "XMLHttpRequest"
-            ),
+            headers = mapOf("X-Requested-With" to "XMLHttpRequest"),
             referer = mainUrl
         ).body.string()
 
-        val document = Jsoup.parse(res)
-        return document.select("ul li").mapNotNull { it.toSearch() }
+        val doc = Jsoup.parse(res)
+        return doc.select("ul li").mapNotNull { it.toSearchResult() }
     }
 
     override suspend fun load(url: String): LoadResponse? {
         val doc = app.get(url, referer = mainUrl).document
 
         val title = doc.selectFirst("div.page-title h1 a")?.text() ?: return null
-        val poster = fixUrlNull(doc.selectFirst("img")?.attr("src"))
+        val poster = fixUrlNull(doc.selectFirst("div.series-profile-image img")?.attr("src"))
         val plot = doc.selectFirst("div.series-profile-summary p")?.text()
 
         if (url.contains("/dizi/")) {
@@ -126,8 +123,62 @@ class DiziMag : MainAPI() {
         callback: (ExtractorLink) -> Unit
     ): Boolean {
 
-        val doc = app.get(data, referer = mainUrl).document
+        val headers = mapOf(
+            "User-Agent" to USER_AGENT,
+            "Referer" to mainUrl
+        )
+
+        val doc = app.get(data, headers = headers).document
         val iframe = fixUrlNull(doc.selectFirst("iframe")?.attr("src")) ?: return false
+
+        val iframeDoc = app.get(iframe, headers = headers, referer = mainUrl).document
+
+        iframeDoc.select("script").forEach { script ->
+            if (script.data().contains("bePlayer")) {
+
+                val pattern = Pattern.compile("bePlayer\\('(.*?)', '(.*?)'\\)")
+                val matcher = pattern.matcher(script.data())
+
+                if (matcher.find()) {
+
+                    val key = matcher.group(1)
+                    val jsonCipher = matcher.group(2)
+
+                    val cipher = ObjectMapper().readValue(
+                        jsonCipher.replace("\\/", "/"),
+                        Cipher::class.java
+                    )
+
+                    val decrypted = CryptoJS.decrypt(key, cipher.ct, cipher.iv, cipher.s)
+
+                    val jsonData = ObjectMapper().readValue(
+                        decrypted,
+                        JsonData::class.java
+                    )
+
+                    jsonData.strSubtitles.forEach { sub ->
+                        subtitleCallback.invoke(
+                            SubtitleFile(
+                                sub.label,
+                                "https://epikplayer.xyz${sub.file}"
+                            )
+                        )
+                    }
+
+                    callback.invoke(
+                        newExtractorLink(
+                            source = name,
+                            name = name,
+                            url = jsonData.videoLocation,
+                            ExtractorLinkType.M3U8
+                        ) {
+                            headers = mapOf("Referer" to iframe)
+                            quality = Qualities.Unknown.value
+                        }
+                    )
+                }
+            }
+        }
 
         loadExtractor(iframe, mainUrl, subtitleCallback, callback)
         return true
@@ -135,11 +186,6 @@ class DiziMag : MainAPI() {
 }
 
 /* -------------------- MODELS -------------------- */
-
-data class SearchResult(
-    val success: Boolean,
-    val theme: Any?
-)
 
 data class Cipher(
     val ct: String,
@@ -150,6 +196,7 @@ data class Cipher(
 data class JsonData(
     @JsonProperty("videoLocation")
     val videoLocation: String,
+
     @JsonProperty("strSubtitles")
     val strSubtitles: List<Subtitle>
 )
