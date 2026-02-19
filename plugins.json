@@ -346,7 +346,7 @@
         "apiVersion": 1,
         "repositoryUrl": "https://github.com/nikyokki/nik-cloudstream",
         "fileSize": 17217,
-        "status": 0,
+        "status": 1,
         "language": "tr",
         "authors": [
             "nikyokki"
