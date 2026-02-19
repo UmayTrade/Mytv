@@ -496,10 +496,10 @@
             "TvSeries"
         ],
         "version": 36,
-        "internalName": "HDFilmCehennemi",
+        "internalName": "JetFilmizle",
         "description": "T\u00fcrkiye'nin en h\u0131zl\u0131 hd film izleme sitesi",
-        "url": "https://raw.githubusercontent.com/nikyokki/nik-cloudstream/builds/HDFilmCehennemi.cs3",
-        "name": "HDFilmCehennemi"
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/JetFilmizle.cs3",
+        "name": "JetFilmizle"
     },
     {
         "iconUrl": "https://www.google.com/s2/favicons?domain=www.hdfilmcehennemi2.nl&sz=%size%",
