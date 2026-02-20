@@ -55,10 +55,10 @@
             "TvSeries"
         ],
         "version": 6,
-        "internalName": "AsyaWatch",
-        "description": "Asyawatch",
-        "url": "https://raw.githubusercontent.com/nikyokki/nik-cloudstream/builds/AsyaWatch.cs3",
-        "name": "AsyaWatch"
+        "internalName": "HdFilmIzle",
+        "description": "HdFilmIzle",
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/HdFilmIzle.cs3",
+        "name": "HdFilmIzle"
     },
     {
         "iconUrl": "https://www.google.com/s2/favicons?domain=belgeselx.com&sz=%size%",
