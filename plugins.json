@@ -41,26 +41,6 @@
         "name": "AnimeciX"
     },
     {
-        "iconUrl": "https://www.google.com/s2/favicons?domain=asyawatch.com&sz=%size%",
-        "apiVersion": 1,
-        "repositoryUrl": "https://github.com/nikyokki/nik-cloudstream",
-        "fileSize": 30151,
-        "status": 1,
-        "language": "tr",
-        "authors": [
-            "nikyokki"
-        ],
-        "tvTypes": [
-            "Movie",
-            "TvSeries"
-        ],
-        "version": 6,
-        "internalName": "HdFilmIzle",
-        "description": "HdFilmIzle",
-        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/HdFilmIzle.cs3",
-        "name": "HdFilmIzle"
-    },
-    {
         "iconUrl": "https://www.google.com/s2/favicons?domain=belgeselx.com&sz=%size%",
         "apiVersion": 1,
         "repositoryUrl": "https://github.com/nikyokki/nik-cloudstream",
@@ -500,26 +480,6 @@
         "description": "\u0130natBox cloudstream eklentisidir. Sevdi\u011finiz yay\u0131n platformlar\u0131n\u0131 ve canl\u0131 ma\u00e7lar\u0131 burada bulabilirsiniz.",
         "url": "https://raw.githubusercontent.com/Kraptor123/cs-kraptor/builds/InatBox.cs3",
         "name": "InatBox"
-    },
-    {
-        "iconUrl": "https://www.google.com/s2/favicons?domain=https://jetfilmizle.de&sz=%size%",
-        "apiVersion": 1,
-        "repositoryUrl": "https://github.com/nikyokki/nik-cloudstream",
-        "fileSize": 23413,
-        "status": 1,
-        "language": "tr",
-        "authors": [
-            "keyiflerolsun",
-            "nikyokki"
-        ],
-        "tvTypes": [
-            "Movie"
-        ],
-        "version": 31,
-        "internalName": "JetFilmizle",
-        "description": "Binlerce Film \u0130zleme Se\u00e7ene\u011fiyle En \u0130yi Film \u0130zleme Sitesi",
-        "url": "https://raw.githubusercontent.com/nikyokki/nik-cloudstream/builds/JetFilmizle.cs3",
-        "name": "JetFilmizle"
     },
     {
         "iconUrl": "https://www.google.com/s2/favicons?domain=www.koreanturk.com&sz=%size%",
