@@ -269,8 +269,8 @@
         "status": 1,
         "language": "tr",
         "authors": [
-            "keyiflerolsun",
-            "muratcesmecioglu"
+            "ByAyzen",
+            "Kraptor"
         ],
         "tvTypes": [
             "TvSeries",
@@ -279,7 +279,7 @@
         "version": 46,
         "internalName": "DiziPal",
         "description": "en yeni dizileri g\u00fcvenli ve h\u0131zl\u0131 \u015fekilde sunar.",
-        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/DiziPal.cs3",
+        "url": "https://raw.githubusercontent.com/Kraptor123/cs-kraptor/builds/DiziPal.cs3",
         "name": "DiziPal"
     },
     {
