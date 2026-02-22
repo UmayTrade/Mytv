@@ -1,4 +1,4 @@
-package com.UmayTrade
+9package com.UmayTrade
 
 import android.util.Log
 import com.lagradost.cloudstream3.*
@@ -9,7 +9,7 @@ import java.io.InputStream
 import java.io.ByteArrayInputStream
 
 class NeonSpor : MainAPI() {
-    override var mainUrl          = "https://github.com"
+    override var mainUrl          = "https://raw.githubusercontent.com/UmayTrade/extensions/refs/heads/master/umaylist.m3u"
     override var name             = "UmayCanli"
     override val hasMainPage      = true
     override var lang             = "tr"
