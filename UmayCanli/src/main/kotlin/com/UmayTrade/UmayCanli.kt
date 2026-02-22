@@ -1,4 +1,4 @@
-9package com.UmayTrade
+package com.UmayTrade
 
 import android.util.Log
 import com.lagradost.cloudstream3.*
