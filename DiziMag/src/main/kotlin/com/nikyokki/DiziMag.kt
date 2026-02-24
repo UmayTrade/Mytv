@@ -7,6 +7,7 @@ import com.lagradost.cloudstream3.LoadResponse.Companion.addActors
 import com.lagradost.cloudstream3.LoadResponse.Companion.addTrailer
 import com.lagradost.cloudstream3.utils.*
 import com.lagradost.cloudstream3.utils.AppUtils.parseJson
+import com.lagradost.cloudstream3.network.CloudflareKiller
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import java.util.Base64
@@ -16,7 +17,6 @@ import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
 class DiziMag : MainAPI() {
-    // BOŞLUKSUZ!
     override var mainUrl = "https://dizimag.eu"
     override var name = "DiziMag"
     override val hasMainPage = true
@@ -26,10 +26,12 @@ class DiziMag : MainAPI() {
     override val hasDownloadSupport = true
     override val supportedTypes = setOf(TvType.TvSeries, TvType.Movie)
 
-    // Cloudflare için daha uzun bekleme
     override var sequentialMainPage = true
-    override var sequentialMainPageDelay = 1200L
-    override var sequentialMainPageScrollDelay = 1200L
+    override var sequentialMainPageDelay = 800L
+    override var sequentialMainPageScrollDelay = 800L
+
+    // Cloudflare bypass için interceptor
+    private val cloudflareKiller = CloudflareKiller()
 
     private val userAgents = listOf(
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -50,8 +52,19 @@ class DiziMag : MainAPI() {
             "Sec-Fetch-Mode" to "navigate",
             "Sec-Fetch-Site" to "none",
             "Sec-Fetch-User" to "?1",
-            "Cache-Control" to "no-cache",
-            "Pragma" to "no-cache"
+            "Cache-Control" to "no-cache"
+        )
+    }
+
+    // Cloudflare bypass ile istek yapma
+    private suspend fun makeRequest(url: String, referer: String? = null): khttp.responses.Response {
+        val headers = getHeaders().toMutableMap()
+        referer?.let { headers["Referer"] = it }
+        
+        return cloudflareKiller.request(
+            url = url,
+            headers = headers,
+            timeout = 30
         )
     }
 
@@ -87,87 +100,69 @@ class DiziMag : MainAPI() {
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
         val baseUrl = request.data.trim()
         
-        // URL oluşturma
         val url = when {
             page == 1 -> baseUrl
             baseUrl.contains("?") -> "$baseUrl&page=$page"
             else -> "$baseUrl/$page"
         }
         
-        Log.d("DiziMag", "Fetching URL: $url")
+        Log.d("DiziMag", "Fetching: $url")
 
-        try {
-            val response = app.get(
-                url, 
-                headers = getHeaders(), 
-                referer = "$mainUrl/",
-                timeout = 30  // Timeout artır
-            )
+        return try {
+            // Cloudflare bypass ile istek
+            val response = makeRequest(url, "$mainUrl/")
             
-            Log.d("DiziMag", "Response code: ${response.code}")
+            Log.d("DiziMag", "Response: ${response.statusCode}")
             
-            if (response.code == 403) {
-                throw ErrorLoadingException("Cloudflare 403 - Engel")
-            }
-            if (response.code == 503) {
-                throw ErrorLoadingException("Cloudflare 503 - Service Unavailable")
-            }
-            if (!response.isSuccessful) {
-                throw ErrorLoadingException("HTTP ${response.code}")
+            if (response.statusCode != 200) {
+                throw ErrorLoadingException("HTTP ${response.statusCode}")
             }
 
-            val document = response.document
+            val document = Jsoup.parse(response.text)
             
-            // Ana seçici
             var items = document.select("div.poster-long")
-            Log.d("DiziMag", "Found ${items.size} items with 'div.poster-long'")
+            Log.d("DiziMag", "Found ${items.size} items")
             
-            // Boşsa alternatif dene
             if (items.isEmpty()) {
-                items = document.select("div.poster, .movie-item, .series-item, .item")
-                Log.d("DiziMag", "Alt selector found ${items.size} items")
-            }
-            
-            // Hala boşsa tüm HTML'i logla (debug için)
-            if (items.isEmpty()) {
-                Log.e("DiziMag", "HTML Preview: ${document.html().take(500)}")
+                items = document.select("div.poster, .movie-item, .series-item")
+                Log.d("DiziMag", "Alt found ${items.size}")
             }
 
             val home = items.mapNotNull { it.toSearchResult() }
             
-            return newHomePageResponse(
-                request.name, 
-                home, 
-                hasNext = home.isNotEmpty()
-            )
+            newHomePageResponse(request.name, home, hasNext = home.isNotEmpty())
             
         } catch (e: Exception) {
-            Log.e("DiziMag", "Error loading main page: ${e.message}")
-            throw e
+            Log.e("DiziMag", "Error: ${e.message}")
+            // Cloudflare başarısız olursa normal app.get dene
+            fallbackMainPage(page, request)
         }
     }
 
-    private fun Element.toSearchResult(): SearchResponse? {
-        // Esnek başlık seçimi
-        val title = this.selectFirst("h2, h3, .title, .name, [class*='title']")?.text()?.trim() 
-            ?: return null
+    // Yedek normal istek
+    private suspend fun fallbackMainPage(page: Int, request: MainPageRequest): HomePageResponse {
+        Log.d("DiziMag", "Using fallback")
         
-        val href = fixUrlNull(this.selectFirst("a")?.attr("href")) ?: return null
-
-        val posterUrl = fixUrlNull(
-            this.selectFirst("img")?.let { img ->
-                img.attr("data-src").takeIf { it.isNotBlank() }
-                    ?: img.attr("src").takeIf { it.isNotBlank() }
-                    ?: img.attr("data-original")
-            }
-        )
-
-        // Tip belirleme
-        val isTvSeries = when {
-            href.contains("/dizi/") -> true
-            href.contains("/film/") -> false
-            else -> !title.contains("film", true) || title.contains("sezon", true)
+        val baseUrl = request.data.trim()
+        val url = when {
+            page == 1 -> baseUrl
+            baseUrl.contains("?") -> "$baseUrl&page=$page"
+            else -> "$baseUrl/$page"
         }
+        
+        val response = app.get(url, headers = getHeaders(), referer = "$mainUrl/")
+        val document = response.document
+        val home = document.select("div.poster-long").mapNotNull { it.toSearchResult() }
+        
+        return newHomePageResponse(request.name, home, hasNext = home.isNotEmpty())
+    }
+
+    private fun Element.toSearchResult(): SearchResponse? {
+        val title = this.selectFirst("h2, h3, .title")?.text()?.trim() ?: return null
+        val href = fixUrlNull(this.selectFirst("a")?.attr("href")) ?: return null
+        val posterUrl = fixUrlNull(this.selectFirst("img")?.attr("data-src"))
+
+        val isTvSeries = !href.contains("/film/")
 
         return if (isTvSeries) {
             newTvSeriesSearchResponse(title, href, TvType.TvSeries) {
@@ -180,5 +175,299 @@ class DiziMag : MainAPI() {
         }
     }
 
-    // ... search ve load fonksiyonları öncekiyle aynı ...
+    override suspend fun search(query: String): List<SearchResponse> {
+        return try {
+            val searchHeaders = getHeaders().plus(mapOf(
+                "X-Requested-With" to "XMLHttpRequest",
+                "Content-Type" to "application/x-www-form-urlencoded",
+                "Accept" to "application/json, text/javascript, */*; q=0.01",
+                "Origin" to mainUrl
+            ))
+
+            val response = cloudflareKiller.request(
+                url = "$mainUrl/search",
+                method = "POST",
+                data = mapOf("query" to query),
+                headers = searchHeaders,
+                referer = "$mainUrl/"
+            )
+
+            val searchResult = parseJson<SearchResult>(response.text)
+            val html = searchResult?.theme ?: return emptyList()
+            
+            val document = Jsoup.parse(html)
+            document.select("ul li").mapNotNull { element ->
+                val href = element.selectFirst("a")?.attr("href") ?: return@mapNotNull null
+                if (href.contains("/dizi/") || href.contains("/film/")) {
+                    element.toPostSearchResult()
+                } else null
+            }
+        } catch (e: Exception) {
+            Log.e("DiziMag", "Search error: ${e.message}")
+            emptyList()
+        }
+    }
+
+    private fun Element.toPostSearchResult(): SearchResponse? {
+        val title = this.selectFirst("span, h4")?.text()?.trim() ?: return null
+        val href = fixUrlNull(this.selectFirst("a")?.attr("href")) ?: return null
+        val posterUrl = fixUrlNull(this.selectFirst("img")?.attr("data-src"))
+
+        return if (href.contains("/dizi/")) {
+            newTvSeriesSearchResponse(title, href, TvType.TvSeries) {
+                this.posterUrl = posterUrl
+            }
+        } else {
+            newMovieSearchResponse(title, href, TvType.Movie) {
+                this.posterUrl = posterUrl
+            }
+        }
+    }
+
+    override suspend fun load(url: String): LoadResponse? {
+        return try {
+            val response = cloudflareKiller.request(url, headers = getHeaders(), referer = "$mainUrl/")
+            val document = Jsoup.parse(response.text)
+            
+            parseLoadResponse(document, url)
+        } catch (e: Exception) {
+            Log.e("DiziMag", "Load error: ${e.message}")
+            // Fallback
+            val response = app.get(url, headers = getHeaders(), referer = "$mainUrl/")
+            parseLoadResponse(response.document, url)
+        }
+    }
+
+    private fun parseLoadResponse(document: Element, url: String): LoadResponse? {
+        val title = document.selectFirst("div.page-title h1 a")?.text()?.trim()
+            ?: document.selectFirst("div.page-title h1")?.text()?.trim()
+            ?: document.selectFirst("h1")?.text()?.trim()
+            ?: return null
+
+        val originalTitle = document.selectFirst("div.page-title p")?.text()?.trim() ?: ""
+        val displayTitle = if (originalTitle.isNotBlank() && !title.contains(originalTitle, true)) {
+            "$title - $originalTitle"
+        } else {
+            title
+        }
+
+        val poster = fixUrlNull(
+            document.selectFirst("div.series-profile-image img")?.attr("src")
+                ?: document.selectFirst("meta[property=og:image]")?.attr("content")
+        )
+
+        val year = document.selectFirst("h1 span")?.text()
+            ?.substringAfter("(")?.substringBefore(")")
+            ?.toIntOrNull()
+
+        val rating = document.selectFirst("span.color-imdb")?.text()?.trim()
+
+        val duration = document.selectXpath("//span[text()='Süre']/following-sibling::p")
+            .text().trim().split(" ").firstOrNull()?.toIntOrNull()
+
+        val description = document.selectFirst("div.series-profile-summary p")?.text()?.trim()
+            ?: document.selectFirst("meta[property=og:description]")?.attr("content")
+
+        val tags = document.selectFirst("div.series-profile-type")?.select("a")
+            ?.mapNotNull { it.text().trim().takeIf { t -> t.isNotBlank() } }
+
+        val trailer = document.selectFirst("div.series-profile-trailer")?.attr("data-yt")
+            ?: document.selectFirst("button[data-yt]")?.attr("data-yt")
+        
+        val trailerUrl = trailer?.let { "https://www.youtube.com/embed/$it" }
+
+        val actors = document.select("div.series-profile-cast li").mapNotNull { element ->
+            val img = fixUrlNull(element.selectFirst("img")?.attr("data-src"))
+            val name = element.selectFirst("h5.truncate")?.text()?.trim() ?: return@mapNotNull null
+            Actor(name, img)
+        }
+
+        val isTvSeries = url.contains("/dizi/") || 
+                        document.select("div.series-profile-episode-list").isNotEmpty()
+
+        return if (isTvSeries) {
+            val episodes = mutableListOf<Episode>()
+            
+            document.select("div.series-profile-episode-list").forEachIndexed { seasonIndex, seasonElement ->
+                val seasonNumber = seasonIndex + 1
+                
+                seasonElement.select("li").forEachIndexed { episodeIndex, episodeElement ->
+                    val epName = episodeElement.selectFirst("h6.truncate a")?.text()?.trim()
+                        ?: "Bölüm ${episodeIndex + 1}"
+                        
+                    val epHref = fixUrlNull(
+                        episodeElement.selectFirst("h6.truncate a")?.attr("href")
+                    ) ?: return@forEachIndexed
+
+                    episodes.add(
+                        newEpisode(epHref) {
+                            this.name = epName
+                            this.season = seasonNumber
+                            this.episode = episodeIndex + 1
+                        }
+                    )
+                }
+            }
+
+            newTvSeriesLoadResponse(displayTitle, url, TvType.TvSeries, episodes) {
+                this.posterUrl = poster
+                this.year = year
+                this.plot = description
+                this.tags = tags
+                this.score = Score.from10(rating)
+                addActors(actors)
+                trailerUrl?.let { addTrailer(it) }
+            }
+        } else {
+            newMovieLoadResponse(title, url, TvType.Movie, url) {
+                this.posterUrl = poster
+                this.year = year
+                this.plot = description
+                this.tags = tags
+                this.score = Score.from10(rating)
+                this.duration = duration
+                addActors(actors)
+                trailerUrl?.let { addTrailer(it) }
+            }
+        }
+    }
+
+    private fun decryptAES(password: String, cipherText: String, iv: String, salt: String?): String {
+        return try {
+            val key = generateKey(password, salt?.hexToBytes())
+            val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
+            val ivSpec = IvParameterSpec(iv.hexToBytes())
+            cipher.init(Cipher.DECRYPT_MODE, SecretKeySpec(key, "AES"), ivSpec)
+            
+            val encrypted = Base64.getDecoder().decode(cipherText)
+            String(cipher.doFinal(encrypted), Charsets.UTF_8)
+        } catch (e: Exception) {
+            Log.e("DiziMag", "AES error: ${e.message}")
+            throw e
+        }
+    }
+
+    private fun generateKey(password: String, salt: ByteArray?): ByteArray {
+        val md = java.security.MessageDigest.getInstance("MD5")
+        val key = md.digest(password.toByteArray(Charsets.UTF_8) + (salt ?: byteArrayOf()))
+        return key.copyOf(16)
+    }
+
+    private fun String.hexToBytes(): ByteArray {
+        val len = this.length
+        val data = ByteArray(len / 2)
+        for (i in 0 until len step 2) {
+            data[i / 2] = ((Character.digit(this[i], 16) shl 4) + 
+                          Character.digit(this[i + 1], 16)).toByte()
+        }
+        return data
+    }
+
+    override suspend fun loadLinks(
+        data: String,
+        isCasting: Boolean,
+        subtitleCallback: (SubtitleFile) -> Unit,
+        callback: (ExtractorLink) -> Unit
+    ): Boolean {
+        return try {
+            val mainPage = cloudflareKiller.request(mainUrl, headers = getHeaders())
+            val ciSession = mainPage.cookies["ci_session"] ?: ""
+
+            val headers = getHeaders().plus(mapOf(
+                "Referer" to "$mainUrl/",
+                "Cookie" to "ci_session=$ciSession"
+            ))
+
+            val response = cloudflareKiller.request(data, headers = headers, referer = "$mainUrl/")
+            val document = Jsoup.parse(response.text)
+
+            val iframeSrc = fixUrlNull(
+                document.selectFirst("div#tv-spoox2 iframe")?.attr("src")
+                    ?: document.selectFirst("iframe[src*=player]")?.attr("src")
+                    ?: document.selectFirst("iframe")?.attr("src")
+            ) ?: return false
+
+            Log.d("DiziMag", "Iframe: $iframeSrc")
+
+            val playerResponse = cloudflareKiller.request(iframeSrc, headers = headers, referer = "$mainUrl/")
+            val playerDoc = Jsoup.parse(playerResponse.text)
+
+            playerDoc.select("script").forEach { script ->
+                val scriptContent = script.data() ?: script.html()
+                
+                if (scriptContent.contains("bePlayer")) {
+                    val pattern = Pattern.compile("""bePlayer\s*\(\s*['"]([^'"]+)['"]\s*,\s*['"](\{[^}]*\})['"]\s*\)""")
+                    val matcher = pattern.matcher(scriptContent)
+                    
+                    if (matcher.find()) {
+                        val key = matcher.group(1)
+                        val jsonCipher = matcher.group(2)
+                        
+                        try {
+                            val cipherData = parseJson<CipherData>(jsonCipher.replace("\\/", "/"))
+                            val decrypted = decryptAES(key, cipherData.ct, cipherData.iv, cipherData.s)
+                            val jsonData = parseJson<PlayerData>(decrypted)
+                            
+                            jsonData.strSubtitles?.forEach { sub ->
+                                subtitleCallback.invoke(
+                                    SubtitleFile(
+                                        lang = sub.label ?: "Unknown",
+                                        url = fixUrl(sub.file)
+                                    )
+                                )
+                            }
+                            
+                            callback.invoke(
+                                newExtractorLink(
+                                    source = this.name,
+                                    name = "${this.name} ${jsonData.videoType?.uppercase() ?: "HD"}",
+                                    url = jsonData.videoLocation,
+                                    type = ExtractorLinkType.M3U8
+                                ) {
+                                    this.headers = mapOf(
+                                        "Accept" to "*/*",
+                                        "Referer" to iframeSrc
+                                    )
+                                    this.referer = iframeSrc
+                                    this.quality = Qualities.Unknown.value
+                                }
+                            )
+                            
+                            return true
+                        } catch (e: Exception) {
+                            Log.e("DiziMag", "Decrypt failed: ${e.message}")
+                        }
+                    }
+                }
+            }
+
+            loadExtractor(iframeSrc, "$mainUrl/", subtitleCallback, callback)
+        } catch (e: Exception) {
+            Log.e("DiziMag", "LoadLinks error: ${e.message}")
+            false
+        }
+    }
+
+    data class SearchResult(
+        @JsonProperty("success") val success: Boolean?,
+        @JsonProperty("theme") val theme: String?
+    )
+
+    data class CipherData(
+        @JsonProperty("ct") val ct: String,
+        @JsonProperty("iv") val iv: String,
+        @JsonProperty("s") val s: String?
+    )
+
+    data class PlayerData(
+        @JsonProperty("videoLocation") val videoLocation: String,
+        @JsonProperty("videoType") val videoType: String?,
+        @JsonProperty("strSubtitles") val strSubtitles: List<SubtitleData>?
+    )
+
+    data class SubtitleData(
+        @JsonProperty("file") val file: String,
+        @JsonProperty("label") val label: String?,
+        @JsonProperty("kind") val kind: String?
+    )
 }
