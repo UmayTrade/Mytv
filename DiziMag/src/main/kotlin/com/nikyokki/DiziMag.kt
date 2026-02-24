@@ -7,8 +7,6 @@ import com.lagradost.cloudstream3.LoadResponse.Companion.addActors
 import com.lagradost.cloudstream3.LoadResponse.Companion.addTrailer
 import com.lagradost.cloudstream3.utils.*
 import com.lagradost.cloudstream3.utils.AppUtils.parseJson
-import com.lagradost.cloudstream3.network.CloudflareKiller
-import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import java.util.Base64
 import java.util.regex.Pattern
@@ -26,12 +24,10 @@ class DiziMag : MainAPI() {
     override val hasDownloadSupport = true
     override val supportedTypes = setOf(TvType.TvSeries, TvType.Movie)
 
+    // Cloudflare bypass için sıralı istekler
     override var sequentialMainPage = true
-    override var sequentialMainPageDelay = 800L
-    override var sequentialMainPageScrollDelay = 800L
-
-    // Cloudflare bypass için interceptor
-    private val cloudflareKiller = CloudflareKiller()
+    override var sequentialMainPageDelay = 1500L  // Daha uzun bekleme
+    override var sequentialMainPageScrollDelay = 1500L
 
     private val userAgents = listOf(
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -53,18 +49,6 @@ class DiziMag : MainAPI() {
             "Sec-Fetch-Site" to "none",
             "Sec-Fetch-User" to "?1",
             "Cache-Control" to "no-cache"
-        )
-    }
-
-    // Cloudflare bypass ile istek yapma
-    private suspend fun makeRequest(url: String, referer: String? = null): khttp.responses.Response {
-        val headers = getHeaders().toMutableMap()
-        referer?.let { headers["Referer"] = it }
-        
-        return cloudflareKiller.request(
-            url = url,
-            headers = headers,
-            timeout = 30
         )
     }
 
@@ -108,51 +92,30 @@ class DiziMag : MainAPI() {
         
         Log.d("DiziMag", "Fetching: $url")
 
-        return try {
-            // Cloudflare bypass ile istek
-            val response = makeRequest(url, "$mainUrl/")
-            
-            Log.d("DiziMag", "Response: ${response.statusCode}")
-            
-            if (response.statusCode != 200) {
-                throw ErrorLoadingException("HTTP ${response.statusCode}")
-            }
-
-            val document = Jsoup.parse(response.text)
-            
-            var items = document.select("div.poster-long")
-            Log.d("DiziMag", "Found ${items.size} items")
-            
-            if (items.isEmpty()) {
-                items = document.select("div.poster, .movie-item, .series-item")
-                Log.d("DiziMag", "Alt found ${items.size}")
-            }
-
-            val home = items.mapNotNull { it.toSearchResult() }
-            
-            newHomePageResponse(request.name, home, hasNext = home.isNotEmpty())
-            
-        } catch (e: Exception) {
-            Log.e("DiziMag", "Error: ${e.message}")
-            // Cloudflare başarısız olursa normal app.get dene
-            fallbackMainPage(page, request)
-        }
-    }
-
-    // Yedek normal istek
-    private suspend fun fallbackMainPage(page: Int, request: MainPageRequest): HomePageResponse {
-        Log.d("DiziMag", "Using fallback")
+        val response = app.get(
+            url = url,
+            headers = getHeaders(),
+            referer = "$mainUrl/",
+            timeout = 60  // Uzun timeout
+        )
         
-        val baseUrl = request.data.trim()
-        val url = when {
-            page == 1 -> baseUrl
-            baseUrl.contains("?") -> "$baseUrl&page=$page"
-            else -> "$baseUrl/$page"
+        Log.d("DiziMag", "Response: ${response.code}")
+
+        if (response.code == 403 || response.code == 503) {
+            throw ErrorLoadingException("Cloudflare engeli (${response.code})")
         }
-        
-        val response = app.get(url, headers = getHeaders(), referer = "$mainUrl/")
+
         val document = response.document
-        val home = document.select("div.poster-long").mapNotNull { it.toSearchResult() }
+        
+        var items = document.select("div.poster-long")
+        Log.d("DiziMag", "Found ${items.size} items")
+        
+        if (items.isEmpty()) {
+            items = document.select("div.poster, .movie-item, .series-item")
+            Log.d("DiziMag", "Alt selector found ${items.size}")
+        }
+
+        val home = items.mapNotNull { it.toSearchResult() }
         
         return newHomePageResponse(request.name, home, hasNext = home.isNotEmpty())
     }
@@ -176,34 +139,39 @@ class DiziMag : MainAPI() {
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
+        val searchHeaders = getHeaders().plus(mapOf(
+            "X-Requested-With" to "XMLHttpRequest",
+            "Content-Type" to "application/x-www-form-urlencoded",
+            "Accept" to "application/json, text/javascript, */*; q=0.01",
+            "Origin" to mainUrl
+        ))
+
+        val response = app.post(
+            url = "$mainUrl/search",
+            data = mapOf("query" to query),
+            headers = searchHeaders,
+            referer = "$mainUrl/"
+        )
+
+        if (!response.isSuccessful) {
+            Log.e("DiziMag", "Search failed: ${response.code}")
+            return emptyList()
+        }
+
         return try {
-            val searchHeaders = getHeaders().plus(mapOf(
-                "X-Requested-With" to "XMLHttpRequest",
-                "Content-Type" to "application/x-www-form-urlencoded",
-                "Accept" to "application/json, text/javascript, */*; q=0.01",
-                "Origin" to mainUrl
-            ))
-
-            val response = cloudflareKiller.request(
-                url = "$mainUrl/search",
-                method = "POST",
-                data = mapOf("query" to query),
-                headers = searchHeaders,
-                referer = "$mainUrl/"
-            )
-
-            val searchResult = parseJson<SearchResult>(response.text)
+            val searchResult = response.parsedSafe<SearchResult>()
             val html = searchResult?.theme ?: return emptyList()
             
-            val document = Jsoup.parse(html)
-            document.select("ul li").mapNotNull { element ->
+            // Jsoup parse
+            val doc = org.jsoup.Jsoup.parse(html)
+            doc.select("ul li").mapNotNull { element ->
                 val href = element.selectFirst("a")?.attr("href") ?: return@mapNotNull null
                 if (href.contains("/dizi/") || href.contains("/film/")) {
                     element.toPostSearchResult()
                 } else null
             }
         } catch (e: Exception) {
-            Log.e("DiziMag", "Search error: ${e.message}")
+            Log.e("DiziMag", "Search parse error: ${e.message}")
             emptyList()
         }
     }
@@ -225,20 +193,15 @@ class DiziMag : MainAPI() {
     }
 
     override suspend fun load(url: String): LoadResponse? {
-        return try {
-            val response = cloudflareKiller.request(url, headers = getHeaders(), referer = "$mainUrl/")
-            val document = Jsoup.parse(response.text)
-            
-            parseLoadResponse(document, url)
-        } catch (e: Exception) {
-            Log.e("DiziMag", "Load error: ${e.message}")
-            // Fallback
-            val response = app.get(url, headers = getHeaders(), referer = "$mainUrl/")
-            parseLoadResponse(response.document, url)
-        }
-    }
+        val response = app.get(
+            url = url,
+            headers = getHeaders(),
+            referer = "$mainUrl/",
+            timeout = 60
+        )
 
-    private fun parseLoadResponse(document: Element, url: String): LoadResponse? {
+        val document = response.document
+        
         val title = document.selectFirst("div.page-title h1 a")?.text()?.trim()
             ?: document.selectFirst("div.page-title h1")?.text()?.trim()
             ?: document.selectFirst("h1")?.text()?.trim()
@@ -286,6 +249,7 @@ class DiziMag : MainAPI() {
                         document.select("div.series-profile-episode-list").isNotEmpty()
 
         return if (isTvSeries) {
+            // Dizi - bölümleri topla
             val episodes = mutableListOf<Episode>()
             
             document.select("div.series-profile-episode-list").forEachIndexed { seasonIndex, seasonElement ->
@@ -369,83 +333,84 @@ class DiziMag : MainAPI() {
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ): Boolean {
-        return try {
-            val mainPage = cloudflareKiller.request(mainUrl, headers = getHeaders())
-            val ciSession = mainPage.cookies["ci_session"] ?: ""
+        // Session cookie al
+        val mainPage = app.get(mainUrl, headers = getHeaders())
+        val ciSession = mainPage.cookies["ci_session"] ?: ""
 
-            val headers = getHeaders().plus(mapOf(
-                "Referer" to "$mainUrl/",
-                "Cookie" to "ci_session=$ciSession"
-            ))
+        val document = app.get(
+            url = data,
+            headers = getHeaders(),
+            cookies = mapOf("ci_session" to ciSession),
+            referer = "$mainUrl/"
+        ).document
 
-            val response = cloudflareKiller.request(data, headers = headers, referer = "$mainUrl/")
-            val document = Jsoup.parse(response.text)
+        val iframeSrc = fixUrlNull(
+            document.selectFirst("div#tv-spoox2 iframe")?.attr("src")
+                ?: document.selectFirst("iframe[src*=player]")?.attr("src")
+                ?: document.selectFirst("iframe")?.attr("src")
+        ) ?: run {
+            Log.e("DiziMag", "Iframe not found")
+            return false
+        }
 
-            val iframeSrc = fixUrlNull(
-                document.selectFirst("div#tv-spoox2 iframe")?.attr("src")
-                    ?: document.selectFirst("iframe[src*=player]")?.attr("src")
-                    ?: document.selectFirst("iframe")?.attr("src")
-            ) ?: return false
+        Log.d("DiziMag", "Iframe: $iframeSrc")
 
-            Log.d("DiziMag", "Iframe: $iframeSrc")
+        val playerDoc = app.get(
+            url = iframeSrc,
+            headers = getHeaders(),
+            referer = "$mainUrl/"
+        ).document
 
-            val playerResponse = cloudflareKiller.request(iframeSrc, headers = headers, referer = "$mainUrl/")
-            val playerDoc = Jsoup.parse(playerResponse.text)
-
-            playerDoc.select("script").forEach { script ->
-                val scriptContent = script.data() ?: script.html()
+        playerDoc.select("script").forEach { script ->
+            val scriptContent = script.data() ?: script.html()
+            
+            if (scriptContent.contains("bePlayer")) {
+                val pattern = Pattern.compile("""bePlayer\s*\(\s*['"]([^'"]+)['"]\s*,\s*['"](\{[^}]*\})['"]\s*\)""")
+                val matcher = pattern.matcher(scriptContent)
                 
-                if (scriptContent.contains("bePlayer")) {
-                    val pattern = Pattern.compile("""bePlayer\s*\(\s*['"]([^'"]+)['"]\s*,\s*['"](\{[^}]*\})['"]\s*\)""")
-                    val matcher = pattern.matcher(scriptContent)
+                if (matcher.find()) {
+                    val key = matcher.group(1)
+                    val jsonCipher = matcher.group(2)
                     
-                    if (matcher.find()) {
-                        val key = matcher.group(1)
-                        val jsonCipher = matcher.group(2)
+                    try {
+                        val cipherData = parseJson<CipherData>(jsonCipher.replace("\\/", "/"))
+                        val decrypted = decryptAES(key, cipherData.ct, cipherData.iv, cipherData.s)
+                        val jsonData = parseJson<PlayerData>(decrypted)
                         
-                        try {
-                            val cipherData = parseJson<CipherData>(jsonCipher.replace("\\/", "/"))
-                            val decrypted = decryptAES(key, cipherData.ct, cipherData.iv, cipherData.s)
-                            val jsonData = parseJson<PlayerData>(decrypted)
-                            
-                            jsonData.strSubtitles?.forEach { sub ->
-                                subtitleCallback.invoke(
-                                    SubtitleFile(
-                                        lang = sub.label ?: "Unknown",
-                                        url = fixUrl(sub.file)
-                                    )
+                        jsonData.strSubtitles?.forEach { sub ->
+                            subtitleCallback.invoke(
+                                SubtitleFile(
+                                    lang = sub.label ?: "Unknown",
+                                    url = fixUrl(sub.file)
                                 )
-                            }
-                            
-                            callback.invoke(
-                                newExtractorLink(
-                                    source = this.name,
-                                    name = "${this.name} ${jsonData.videoType?.uppercase() ?: "HD"}",
-                                    url = jsonData.videoLocation,
-                                    type = ExtractorLinkType.M3U8
-                                ) {
-                                    this.headers = mapOf(
-                                        "Accept" to "*/*",
-                                        "Referer" to iframeSrc
-                                    )
-                                    this.referer = iframeSrc
-                                    this.quality = Qualities.Unknown.value
-                                }
                             )
-                            
-                            return true
-                        } catch (e: Exception) {
-                            Log.e("DiziMag", "Decrypt failed: ${e.message}")
                         }
+                        
+                        callback.invoke(
+                            newExtractorLink(
+                                source = this.name,
+                                name = "${this.name} ${jsonData.videoType?.uppercase() ?: "HD"}",
+                                url = jsonData.videoLocation,
+                                type = ExtractorLinkType.M3U8
+                            ) {
+                                this.headers = mapOf(
+                                    "Accept" to "*/*",
+                                    "Referer" to iframeSrc
+                                )
+                                this.referer = iframeSrc
+                                this.quality = Qualities.Unknown.value
+                            }
+                        )
+                        
+                        return true
+                    } catch (e: Exception) {
+                        Log.e("DiziMag", "Decrypt failed: ${e.message}")
                     }
                 }
             }
-
-            loadExtractor(iframeSrc, "$mainUrl/", subtitleCallback, callback)
-        } catch (e: Exception) {
-            Log.e("DiziMag", "LoadLinks error: ${e.message}")
-            false
         }
+
+        return loadExtractor(iframeSrc, "$mainUrl/", subtitleCallback, callback)
     }
 
     data class SearchResult(
