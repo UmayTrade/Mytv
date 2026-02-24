@@ -33,10 +33,11 @@ class BelgeselX : MainAPI() {
         val title = this.selectFirst("h2.entry-title a")?.text()?.trim() ?: return null
         val hrefAttr = this.selectFirst("h2.entry-title a")?.attr("href") ?: return null
         val href = fixUrl(hrefAttr)
-        val posterUrl = fixUrlNull(this.selectFirst("img")?.attr("src"))
+        val posterUrl = this.selectFirst("img")?.attr("src")
+        val fixedPosterUrl = posterUrl?.let { fixUrl(it) }
         val quality = this.selectFirst(".quality")?.text()
         return newMovieSearchResponse(title, href, TvType.Documentary) {
-            this.posterUrl = posterUrl
+            this.posterUrl = fixedPosterUrl
             addQuality(quality)
         }
     }
