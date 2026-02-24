@@ -271,7 +271,6 @@ class DiziMag : MainAPI() {
                         document.select("div.series-profile-episode-list").isNotEmpty()
 
         return if (isTvSeries) {
-            // Dizi - Episode'ları topla
             val episodes = mutableListOf<Episode>()
             
             document.select("div.series-profile-episode-list").forEachIndexed { seasonIndex, seasonElement ->
@@ -303,11 +302,11 @@ class DiziMag : MainAPI() {
                 this.plot = description
                 this.tags = tags
                 this.score = Score.from10(rating)
-                this.actors = actors
-                this.trailerUrl = trailerUrl
+                this.duration = duration
+                addActors(actors)
+                trailerUrl?.let { addTrailer(it) }
             }
         } else {
-            // Film
             newMovieLoadResponse(title, url, TvType.Movie, url) {
                 this.posterUrl = poster
                 this.year = year
@@ -315,8 +314,8 @@ class DiziMag : MainAPI() {
                 this.tags = tags
                 this.score = Score.from10(rating)
                 this.duration = duration
-                this.actors = actors
-                this.trailerUrl = trailerUrl
+                addActors(actors)
+                trailerUrl?.let { addTrailer(it) }
             }
         }
     }
