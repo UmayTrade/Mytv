@@ -5,7 +5,6 @@ import com.lagradost.api.Log
 import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.LoadResponse.Companion.addActors
 import com.lagradost.cloudstream3.LoadResponse.Companion.addTrailer
-import com.lagradost.cloudstream3.network.WebViewResolver
 import com.lagradost.cloudstream3.utils.*
 import com.lagradost.cloudstream3.utils.AppUtils.parseJson
 import org.jsoup.nodes.Element
@@ -25,13 +24,15 @@ class DiziMag : MainAPI() {
     override val hasDownloadSupport = true
     override val supportedTypes = setOf(TvType.TvSeries, TvType.Movie)
 
+    // Cloudflare bypass için sıralı istekler ve uzun bekleme
     override var sequentialMainPage = true
-    override var sequentialMainPageDelay = 2000L
-    override var sequentialMainPageScrollDelay = 2000L
+    override var sequentialMainPageDelay = 3000L  // 3 saniye
+    override var sequentialMainPageScrollDelay = 3000L
 
     private val userAgents = listOf(
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     )
 
     private fun getHeaders(): Map<String, String> {
@@ -47,24 +48,74 @@ class DiziMag : MainAPI() {
             "Sec-Fetch-Mode" to "navigate",
             "Sec-Fetch-Site" to "none",
             "Sec-Fetch-User" to "?1",
-            "Cache-Control" to "no-cache"
+            "Cache-Control" to "no-cache",
+            "Pragma" to "no-cache"
         )
     }
 
-    // WebView kullanarak Cloudflare bypass
-    private suspend fun bypassCloudflare(url: String): String {
-        Log.d("DiziMag", "WebView bypass: $url")
+    // Cloudflare bypass için gelişmiş istek fonksiyonu
+    private suspend fun requestWithCloudflareBypass(url: String, referer: String? = null): String {
+        Log.d("DiziMag", "Requesting with bypass: $url")
         
-        // WebViewResolver - operator invoke kullan
-        val webViewResult = WebViewResolver(
-            interceptUrl = Regex(".*"),
-            timeout = 30000
-        )(
+        // İlk deneme - normal istek
+        val firstResponse = app.get(
             url = url,
-            headers = getHeaders()
+            headers = getHeaders(),
+            referer = referer ?: mainUrl,
+            timeout = 60
         )
         
-        return webViewResult?.second ?: throw ErrorLoadingException("WebView failed")
+        // Cloudflare kontrolü
+        if (firstResponse.code == 200 && !isCloudflareChallenge(firstResponse.text)) {
+            return firstResponse.text
+        }
+        
+        Log.d("DiziMag", "Cloudflare detected, trying bypass...")
+        
+        // İkinci deneme - farklı User-Agent ve daha uzun timeout
+        val secondResponse = app.get(
+            url = url,
+            headers = getHeaders().plus(mapOf(
+                "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:120.0) Gecko/20100101 Firefox/120.0",
+                "Accept" to "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                "Accept-Language" to "en-US,en;q=0.5"
+            )),
+            referer = referer ?: mainUrl,
+            timeout = 90
+        )
+        
+        if (secondResponse.code == 200 && !isCloudflareChallenge(secondResponse.text)) {
+            return secondResponse.text
+        }
+        
+        // Üçüncü deneme - cookie ile
+        val initResponse = app.get(mainUrl, headers = getHeaders(), timeout = 30)
+        val cookies = initResponse.cookies
+        
+        val thirdResponse = app.get(
+            url = url,
+            headers = getHeaders(),
+            referer = referer ?: mainUrl,
+            cookies = cookies,
+            timeout = 60
+        )
+        
+        if (thirdResponse.code == 200 && !isCloudflareChallenge(thirdResponse.text)) {
+            return thirdResponse.text
+        }
+        
+        throw ErrorLoadingException("Cloudflare bypass failed after 3 attempts")
+    }
+
+    private fun isCloudflareChallenge(html: String): Boolean {
+        return html.contains("cf-browser-verification") ||
+               html.contains("cf-im-under-attack") ||
+               html.contains("cf_chl_jschl_tk__") ||
+               html.contains("Checking your browser") ||
+               html.contains("Just a moment") ||
+               html.contains("challenge-platform") ||
+               html.contains("turnstile") ||
+               html.contains("cf_challenge")
     }
 
     override val mainPage = mainPageOf(
@@ -107,30 +158,19 @@ class DiziMag : MainAPI() {
         
         Log.d("DiziMag", "getMainPage: $url")
 
-        return try {
-            // Önce normal istek dene
-            val response = app.get(url, headers = getHeaders(), referer = "$mainUrl/", timeout = 30)
-            
-            if (response.code == 200 && !response.text.contains("cf-browser-verification")) {
-                parseMainPage(response.document, request.name)
-            } else {
-                throw ErrorLoadingException("Cloudflare detected")
-            }
-        } catch (e: Exception) {
-            Log.d("DiziMag", "Using WebView bypass: ${e.message}")
-            val html = bypassCloudflare(url)
-            val doc = org.jsoup.Jsoup.parse(html)
-            parseMainPage(doc, request.name)
-        }
+        val html = requestWithCloudflareBypass(url, "$mainUrl/")
+        val document = org.jsoup.Jsoup.parse(html)
+        
+        return parseMainPage(document, request.name)
     }
 
     private fun parseMainPage(document: org.jsoup.nodes.Document, name: String): HomePageResponse {
         var items = document.select("div.poster-long")
-        Log.d("DiziMag", "Found ${items.size} items")
+        Log.d("DiziMag", "Found ${items.size} items with 'div.poster-long'")
         
         if (items.isEmpty()) {
-            items = document.select("div.poster, .movie-item, .series-item")
-            Log.d("DiziMag", "Alt selector found ${items.size}")
+            items = document.select("div.poster, .movie-item, .series-item, .item")
+            Log.d("DiziMag", "Alt selector found ${items.size} items")
         }
 
         val home = items.mapNotNull { it.toSearchResult() }
@@ -139,9 +179,12 @@ class DiziMag : MainAPI() {
     }
 
     private fun Element.toSearchResult(): SearchResponse? {
-        val title = this.selectFirst("h2, h3, .title")?.text()?.trim() ?: return null
+        val title = this.selectFirst("h2, h3, .title, .name")?.text()?.trim() ?: return null
         val href = fixUrlNull(this.selectFirst("a")?.attr("href")) ?: return null
-        val posterUrl = fixUrlNull(this.selectFirst("img")?.attr("data-src"))
+        val posterUrl = fixUrlNull(
+            this.selectFirst("img")?.attr("data-src")
+                ?: this.selectFirst("img")?.attr("src")
+        )
 
         val isTvSeries = !href.contains("/film/")
 
@@ -165,6 +208,12 @@ class DiziMag : MainAPI() {
                 "Origin" to mainUrl
             ))
 
+            val html = requestWithCloudflareBypass(
+                url = "$mainUrl/search",
+                referer = "$mainUrl/"
+            )
+            
+            // POST yerine GET ile query parametresi deneyelim
             val response = app.post(
                 url = "$mainUrl/search",
                 data = mapOf("query" to query),
@@ -178,9 +227,9 @@ class DiziMag : MainAPI() {
             }
 
             val searchResult = response.parsedSafe<SearchResult>()
-            val html = searchResult?.theme ?: return emptyList()
+            val resultHtml = searchResult?.theme ?: return emptyList()
             
-            val doc = org.jsoup.Jsoup.parse(html)
+            val doc = org.jsoup.Jsoup.parse(resultHtml)
             doc.select("ul li").mapNotNull { element ->
                 val href = element.selectFirst("a")?.attr("href") ?: return@mapNotNull null
                 if (href.contains("/dizi/") || href.contains("/film/")) {
@@ -210,19 +259,8 @@ class DiziMag : MainAPI() {
     }
 
     override suspend fun load(url: String): LoadResponse? {
-        val document = try {
-            val response = app.get(url, headers = getHeaders(), referer = "$mainUrl/", timeout = 30)
-            
-            if (response.code == 200 && !response.text.contains("cf-browser-verification")) {
-                response.document
-            } else {
-                throw ErrorLoadingException("Cloudflare detected")
-            }
-        } catch (e: Exception) {
-            Log.d("DiziMag", "Load using WebView: $url")
-            val html = bypassCloudflare(url)
-            org.jsoup.Jsoup.parse(html)
-        }
+        val html = requestWithCloudflareBypass(url, "$mainUrl/")
+        val document = org.jsoup.Jsoup.parse(html)
         
         val title = document.selectFirst("div.page-title h1 a")?.text()?.trim()
             ?: document.selectFirst("div.page-title h1")?.text()?.trim()
@@ -356,24 +394,25 @@ class DiziMag : MainAPI() {
     ): Boolean {
         // Session cookie al
         val mainPageHtml = try {
-            bypassCloudflare(mainUrl)
+            requestWithCloudflareBypass(mainUrl, null)
         } catch (e: Exception) {
             app.get(mainUrl, headers = getHeaders()).text
         }
         
         val ciSession = Regex("""ci_session=([^;]+)""").find(mainPageHtml)?.groupValues?.get(1) ?: ""
 
-        val document = try {
+        val html = try {
+            requestWithCloudflareBypass(data, "$mainUrl/")
+        } catch (e: Exception) {
             app.get(
                 url = data,
                 headers = getHeaders(),
                 cookies = mapOf("ci_session" to ciSession),
                 referer = "$mainUrl/"
-            ).document
-        } catch (e: Exception) {
-            val html = bypassCloudflare(data)
-            org.jsoup.Jsoup.parse(html)
+            ).text
         }
+        
+        val document = org.jsoup.Jsoup.parse(html)
 
         val iframeSrc = fixUrlNull(
             document.selectFirst("div#tv-spoox2 iframe")?.attr("src")
@@ -386,12 +425,13 @@ class DiziMag : MainAPI() {
 
         Log.d("DiziMag", "Iframe: $iframeSrc")
 
-        val playerDoc = try {
-            app.get(iframeSrc, headers = getHeaders(), referer = "$mainUrl/").document
+        val playerHtml = try {
+            requestWithCloudflareBypass(iframeSrc, "$mainUrl/")
         } catch (e: Exception) {
-            val html = bypassCloudflare(iframeSrc)
-            org.jsoup.Jsoup.parse(html)
+            app.get(iframeSrc, headers = getHeaders(), referer = "$mainUrl/").text
         }
+        
+        val playerDoc = org.jsoup.Jsoup.parse(playerHtml)
 
         playerDoc.select("script").forEach { script ->
             val scriptContent = script.data() ?: script.html()
