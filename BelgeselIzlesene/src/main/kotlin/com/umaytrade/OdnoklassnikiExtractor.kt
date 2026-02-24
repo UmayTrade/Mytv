@@ -1,13 +1,18 @@
 package com.umaytrade
 
-import com.fasterxml.jackson.annotation.JsonProperty
+import com.lagradost.cloudstream3.app
+import com.lagradost.cloudstream3.utils.ExtractorApi
+import com.lagradost.cloudstream3.utils.ExtractorLink
+import com.lagradost.cloudstream3.utils.newExtractorLink
 
-data class BelgeselIzleseneMainResponse(
-    @JsonProperty("data") val data: List<BelgeselIzleseneItem>? = null
-)
+class OdnoklassnikiExtractor : ExtractorApi() {
+    override var name = "OK.ru"
+    override var mainUrl = "https://ok.ru"
+    override val requiresReferer = false
 
-data class BelgeselXItem(
-    @JsonProperty("title") val title: String? = null,
-    @JsonProperty("url") val url: String? = null,
-    @JsonProperty("poster") val poster: String? = null
-)
+    override suspend fun getUrl(url: String, referer: String?): List<ExtractorLink> {
+        val links = mutableListOf<ExtractorLink>()
+        // OK.ru için gerekli kodlar...
+        return links
+    }
+}
