@@ -55,16 +55,16 @@ class DiziMag : MainAPI() {
     private suspend fun bypassCloudflare(url: String): String {
         Log.d("DiziMag", "WebView bypass: $url")
         
-        // WebViewResolver kullan - interceptUrl ile
+        // WebViewResolver kullan - Regex tipinde interceptUrl
         val webViewResult = WebViewResolver(
-            interceptUrl = ".*",  // Tüm URL'leri intercept et
+            interceptUrl = Regex(".*"),  // Regex tipi
             timeout = 30000
-        ).resolve(
+        ).get(
             url = url,
             headers = getHeaders()
         )
         
-        return webViewResult?.html ?: throw ErrorLoadingException("WebView failed")
+        return webViewResult?.second ?: throw ErrorLoadingException("WebView failed")
     }
 
     override val mainPage = mainPageOf(
