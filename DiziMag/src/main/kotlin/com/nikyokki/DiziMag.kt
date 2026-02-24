@@ -5,16 +5,13 @@ import com.lagradost.api.Log
 import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.utils.*
 import com.lagradost.cloudstream3.utils.AppUtils.parseJson
-import com.lagradost.cloudstream3.utils.AppUtils.toJson
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
-import java.net.URI
-import java.net.URLDecoder
+import java.util.Base64
 import java.util.regex.Pattern
 import javax.crypto.Cipher
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
-import java.util.Base64
 
 class DiziMag : MainAPI() {
     override var mainUrl = "https://dizimag.eu"
@@ -55,38 +52,49 @@ class DiziMag : MainAPI() {
         )
     }
 
+    // Yeni kategori yapısı: /kategori/{tur}
     override val mainPage = mainPageOf(
-        "$mainUrl/dizi/tur/aile" to "Aile",
-        "$mainUrl/dizi/tur/aksiyon-macera" to "Aksiyon & Macera",
-        "$mainUrl/dizi/tur/animasyon" to "Animasyon",
-        "$mainUrl/dizi/tur/belgesel" to "Belgesel",
-        "$mainUrl/dizi/tur/bilim-kurgu-fantazi" to "Bilim Kurgu & Fantazi",
-        "$mainUrl/dizi/tur/dram" to "Dram",
-        "$mainUrl/dizi/tur/gizem" to "Gizem",
-        "$mainUrl/dizi/tur/komedi" to "Komedi",
-        "$mainUrl/dizi/tur/savas-politik" to "Savaş & Politik",
-        "$mainUrl/dizi/tur/suc" to "Suç",
+        // Diziler
+        "$mainUrl/kategori/aile" to "📺 Aile",
+        "$mainUrl/kategori/aksiyon-macera" to "📺 Aksiyon & Macera",
+        "$mainUrl/kategori/animasyon" to "📺 Animasyon",
+        "$mainUrl/kategori/belgesel" to "📺 Belgesel",
+        "$mainUrl/kategori/bilim-kurgu-fantazi" to "📺 Bilim Kurgu & Fantazi",
+        "$mainUrl/kategori/dram" to "📺 Dram",
+        "$mainUrl/kategori/gizem" to "📺 Gizem",
+        "$mainUrl/kategori/komedi" to "📺 Komedi",
+        "$mainUrl/kategori/savas-politik" to "📺 Savaş & Politik",
+        "$mainUrl/kategori/suc" to "📺 Suç",
         
-        "$mainUrl/film/tur/aile" to "🎬 Aile Filmleri",
-        "$mainUrl/film/tur/animasyon" to "🎬 Animasyon Filmleri",
-        "$mainUrl/film/tur/bilim-kurgu" to "🎬 Bilim Kurgu Filmleri",
-        "$mainUrl/film/tur/dram" to "🎬 Dram Filmleri",
-        "$mainUrl/film/tur/fantastik" to "🎬 Fantastik Filmleri",
-        "$mainUrl/film/tur/gerilim" to "🎬 Gerilim Filmleri",
-        "$mainUrl/film/tur/gizem" to "🎬 Gizem Filmleri",
-        "$mainUrl/film/tur/komedi" to "🎬 Komedi Filmleri",
-        "$mainUrl/film/tur/korku" to "🎬 Korku Filmleri",
-        "$mainUrl/film/tur/macera" to "🎬 Macera Filmleri",
-        "$mainUrl/film/tur/romantik" to "🎬 Romantik Filmleri",
-        "$mainUrl/film/tur/savas" to "🎬 Savaş Filmleri",
-        "$mainUrl/film/tur/suc" to "🎬 Suç Filmleri",
-        "$mainUrl/film/tur/tarih" to "🎬 Tarih Filmleri",
-        "$mainUrl/film/tur/vahsi-bati" to "🎬 Vahşi Batı Filmleri"
+        // Filmler (sayfalama için /2, /3 eklenecek)
+        "$mainUrl/kategori/aile?tur=film" to "🎬 Aile Filmleri",
+        "$mainUrl/kategori/animasyon?tur=film" to "🎬 Animasyon Filmleri",
+        "$mainUrl/kategori/bilim-kurgu?tur=film" to "🎬 Bilim Kurgu Filmleri",
+        "$mainUrl/kategori/dram?tur=film" to "🎬 Dram Filmleri",
+        "$mainUrl/kategori/fantastik?tur=film" to "🎬 Fantastik Filmleri",
+        "$mainUrl/kategori/gerilim?tur=film" to "🎬 Gerilim Filmleri",
+        "$mainUrl/kategori/gizem?tur=film" to "🎬 Gizem Filmleri",
+        "$mainUrl/kategori/komedi?tur=film" to "🎬 Komedi Filmleri",
+        "$mainUrl/kategori/korku?tur=film" to "🎬 Korku Filmleri",
+        "$mainUrl/kategori/macera?tur=film" to "🎬 Macera Filmleri",
+        "$mainUrl/kategori/romantik?tur=film" to "🎬 Romantik Filmleri",
+        "$mainUrl/kategori/savas?tur=film" to "🎬 Savaş Filmleri",
+        "$mainUrl/kategori/suc?tur=film" to "🎬 Suç Filmleri",
+        "$mainUrl/kategori/tarih?tur=film" to "🎬 Tarih Filmleri",
+        "$mainUrl/kategori/vahsi-bati?tur=film" to "🎬 Vahşi Batı Filmleri"
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
-        val url = if (page == 1) request.data else "${request.data}/$page"
+        // URL yapısını kontrol et ve sayfalama ekle
+        val baseUrl = request.data
+        val url = when {
+            baseUrl.contains("?") -> "$baseUrl&page=$page"
+            page > 1 -> "$baseUrl/$page"
+            else -> baseUrl
+        }
         
+        Log.d("DiziMag", "Loading main page: $url")
+
         val response = app.get(url, headers = getHeaders(), referer = "$mainUrl/")
         
         if (!response.isSuccessful) {
@@ -96,7 +104,11 @@ class DiziMag : MainAPI() {
         val document = response.document
         val home = document.select("div.poster-long").mapNotNull { it.toSearchResult() }
 
-        return newHomePageResponse(request.name, home, hasNext = home.isNotEmpty())
+        // Sonraki sayfa var mı kontrol et
+        val hasNext = document.select("a[rel=next], .pagination a:last-child").isNotEmpty() ||
+                      document.select("div.poster-long").size >= 20 // Varsayılan sayfa başı içerik
+
+        return newHomePageResponse(request.name, home, hasNext = hasNext)
     }
 
     private fun Element.toSearchResult(): SearchResponse? {
@@ -120,7 +132,16 @@ class DiziMag : MainAPI() {
         val score = this.selectFirst("span.rating")?.text()?.trim()
             ?: this.selectFirst("span.color-imdb")?.text()?.trim()
 
-        val isTvSeries = href.contains("/dizi/") || !href.contains("/film/")
+        // URL yapısına göre tip belirle
+        val isTvSeries = when {
+            href.contains("/dizi/") -> true
+            href.contains("/film/") -> false
+            else -> {
+                // Belirsizse poster veya başlıktan tahmin et
+                val typeText = this.selectFirst("div.poster-long-type")?.text()?.lowercase() ?: ""
+                typeText.contains("dizi") || !typeText.contains("film")
+            }
+        }
 
         return if (isTvSeries) {
             newTvSeriesSearchResponse(title, href, TvType.TvSeries) {
@@ -258,8 +279,11 @@ class DiziMag : MainAPI() {
             Actor(name, img)
         }
 
-        // Bölümleri veya film kaynağını al
-        return if (url.contains("/dizi/") || document.select("div.series-profile-episode-list").isNotEmpty()) {
+        // Tip belirleme
+        val isTvSeries = url.contains("/dizi/") || 
+                        document.select("div.series-profile-episode-list").isNotEmpty()
+
+        return if (isTvSeries) {
             loadTvSeries(document, displayTitle, url, poster, year, description, tags, rating, actors, trailerUrl)
         } else {
             loadMovie(document, title, url, poster, year, description, tags, rating, duration, actors, trailerUrl)
@@ -339,7 +363,7 @@ class DiziMag : MainAPI() {
         }
     }
 
-    // CryptoJS AES decryption için
+    // CryptoJS AES decryption
     private fun decryptAES(password: String, cipherText: String, iv: String, salt: String?): String {
         return try {
             val key = generateKey(password, salt?.hexToBytes())
@@ -356,10 +380,9 @@ class DiziMag : MainAPI() {
     }
 
     private fun generateKey(password: String, salt: ByteArray?): ByteArray {
-        // OpenSSL EVP_BytesToKey compatible key derivation
         val md = java.security.MessageDigest.getInstance("MD5")
         val key = md.digest(password.toByteArray(Charsets.UTF_8) + (salt ?: byteArrayOf()))
-        return key.copyOf(16) // 128-bit key
+        return key.copyOf(16)
     }
 
     private fun String.hexToBytes(): ByteArray {
