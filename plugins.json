@@ -40,6 +40,28 @@
         "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/AnimeciX.cs3",
         "name": "AnimeciX"
     },
+        {
+        "iconUrl": "https://www.google.com/s2/favicons?domain=animecix.net&sz=%size%",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/nikyokki/nik-cloudstream",
+        "fileSize": 23212,
+        "status": 1,
+        "language": "tr",
+        "authors": [
+            "keyiflerolsun",
+            "inatchii",
+            "JustRelaxable",
+            "nikyokki"
+        ],
+        "tvTypes": [
+            "Anime"
+        ],
+        "version": 11,
+        "internalName": "DiziMag",
+        "description": "DiziMag, animeleri ke\u015ffedebilece\u011finiz ve animeler hakk\u0131nda her \u015feyi \u00f6\u011frenebilece\u011finiz bir payla\u015f\u0131m platformudur.",
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/DiziMag.cs3",
+        "name": "DiziMag"
+    },
     {
         "iconUrl": "https://www.google.com/s2/favicons?domain=belgeselx.com&sz=%size%",
         "apiVersion": 1,
