@@ -1,0 +1,11 @@
+package com.umaytrade
+
+import com.lagradost.cloudstream3.plugins.CloudstreamPlugin
+import com.lagradost.cloudstream3.plugins.Plugin
+
+@CloudstreamPlugin
+class BelgeselIzlesenePlugin : Plugin() {
+    override fun load() {
+        registerMainAPI(BelgeselX())
+    }
+}
