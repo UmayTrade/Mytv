@@ -31,10 +31,8 @@ class BelgeselX : MainAPI() {
 
     private fun Element.toSearchResult(): SearchResponse? {
         val title = this.selectFirst("h2.entry-title a")?.text()?.trim() ?: return null
-        val hrefAttr = this.selectFirst("h2.entry-title a")?.attr("href") ?: return null
-        val href = fixUrl(hrefAttr)
-        val posterAttr = this.selectFirst("img")?.attr("src")
-        val posterUrl = posterAttr?.let { fixUrl(it) }
+        val href = this.selectFirst("h2.entry-title a")?.attr("href")?.let { fixUrl(it) } ?: return null
+        val posterUrl = this.selectFirst("img")?.attr("src")?.let { fixUrl(it) }
         val quality = this.selectFirst(".quality")?.text()
         return newMovieSearchResponse(title, href, TvType.Documentary) {
             this.posterUrl = posterUrl
@@ -51,8 +49,7 @@ class BelgeselX : MainAPI() {
         val document = app.get(url).document
 
         val title = document.selectFirst("h1.entry-title")?.text()?.trim() ?: return null
-        val posterAttr = document.selectFirst(".post-thumbnail img")?.attr("src")
-        val poster = posterAttr?.let { fixUrl(it) }
+        val poster = document.selectFirst(".post-thumbnail img")?.attr("src")?.let { fixUrl(it) }
         val description = document.selectFirst(".entry-content p")?.text()?.trim()
         val year = document.selectFirst(".published")?.text()?.split(" ")?.last()?.toIntOrNull()
         
@@ -64,10 +61,8 @@ class BelgeselX : MainAPI() {
 
         document.select(".episode-item").forEachIndexed { index, element ->
             val epName = element.selectFirst(".episode-title")?.text() ?: "Bölüm ${index + 1}"
-            val epHrefAttr = element.selectFirst("a")?.attr("href") ?: return@forEachIndexed
-            val epHref = fixUrl(epHrefAttr)
-            val epPosterAttr = element.selectFirst("img")?.attr("src")
-            val epPoster = epPosterAttr?.let { fixUrl(it) }
+            val epHref = element.selectFirst("a")?.attr("href")?.let { fixUrl(it) } ?: return@forEachIndexed
+            val epPoster = element.selectFirst("img")?.attr("src")?.let { fixUrl(it) }
             
             episodes.add(
                 newEpisode(epHref) {
