@@ -31,19 +31,7 @@ class DiziPal : MainAPI() {
     override val mainPage = mainPageOf(
         "$mainUrl/filmler" to "Filmler",
         "$mainUrl/diziler" to "Diziler",
-        "$mainUrl/animeler" to "Animeler",
-        "$mainUrl/platform/netflix" to "Netflix",
-        "$mainUrl/platform/exxen" to "Exxen",
-        "$mainUrl/platform/prime-video" to "Prime-Video",
-        "$mainUrl/platform/tabii" to "Tabii",
-        "$mainUrl/platform/apple-tv" to "Apple-Tv",
-        "$mainUrl/platform/disney" to "Disney+",
-        "$mainUrl/platform/hbomax" to "Hbomax",
-        "$mainUrl/platform/gain" to "Gain",
-        "$mainUrl/platform/mubi" to "Mubi",
-        "$mainUrl/platform/tod" to "TOD",
-        "$mainUrl/platform/tv" to "TV+",
-        "$mainUrl/platform/hulu" to "Hulu"
+        "$mainUrl/animeler" to "Animeler"
     )
 
     // ================= UTIL =================
