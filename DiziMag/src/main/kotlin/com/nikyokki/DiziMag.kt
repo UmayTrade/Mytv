@@ -23,12 +23,10 @@ class DiziMag : MainAPI() {
     override val hasDownloadSupport = true
     override val supportedTypes = setOf(TvType.TvSeries, TvType.Movie)
 
-    // CloudFlare bypass için sıralı istekler
     override var sequentialMainPage = true
     override var sequentialMainPageDelay = 500L
     override var sequentialMainPageScrollDelay = 500L
 
-    // User-Agent rotation için
     private val userAgents = listOf(
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:120.0) Gecko/20100101 Firefox/120.0",
@@ -52,9 +50,7 @@ class DiziMag : MainAPI() {
         )
     }
 
-    // Yeni kategori yapısı: /kategori/{tur}
     override val mainPage = mainPageOf(
-        // Diziler
         "$mainUrl/kategori/aile" to "📺 Aile",
         "$mainUrl/kategori/aksiyon-macera" to "📺 Aksiyon & Macera",
         "$mainUrl/kategori/animasyon" to "📺 Animasyon",
@@ -66,7 +62,6 @@ class DiziMag : MainAPI() {
         "$mainUrl/kategori/savas-politik" to "📺 Savaş & Politik",
         "$mainUrl/kategori/suc" to "📺 Suç",
         
-        // Filmler (sayfalama için /2, /3 eklenecek)
         "$mainUrl/kategori/aile?tur=film" to "🎬 Aile Filmleri",
         "$mainUrl/kategori/animasyon?tur=film" to "🎬 Animasyon Filmleri",
         "$mainUrl/kategori/bilim-kurgu?tur=film" to "🎬 Bilim Kurgu Filmleri",
@@ -85,7 +80,6 @@ class DiziMag : MainAPI() {
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
-        // URL yapısını kontrol et ve sayfalama ekle
         val baseUrl = request.data
         val url = when {
             baseUrl.contains("?") -> "$baseUrl&page=$page"
@@ -104,9 +98,8 @@ class DiziMag : MainAPI() {
         val document = response.document
         val home = document.select("div.poster-long").mapNotNull { it.toSearchResult() }
 
-        // Sonraki sayfa var mı kontrol et
         val hasNext = document.select("a[rel=next], .pagination a:last-child").isNotEmpty() ||
-                      document.select("div.poster-long").size >= 20 // Varsayılan sayfa başı içerik
+                      document.select("div.poster-long").size >= 20
 
         return newHomePageResponse(request.name, home, hasNext = hasNext)
     }
@@ -132,12 +125,10 @@ class DiziMag : MainAPI() {
         val score = this.selectFirst("span.rating")?.text()?.trim()
             ?: this.selectFirst("span.color-imdb")?.text()?.trim()
 
-        // URL yapısına göre tip belirle
         val isTvSeries = when {
             href.contains("/dizi/") -> true
             href.contains("/film/") -> false
             else -> {
-                // Belirsizse poster veya başlıktan tahmin et
                 val typeText = this.selectFirst("div.poster-long-type")?.text()?.lowercase() ?: ""
                 typeText.contains("dizi") || !typeText.contains("film")
             }
@@ -221,7 +212,6 @@ class DiziMag : MainAPI() {
 
         val document = response.document
         
-        // Temel bilgiler
         val title = document.selectFirst("div.page-title h1 a")?.text()?.trim()
             ?: document.selectFirst("div.page-title h1")?.text()?.trim()
             ?: document.selectFirst("h1")?.text()?.trim()
@@ -264,13 +254,11 @@ class DiziMag : MainAPI() {
             ?.mapNotNull { it.text().trim().takeIf { t -> t.isNotBlank() } }
             ?: document.select("div.genres a").mapNotNull { it.text().trim() }
 
-        // Trailer
         val trailer = document.selectFirst("div.series-profile-trailer")?.attr("data-yt")
             ?: document.selectFirst("button[data-yt]")?.attr("data-yt")
         
         val trailerUrl = trailer?.let { "https://www.youtube.com/embed/$it" }
 
-        // Oyuncular
         val actors = document.select("div.series-profile-cast li").mapNotNull { element ->
             val img = fixUrlNull(element.selectFirst("img")?.attr("data-src"))
             val name = element.selectFirst("h5.truncate")?.text()?.trim()
@@ -279,91 +267,60 @@ class DiziMag : MainAPI() {
             Actor(name, img)
         }
 
-        // Tip belirleme
         val isTvSeries = url.contains("/dizi/") || 
                         document.select("div.series-profile-episode-list").isNotEmpty()
 
         return if (isTvSeries) {
-            loadTvSeries(document, displayTitle, url, poster, year, description, tags, rating, actors, trailerUrl)
-        } else {
-            loadMovie(document, title, url, poster, year, description, tags, rating, duration, actors, trailerUrl)
-        }
-    }
-
-    private fun loadTvSeries(
-        document: Element,
-        title: String,
-        url: String,
-        poster: String?,
-        year: Int?,
-        description: String?,
-        tags: List<String>?,
-        rating: String?,
-        actors: List<Actor>,
-        trailer: String?
-    ): LoadResponse {
-        val episodes = mutableListOf<Episode>()
-        
-        document.select("div.series-profile-episode-list").forEachIndexed { seasonIndex, seasonElement ->
-            val seasonNumber = seasonIndex + 1
+            // Dizi - Episode'ları topla
+            val episodes = mutableListOf<Episode>()
             
-            seasonElement.select("li").forEachIndexed { episodeIndex, episodeElement ->
-                val epName = episodeElement.selectFirst("h6.truncate a")?.text()?.trim()
-                    ?: episodeElement.selectFirst("a")?.text()?.trim()
-                    ?: "Bölüm ${episodeIndex + 1}"
-                    
-                val epHref = fixUrlNull(
-                    episodeElement.selectFirst("h6.truncate a")?.attr("href")
-                        ?: episodeElement.selectFirst("a")?.attr("href")
-                ) ?: return@forEachIndexed
+            document.select("div.series-profile-episode-list").forEachIndexed { seasonIndex, seasonElement ->
+                val seasonNumber = seasonIndex + 1
+                
+                seasonElement.select("li").forEachIndexed { episodeIndex, episodeElement ->
+                    val epName = episodeElement.selectFirst("h6.truncate a")?.text()?.trim()
+                        ?: episodeElement.selectFirst("a")?.text()?.trim()
+                        ?: "Bölüm ${episodeIndex + 1}"
+                        
+                    val epHref = fixUrlNull(
+                        episodeElement.selectFirst("h6.truncate a")?.attr("href")
+                            ?: episodeElement.selectFirst("a")?.attr("href")
+                    ) ?: return@forEachIndexed
 
-                episodes.add(
-                    newEpisode(epHref) {
-                        this.name = epName
-                        this.season = seasonNumber
-                        this.episode = episodeIndex + 1
-                    }
-                )
+                    episodes.add(
+                        newEpisode(epHref) {
+                            this.name = epName
+                            this.season = seasonNumber
+                            this.episode = episodeIndex + 1
+                        }
+                    )
+                }
+            }
+
+            newTvSeriesLoadResponse(displayTitle, url, TvType.TvSeries, episodes) {
+                this.posterUrl = poster
+                this.year = year
+                this.plot = description
+                this.tags = tags
+                this.score = Score.from10(rating)
+                this.actors = actors
+                this.trailerUrl = trailerUrl
+            }
+        } else {
+            // Film
+            newMovieLoadResponse(title, url, TvType.Movie, url) {
+                this.posterUrl = poster
+                this.year = year
+                this.plot = description
+                this.tags = tags
+                this.score = Score.from10(rating)
+                this.duration = duration
+                this.actors = actors
+                this.trailerUrl = trailerUrl
             }
         }
-
-        return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodes) {
-            this.posterUrl = poster
-            this.year = year
-            this.plot = description
-            this.tags = tags
-            this.score = Score.from10(rating)
-            addActors(actors)
-            trailer?.let { addTrailer(it) }
-        }
     }
 
-    private fun loadMovie(
-        document: Element,
-        title: String,
-        url: String,
-        poster: String?,
-        year: Int?,
-        description: String?,
-        tags: List<String>?,
-        rating: String?,
-        duration: Int?,
-        actors: List<Actor>,
-        trailer: String?
-    ): LoadResponse {
-        return newMovieLoadResponse(title, url, TvType.Movie, url) {
-            this.posterUrl = poster
-            this.year = year
-            this.plot = description
-            this.tags = tags
-            this.score = Score.from10(rating)
-            this.duration = duration
-            addActors(actors)
-            trailer?.let { addTrailer(it) }
-        }
-    }
-
-    // CryptoJS AES decryption
     private fun decryptAES(password: String, cipherText: String, iv: String, salt: String?): String {
         return try {
             val key = generateKey(password, salt?.hexToBytes())
@@ -406,7 +363,6 @@ class DiziMag : MainAPI() {
             "Accept" to "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
         ))
 
-        // Session cookie al
         val mainPage = app.get(mainUrl, headers = headers)
         val ciSession = mainPage.cookies["ci_session"] ?: ""
 
@@ -417,7 +373,6 @@ class DiziMag : MainAPI() {
             referer = "$mainUrl/"
         ).document
 
-        // iframe bul
         val iframeSrc = fixUrlNull(
             document.selectFirst("div#tv-spoox2 iframe")?.attr("src")
                 ?: document.selectFirst("iframe[src*=player]")?.attr("src")
@@ -429,11 +384,9 @@ class DiziMag : MainAPI() {
 
         Log.d("DiziMag", "Found iframe: $iframeSrc")
 
-        // Player sayfasını al
         val playerResponse = app.get(iframeSrc, headers = headers, referer = "$mainUrl/")
         val playerDoc = playerResponse.document
 
-        // bePlayer şifrelemesini çöz
         playerDoc.select("script").forEach { script ->
             val scriptContent = script.data() ?: script.html()
             
@@ -463,7 +416,6 @@ class DiziMag : MainAPI() {
                         
                         val jsonData = parseJson<PlayerData>(decrypted)
                         
-                        // Altyazıları ekle
                         jsonData.strSubtitles?.forEach { sub ->
                             subtitleCallback.invoke(
                                 SubtitleFile(
@@ -473,7 +425,6 @@ class DiziMag : MainAPI() {
                             )
                         }
                         
-                        // Video kaynağını ekle
                         callback.invoke(
                             newExtractorLink(
                                 source = this.name,
@@ -501,11 +452,9 @@ class DiziMag : MainAPI() {
             }
         }
 
-        // Yedek: Doğrudan extractor dene
         return loadExtractor(iframeSrc, "$mainUrl/", subtitleCallback, callback)
     }
 
-    // Data classes
     data class SearchResult(
         @JsonProperty("success") val success: Boolean?,
         @JsonProperty("theme") val theme: String?
