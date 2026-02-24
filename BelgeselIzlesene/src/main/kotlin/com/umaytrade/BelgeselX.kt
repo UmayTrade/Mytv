@@ -33,11 +33,11 @@ class BelgeselX : MainAPI() {
         val title = this.selectFirst("h2.entry-title a")?.text()?.trim() ?: return null
         val hrefAttr = this.selectFirst("h2.entry-title a")?.attr("href") ?: return null
         val href = fixUrl(hrefAttr)
-        val posterUrl = this.selectFirst("img")?.attr("src")
-        val fixedPosterUrl = posterUrl?.let { fixUrl(it) }
+        val posterAttr = this.selectFirst("img")?.attr("src")
+        val posterUrl = posterAttr?.let { fixUrl(it) }
         val quality = this.selectFirst(".quality")?.text()
         return newMovieSearchResponse(title, href, TvType.Documentary) {
-            this.posterUrl = fixedPosterUrl
+            this.posterUrl = posterUrl
             addQuality(quality)
         }
     }
@@ -51,7 +51,8 @@ class BelgeselX : MainAPI() {
         val document = app.get(url).document
 
         val title = document.selectFirst("h1.entry-title")?.text()?.trim() ?: return null
-        val poster = fixUrlNull(document.selectFirst(".post-thumbnail img")?.attr("src"))
+        val posterAttr = document.selectFirst(".post-thumbnail img")?.attr("src")
+        val poster = posterAttr?.let { fixUrl(it) }
         val description = document.selectFirst(".entry-content p")?.text()?.trim()
         val year = document.selectFirst(".published")?.text()?.split(" ")?.last()?.toIntOrNull()
         
@@ -65,7 +66,8 @@ class BelgeselX : MainAPI() {
             val epName = element.selectFirst(".episode-title")?.text() ?: "Bölüm ${index + 1}"
             val epHrefAttr = element.selectFirst("a")?.attr("href") ?: return@forEachIndexed
             val epHref = fixUrl(epHrefAttr)
-            val epPoster = fixUrlNull(element.selectFirst("img")?.attr("src"))
+            val epPosterAttr = element.selectFirst("img")?.attr("src")
+            val epPoster = epPosterAttr?.let { fixUrl(it) }
             
             episodes.add(
                 newEpisode(epHref) {
@@ -114,7 +116,9 @@ class BelgeselX : MainAPI() {
         }
 
         document.select(".video-source a").forEach { source ->
-            val videoUrl = source.attr("data-src").ifBlank { source.attr("href") }
+            val dataSrc = source.attr("data-src")
+            val href = source.attr("href")
+            val videoUrl = dataSrc.ifBlank { href }
             if (videoUrl.isNotBlank()) {
                 loadExtractor(videoUrl, data, subtitleCallback, callback)
             }
