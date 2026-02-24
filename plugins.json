@@ -137,10 +137,10 @@
             "AsianDrama"
         ],
         "version": 11,
-        "internalName": "DiziKorea",
-        "description": "En G\u00fcncel Kore Dizileri izleme Sitesi",
-        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/DiziPalOrj.cs3",
-        "name": "DiziKorea"
+        "internalName": "DiziPal",
+        "description": "DiziPal Dizileri izleme Sitesi",
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/DiziPal.cs3",
+        "name": "DiziPal"
     },
     {
         "iconUrl": "https://www.google.com/s2/favicons?domain=dizilla.club&sz=%size%",
