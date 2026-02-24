@@ -1,12 +1,17 @@
 package com.nikyokki
 
+import android.webkit.WebResourceRequest
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.lagradost.api.Log
 import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.LoadResponse.Companion.addActors
 import com.lagradost.cloudstream3.LoadResponse.Companion.addTrailer
+import com.lagradost.cloudstream3.network.WebViewResolver
 import com.lagradost.cloudstream3.utils.*
 import com.lagradost.cloudstream3.utils.AppUtils.parseJson
+import kotlinx.coroutines.delay
 import org.jsoup.nodes.Element
 import java.util.Base64
 import java.util.regex.Pattern
@@ -24,15 +29,16 @@ class DiziMag : MainAPI() {
     override val hasDownloadSupport = true
     override val supportedTypes = setOf(TvType.TvSeries, TvType.Movie)
 
-    // Cloudflare bypass için sıralı istekler
     override var sequentialMainPage = true
-    override var sequentialMainPageDelay = 1500L  // Daha uzun bekleme
-    override var sequentialMainPageScrollDelay = 1500L
+    override var sequentialMainPageDelay = 2000L
+    override var sequentialMainPageScrollDelay = 2000L
+
+    // WebView resolver
+    private val webViewResolver by lazy { WebViewResolver() }
 
     private val userAgents = listOf(
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     )
 
     private fun getHeaders(): Map<String, String> {
@@ -50,6 +56,21 @@ class DiziMag : MainAPI() {
             "Sec-Fetch-User" to "?1",
             "Cache-Control" to "no-cache"
         )
+    }
+
+    // Cloudflare bypass için WebView kullanan istek fonksiyonu
+    private suspend fun requestWithWebView(url: String, referer: String? = null): String {
+        Log.d("DiziMag", "WebView request: $url")
+        
+        val headers = getHeaders().toMutableMap()
+        referer?.let { headers["Referer"] = it }
+        
+        return webViewResolver.get(
+            url = url,
+            headers = headers,
+            timeout = 30000,  // 30 saniye
+            additionalUrls = listOf("*/cdn-cgi/*")  // Cloudflare challenge URL'leri
+        )?.second ?: throw ErrorLoadingException("WebView failed")
     }
 
     override val mainPage = mainPageOf(
@@ -90,23 +111,32 @@ class DiziMag : MainAPI() {
             else -> "$baseUrl/$page"
         }
         
-        Log.d("DiziMag", "Fetching: $url")
+        Log.d("DiziMag", "getMainPage: $url")
 
-        val response = app.get(
-            url = url,
-            headers = getHeaders(),
-            referer = "$mainUrl/",
-            timeout = 60  // Uzun timeout
-        )
-        
-        Log.d("DiziMag", "Response: ${response.code}")
-
-        if (response.code == 403 || response.code == 503) {
-            throw ErrorLoadingException("Cloudflare engeli (${response.code})")
+        return try {
+            // Önce normal istek dene
+            val response = app.get(url, headers = getHeaders(), referer = "$mainUrl/", timeout = 30)
+            
+            if (response.code == 200 && !response.text.contains("cf-browser-verification")) {
+                // Cloudflare yok, normal parse
+                parseMainPage(response.document, request.name)
+            } else {
+                // Cloudflare var, WebView kullan
+                Log.d("DiziMag", "Cloudflare detected, using WebView")
+                val html = requestWithWebView(url, "$mainUrl/")
+                val doc = org.jsoup.Jsoup.parse(html)
+                parseMainPage(doc, request.name)
+            }
+        } catch (e: Exception) {
+            Log.e("DiziMag", "Normal request failed: ${e.message}")
+            // WebView dene
+            val html = requestWithWebView(url, "$mainUrl/")
+            val doc = org.jsoup.Jsoup.parse(html)
+            parseMainPage(doc, request.name)
         }
+    }
 
-        val document = response.document
-        
+    private fun parseMainPage(document: org.jsoup.nodes.Document, name: String): HomePageResponse {
         var items = document.select("div.poster-long")
         Log.d("DiziMag", "Found ${items.size} items")
         
@@ -117,7 +147,7 @@ class DiziMag : MainAPI() {
 
         val home = items.mapNotNull { it.toSearchResult() }
         
-        return newHomePageResponse(request.name, home, hasNext = home.isNotEmpty())
+        return newHomePageResponse(name, home, hasNext = home.isNotEmpty())
     }
 
     private fun Element.toSearchResult(): SearchResponse? {
@@ -139,30 +169,30 @@ class DiziMag : MainAPI() {
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
-        val searchHeaders = getHeaders().plus(mapOf(
-            "X-Requested-With" to "XMLHttpRequest",
-            "Content-Type" to "application/x-www-form-urlencoded",
-            "Accept" to "application/json, text/javascript, */*; q=0.01",
-            "Origin" to mainUrl
-        ))
-
-        val response = app.post(
-            url = "$mainUrl/search",
-            data = mapOf("query" to query),
-            headers = searchHeaders,
-            referer = "$mainUrl/"
-        )
-
-        if (!response.isSuccessful) {
-            Log.e("DiziMag", "Search failed: ${response.code}")
-            return emptyList()
-        }
-
         return try {
+            val searchHeaders = getHeaders().plus(mapOf(
+                "X-Requested-With" to "XMLHttpRequest",
+                "Content-Type" to "application/x-www-form-urlencoded",
+                "Accept" to "application/json, text/javascript, */*; q=0.01",
+                "Origin" to mainUrl
+            ))
+
+            // Search için WebView kullanma, direkt POST dene
+            val response = app.post(
+                url = "$mainUrl/search",
+                data = mapOf("query" to query),
+                headers = searchHeaders,
+                referer = "$mainUrl/"
+            )
+
+            if (!response.isSuccessful) {
+                Log.e("DiziMag", "Search failed: ${response.code}")
+                return emptyList()
+            }
+
             val searchResult = response.parsedSafe<SearchResult>()
             val html = searchResult?.theme ?: return emptyList()
             
-            // Jsoup parse
             val doc = org.jsoup.Jsoup.parse(html)
             doc.select("ul li").mapNotNull { element ->
                 val href = element.selectFirst("a")?.attr("href") ?: return@mapNotNull null
@@ -171,7 +201,7 @@ class DiziMag : MainAPI() {
                 } else null
             }
         } catch (e: Exception) {
-            Log.e("DiziMag", "Search parse error: ${e.message}")
+            Log.e("DiziMag", "Search error: ${e.message}")
             emptyList()
         }
     }
@@ -193,14 +223,20 @@ class DiziMag : MainAPI() {
     }
 
     override suspend fun load(url: String): LoadResponse? {
-        val response = app.get(
-            url = url,
-            headers = getHeaders(),
-            referer = "$mainUrl/",
-            timeout = 60
-        )
+        val response = try {
+            app.get(url, headers = getHeaders(), referer = "$mainUrl/", timeout = 30)
+        } catch (e: Exception) {
+            null
+        }
 
-        val document = response.document
+        val document = if (response != null && response.code == 200 && !response.text.contains("cf-browser-verification")) {
+            response.document
+        } else {
+            // WebView kullan
+            Log.d("DiziMag", "Load using WebView: $url")
+            val html = requestWithWebView(url, "$mainUrl/")
+            org.jsoup.Jsoup.parse(html)
+        }
         
         val title = document.selectFirst("div.page-title h1 a")?.text()?.trim()
             ?: document.selectFirst("div.page-title h1")?.text()?.trim()
@@ -249,7 +285,6 @@ class DiziMag : MainAPI() {
                         document.select("div.series-profile-episode-list").isNotEmpty()
 
         return if (isTvSeries) {
-            // Dizi - bölümleri topla
             val episodes = mutableListOf<Episode>()
             
             document.select("div.series-profile-episode-list").forEachIndexed { seasonIndex, seasonElement ->
@@ -333,16 +368,27 @@ class DiziMag : MainAPI() {
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ): Boolean {
-        // Session cookie al
-        val mainPage = app.get(mainUrl, headers = getHeaders())
-        val ciSession = mainPage.cookies["ci_session"] ?: ""
+        // Session cookie al - WebView kullan
+        val mainPageHtml = try {
+            requestWithWebView(mainUrl, null)
+        } catch (e: Exception) {
+            app.get(mainUrl, headers = getHeaders()).text
+        }
+        
+        // Cookie'yi extract et
+        val ciSession = Regex("""ci_session=([^;]+)""").find(mainPageHtml)?.groupValues?.get(1) ?: ""
 
-        val document = app.get(
-            url = data,
-            headers = getHeaders(),
-            cookies = mapOf("ci_session" to ciSession),
-            referer = "$mainUrl/"
-        ).document
+        val document = try {
+            app.get(
+                url = data,
+                headers = getHeaders(),
+                cookies = mapOf("ci_session" to ciSession),
+                referer = "$mainUrl/"
+            ).document
+        } catch (e: Exception) {
+            val html = requestWithWebView(data, "$mainUrl/")
+            org.jsoup.Jsoup.parse(html)
+        }
 
         val iframeSrc = fixUrlNull(
             document.selectFirst("div#tv-spoox2 iframe")?.attr("src")
@@ -355,11 +401,12 @@ class DiziMag : MainAPI() {
 
         Log.d("DiziMag", "Iframe: $iframeSrc")
 
-        val playerDoc = app.get(
-            url = iframeSrc,
-            headers = getHeaders(),
-            referer = "$mainUrl/"
-        ).document
+        val playerDoc = try {
+            app.get(iframeSrc, headers = getHeaders(), referer = "$mainUrl/").document
+        } catch (e: Exception) {
+            val html = requestWithWebView(iframeSrc, "$mainUrl/")
+            org.jsoup.Jsoup.parse(html)
+        }
 
         playerDoc.select("script").forEach { script ->
             val scriptContent = script.data() ?: script.html()
