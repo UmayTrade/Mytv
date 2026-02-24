@@ -1,13 +1,4 @@
 package com.umaytrade
 
-import com.fasterxml.jackson.annotation.JsonProperty
-
-data class BelgeselIzleseneMainResponse(
-    @JsonProperty("data") val data: List<BelgeselIzleseneItem>? = null
-)
-
-data class BelgeselIzleseneItem(
-    @JsonProperty("title") val title: String? = null,
-    @JsonProperty("url") val url: String? = null,
-    @JsonProperty("poster") val poster: String? = null
-)
+// Boş bırakın veya gerekli data class'ları buraya taşıyın
+// Eğer bu dosyada BelgeselIzleseneMainResponse tanımlıysa kaldırın
