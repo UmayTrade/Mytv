@@ -147,10 +147,12 @@ class RecTV : MainAPI() {
                     else -> DubStatus.None
                 }
 
+                val seasonNum = numRegex.find(season.title)?.value?.toIntOrNull()
+
                 season.episodes.forEach { ep ->
                     episodesMap.getOrPut(status) { mutableListOf() }.add(newEpisode(ep.sources.first().url) {
                         name = ep.title
-                        season = numRegex.find(season.title)?.value?.toIntOrNull()
+                        season = seasonNum
                         episode = numRegex.find(ep.title)?.value?.toIntOrNull()
                         description = season.title.substringAfter(".S ")
                         posterUrl = item.image
