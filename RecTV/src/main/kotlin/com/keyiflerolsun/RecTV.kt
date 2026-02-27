@@ -2,31 +2,31 @@ package com.keyiflerolsun
 
 import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.utils.*
-import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
-
-// ✅ DOSYA SEVİYESİ EXTENSION (CLASS DIŞINDA)
-val Int.toMillis: Long
-    get() = this * 1000L
 
 class RecTV : MainAPI() {
 
-    override var mainUrl = "https://rectv.example"   // BURAYI SİTENLE DEĞİŞTİR
+    override var mainUrl = "https://rectv.example" // değiştir
     override var name = "RecTV"
-    override val hasMainPage = true
     override var lang = "tr"
+    override val hasMainPage = true
 
     override val supportedTypes = setOf(
         TvType.Movie,
         TvType.TvSeries
     )
 
-    // ---------------- MAIN PAGE ----------------
+    // ================= MAIN PAGE =================
 
-    override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
+    override suspend fun getMainPage(
+        page: Int,
+        request: MainPageRequest
+    ): HomePageResponse {
+
         val document = app.get(mainUrl).document
 
-        val items = document.select("div.item").mapNotNull { it.toSearchResult() }
+        val items = document.select("div.item")
+            .mapNotNull { it.toSearchResult() }
 
         return newHomePageResponse(
             listOf(
@@ -39,35 +39,74 @@ class RecTV : MainAPI() {
         )
     }
 
-    // ---------------- SEARCH ----------------
+    // ================= SEARCH =================
 
     override suspend fun search(query: String): List<SearchResponse> {
         val document = app.get("$mainUrl/?s=$query").document
-        return document.select("div.item").mapNotNull { it.toSearchResult() }
+        return document.select("div.item")
+            .mapNotNull { it.toSearchResult() }
     }
 
     private fun Element.toSearchResult(): SearchResponse? {
-        val title = this.selectFirst("h2")?.text() ?: return null
-        val href = fixUrl(this.selectFirst("a")?.attr("href") ?: return null)
-        val poster = fixUrlNull(this.selectFirst("img")?.attr("src"))
+        val title = selectFirst("h2")?.text() ?: return null
+        val href = fixUrl(selectFirst("a")?.attr("href") ?: return null)
+        val poster = fixUrlNull(selectFirst("img")?.attr("src"))
 
-        return newMovieSearchResponse(title, href, TvType.Movie) {
+        return newTvSeriesSearchResponse(title, href, TvType.TvSeries) {
             this.posterUrl = poster
         }
     }
 
-    // ---------------- LOAD ----------------
+    // ================= LOAD =================
 
     override suspend fun load(url: String): LoadResponse? {
+
         val document = app.get(url).document
 
         val title = document.selectFirst("h1")?.text() ?: return null
         val poster = fixUrlNull(document.selectFirst("img")?.attr("src"))
         val plot = document.selectFirst(".description")?.text()
 
-        val links = document.select("iframe").mapNotNull {
-            it.attr("src")
+        // Eğer sezon sistemi varsa
+        val seasons = document.select(".season")
+
+        if (seasons.isNotEmpty()) {
+
+            val episodes = mutableListOf<Episode>()
+
+            val numberRegex = Regex("""\d+""")
+
+            seasons.forEach { seasonElement ->
+
+                val seasonTitle = seasonElement.selectFirst(".season-title")?.text() ?: ""
+                val seasonNum = numberRegex.find(seasonTitle)?.value?.toIntOrNull()
+
+                seasonElement.select(".episode").forEach { ep ->
+
+                    val epTitle = ep.text()
+                    val epUrl = fixUrl(ep.selectFirst("a")?.attr("href") ?: return@forEach)
+
+                    val epNum = numberRegex.find(epTitle)?.value?.toIntOrNull()
+
+                    episodes.add(
+                        newEpisode(epUrl) {
+                            this.name = epTitle
+                            this.season = seasonNum
+                            this.episode = epNum
+                        }
+                    )
+                }
+            }
+
+            return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodes) {
+                this.posterUrl = poster
+                this.plot = plot
+            }
         }
+
+        // Film ise
+        val links = document.select("iframe")
+            .mapNotNull { it.attr("src") }
 
         return newMovieLoadResponse(title, url, TvType.Movie, links) {
             this.posterUrl = poster
@@ -75,7 +114,7 @@ class RecTV : MainAPI() {
         }
     }
 
-    // ---------------- LINKS ----------------
+    // ================= LINKS =================
 
     override suspend fun loadLinks(
         data: String,
@@ -84,15 +123,21 @@ class RecTV : MainAPI() {
         callback: (ExtractorLink) -> Unit
     ): Boolean {
 
+        val fixedUrl = fixUrl(data)
+
         callback.invoke(
-            ExtractorLink(
+            newExtractorLink(
                 source = name,
                 name = name,
-                url = data,
-                referer = mainUrl,
-                quality = Qualities.Unknown.value,
-                isM3u8 = data.contains(".m3u8")
-            )
+                url = fixedUrl,
+                type = if (fixedUrl.contains(".m3u8"))
+                    ExtractorLinkType.M3U8
+                else
+                    ExtractorLinkType.VIDEO
+            ) {
+                this.referer = mainUrl
+                this.quality = Qualities.Unknown.value
+            }
         )
 
         return true
