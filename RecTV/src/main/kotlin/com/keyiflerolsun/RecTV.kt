@@ -8,7 +8,8 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import okhttp3.Interceptor
 import java.util.Base64
 
-val Int.toMillis: Long
+// ----------------- UTILS -----------------
+private val Int.toMillis: Long
     get() = this * 1000L
 
 class RecTV : MainAPI() {
@@ -24,7 +25,7 @@ class RecTV : MainAPI() {
     private var tokenExpirationTime: Long = 0L
     private val AUTH_URL = "$mainUrl/api/attest/nonce"
 
-    // ---------------- TOKEN YÖNETİMİ ----------------
+    // ---------------- TOKEN ----------------
     private suspend fun getValidToken(): String {
         val now = System.currentTimeMillis()
         if (currentToken == null || tokenExpirationTime < now + 30.toMillis) {
@@ -50,14 +51,16 @@ class RecTV : MainAPI() {
         currentToken = authResponse.accessToken
 
         tokenExpirationTime = authResponse.expiresIn?.let { System.currentTimeMillis() + it.toMillis } ?: run {
-            try {
-                val payload = currentToken!!.split(".")[1]
-                val json = String(Base64.getUrlDecoder().decode(payload))
-                val jwtPayload = jacksonObjectMapper().readValue<JWTPayload>(json)
-                jwtPayload.expiration * 1000L
-            } catch (_: Exception) {
-                System.currentTimeMillis() + 60.toMillis
-            }
+            currentToken?.let { token ->
+                try {
+                    val payload = token.split(".")[1]
+                    val json = String(Base64.getUrlDecoder().decode(payload))
+                    val jwtPayload = jacksonObjectMapper().readValue<JWTPayload>(json)
+                    jwtPayload.expiration * 1000L
+                } catch (_: Exception) {
+                    System.currentTimeMillis() + 60.toMillis
+                }
+            } ?: System.currentTimeMillis() + 60.toMillis
         }
 
         Log.d(name, "Token yenilendi. Geçerlilik: $tokenExpirationTime")
@@ -96,9 +99,10 @@ class RecTV : MainAPI() {
 
         val responses = items.map { item ->
             val jsonStr = jacksonObjectMapper().writeValueAsString(item)
-            when (item.label.lowercase()) {
-                "canlı" -> newLiveSearchResponse(item.title, jsonStr, TvType.Live) { posterUrl = item.image }
-                else -> newMovieSearchResponse(item.title, jsonStr, TvType.Movie) { posterUrl = item.image }
+            if (item.label.equals("canlı", ignoreCase = true)) {
+                newLiveSearchResponse(item.title, jsonStr, TvType.Live) { posterUrl = item.image }
+            } else {
+                newMovieSearchResponse(item.title, jsonStr, TvType.Movie) { posterUrl = item.image }
             }
         }
 
@@ -111,12 +115,10 @@ class RecTV : MainAPI() {
         val data = AppUtils.tryParseJson<RecSearch>(res.text) ?: return emptyList()
 
         val results = mutableListOf<SearchResponse>()
-
         data.channels?.forEach { ch ->
             val jsonStr = jacksonObjectMapper().writeValueAsString(ch)
             results.add(newMovieSearchResponse(ch.title, jsonStr, TvType.Movie) { posterUrl = ch.image })
         }
-
         data.posters?.forEach { mv ->
             val jsonStr = jacksonObjectMapper().writeValueAsString(mv)
             results.add(newMovieSearchResponse(mv.title, jsonStr, TvType.Movie) { posterUrl = mv.image })
@@ -165,13 +167,14 @@ class RecTV : MainAPI() {
             }
         }
 
-        return when (item.label.lowercase()) {
-            "canlı" -> newLiveStreamLoadResponse(item.title, url, url) {
+        return if (item.label.equals("canlı", ignoreCase = true)) {
+            newLiveStreamLoadResponse(item.title, url, url) {
                 posterUrl = item.image
                 plot = item.description
                 tags = item.genres?.map { it.title }
             }
-            else -> newMovieLoadResponse(item.title, url, TvType.Movie, url) {
+        } else {
+            newMovieLoadResponse(item.title, url, TvType.Movie, url) {
                 posterUrl = item.image
                 plot = item.description
                 year = item.year
@@ -188,6 +191,7 @@ class RecTV : MainAPI() {
         callback: (ExtractorLink) -> Unit
     ): Boolean {
         val item = AppUtils.tryParseJson<RecItem>(data)
+
         if (item == null && data.startsWith("http")) {
             callback(newExtractorLink(source = name, name = name, url = data, type = INFER_TYPE) {
                 headers = mapOf("Referer" to "https://twitter.com/")
