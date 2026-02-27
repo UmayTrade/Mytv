@@ -8,8 +8,8 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import okhttp3.Interceptor
 import java.util.Base64
 
-// ----------------- UTILS -----------------
-private val Int.toMillis: Long
+// ----------------- DOSYA SEVİYESİ EXTENSION -----------------
+val Int.toMillis: Long
     get() = this * 1000L
 
 class RecTV : MainAPI() {
