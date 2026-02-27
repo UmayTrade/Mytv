@@ -9,7 +9,7 @@ import java.io.InputStream
 import java.io.ByteArrayInputStream
 
 class NeonSpor : MainAPI() {
-    override var mainUrl          = "https://raw.githubusercontent.com/UmayTrade/extensions/refs/heads/master/umaylist.m3u"
+    override var mainUrl          = "https://github.com"
     override var name             = "UmayCanli"
     override val hasMainPage      = true
     override var lang             = "tr"
