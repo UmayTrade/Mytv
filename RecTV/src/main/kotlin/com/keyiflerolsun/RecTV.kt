@@ -6,7 +6,7 @@ import org.jsoup.nodes.Element
 
 class RecTV : MainAPI() {
 
-    override var mainUrl = "https://rectv.example" // değiştir
+    override var mainUrl = "https://m.prectv61.sbs" // değiştir
     override var name = "RecTV"
     override var lang = "tr"
     override val hasMainPage = true
