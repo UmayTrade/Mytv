@@ -13,7 +13,8 @@ buildscript {
     dependencies {
         classpath("com.android.tools.build:gradle:8.13.2")
         // Cloudstream gradle plugin which makes everything work and builds plugins
-        classpath("com.github.recloudstream:gradle:cce1b8d84d")
+        // DEĞİŞTİRİLDİ: cce1b8d84d yerine master-SNAPSHOT kullanılıyor
+        classpath("com.github.recloudstream:gradle:master-SNAPSHOT")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.3.0")
     }
 }
@@ -49,7 +50,7 @@ subprojects {
 
     cloudstream {
         // when running through github workflow, GITHUB_REPOSITORY should contain current repository name
-        setRepo(System.getenv("GITHUB_REPOSITORY") ?: "https://github.com/Kraptor123/Cs-Karma")
+        setRepo(System.getenv("GITHUB_REPOSITORY") ?: "https://github.com/UmayTrade/MyTV")
 
         authors = listOf("kraptor")
     }
