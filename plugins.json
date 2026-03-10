@@ -1,8 +1,8 @@
 [
     {
-        "iconUrl": "https://raw.githubusercontent.com/Kraptor123/Cs-Karma/refs/heads/master/.github/logo/faviconAyzen.png",
+        "iconUrl": "https://www.google.com/s2/favicons?domain=https://dizipal683.com&sz=%size%",
         "apiVersion": 1,
-        "repositoryUrl": "https://github.com/Kraptor123/Cs-Karma",
+        "repositoryUrl": "https://github.com/UmayTrade/MyTV",
         "fileSize": 24013,
         "status": 1,
         "language": "tr",
@@ -19,9 +19,9 @@
         "name": "DiziPal"
     },
     {
-        "iconUrl": "https://raw.githubusercontent.com/Kraptor123/Cs-Karma/refs/heads/master/.github/logo/faviconFsTv.png",
+        "iconUrl": "https://www.google.com/s2/favicons?domain=www.4kfilmizlesene.org&sz=%size%",
         "apiVersion": 1,
-        "repositoryUrl": "https://github.com/Kraptor123/Cs-Karma",
+        "repositoryUrl": "https://github.com/UmayTrade/MyTV",
         "fileSize": 9787,
         "status": 1,
         "language": "en",
@@ -33,14 +33,14 @@
         ],
         "version": 5,
         "internalName": "4KFilmIzleme",
-        "description": "Watch live sport on tv with full HD streaming videos for football, tennis, basketball games world-wide and more. Get live scores, results, highlights on Fstv",
+        "description": "En yeni ve sorunsuz \u26a1  Full HD Film izle keyfi her yerde sizinle ! 4K ve 1080p online film izleme fark\u0131yla 4KFilmizlesene&amp;#039;nin Tad\u0131n\u0131 \u00c7\u0131kart.",
         "url": "https://raw.githubusercontent.com/UmayTrade/MyTV/builds/4KFilmIzleme.cs3",
         "name": "4KFilmIzleme"
     },
     {
-        "iconUrl": "https://www.google.com/s2/favicons?domain=fullraces.com&sz=%size%",
+        "iconUrl": "https://www.google.com/s2/favicons?domain=https://dizipal683.com&sz=%size%",
         "apiVersion": 1,
-        "repositoryUrl": "https://github.com/Kraptor123/Cs-Karma",
+        "repositoryUrl": "https://github.com/UmayTrade/MyTV",
         "fileSize": 9724,
         "status": 1,
         "language": "en",
@@ -52,14 +52,52 @@
         ],
         "version": 1,
         "internalName": "DiziPalOrijinal",
-        "description": "Formula 1 is one of the most popular and dramatic sports in the world. You can watch Formula One races replays videos online and enjoy every moment of this exciting sports event. We offer to watch F1 Full Races replays FREE in HD",
+        "description": "en yeni dizileri g\u00fcvenli ve h\u0131zl\u0131 \u015fekilde sunar.",
         "url": "https://raw.githubusercontent.com/UmayTrade/MyTV/builds/DiziPalOrijinal.cs3",
         "name": "DiziPalOrijinal"
     },
     {
-        "iconUrl": "https://www.google.com/s2/favicons?domain=www.fullreplays.com&sz=%size%",
+        "iconUrl": "https://www.tlctv.com.tr/favicon.ico",
         "apiVersion": 1,
-        "repositoryUrl": "https://github.com/Kraptor123/Cs-Karma",
+        "repositoryUrl": "https://github.com/UmayTrade/MyTV",
+        "fileSize": 9787,
+        "status": 1,
+        "language": "en",
+        "authors": [
+            "kerimmkirac"
+        ],
+        "tvTypes": [
+            "Live"
+        ],
+        "version": 5,
+        "internalName": "TLC",
+        "description": "TLC TV dizi ve programlar\u0131n\u0131 takip etmek i\u00e7in ziyaret edin. TLC TV dizi ve programlar\u0131n\u0131 tek par\u00e7a ve hd kalitesiyle izleyin.",
+        "url": "https://raw.githubusercontent.com/UmayTrade/MyTV/builds/TLC.cs3",
+        "name": "TLC"
+    },
+    {
+        "iconUrl": "https://www.dmax.com.tr/favicon.ico",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/UmayTrade/MyTV",
+        "fileSize": 9724,
+        "status": 1,
+        "language": "en",
+        "authors": [
+            "kerimmkirac"
+        ],
+        "tvTypes": [
+            "Movie"
+        ],
+        "version": 1,
+        "internalName": "DMax",
+        "description": "DMAX dizi ve programlar\u0131n\u0131 takip etmek i\u00e7in ziyaret edin. DMAX dizi ve programlar\u0131n\u0131 tek par\u00e7a ve hd kalitesiyle izleyin.",
+        "url": "https://raw.githubusercontent.com/UmayTrade/MyTV/builds/DMax.cs3",
+        "name": "DMax"
+    },
+    {
+        "iconUrl": "https://www.google.com/s2/favicons?domain=www.dizimom.tv&sz=%size%",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/UmayTrade/MyTV",
         "fileSize": 10566,
         "status": 1,
         "language": "en",
@@ -71,14 +109,14 @@
         ],
         "version": 1,
         "internalName": "DiziMom",
-        "description": "Watch latest football full match replay of Premier League, Champions League, LaLiga, Serie A, Bundesliga, Ligue 1, Europa League, and more...",
+        "description": "Binlerce yerli yabanc\u0131 dizi ar\u015fivi, t\u00fcm sezonlar, kesintisiz b\u00f6l\u00fcmler. Sadece dizi izle, Dizimom heryerde seninle!.",
         "url": "https://raw.githubusercontent.com/UmayTrade/MyTV/builds/DiziMom.cs3",
         "name": "DiziMom"
     },
         {
-        "iconUrl": "https://www.google.com/s2/favicons?domain=www.fullreplays.com&sz=%size%",
+        "iconUrl": "https://www.google.com/s2/favicons?domain=https://www.sinewix.com/&sz=%size%",
         "apiVersion": 1,
-        "repositoryUrl": "https://github.com/Kraptor123/Cs-Karma",
+        "repositoryUrl": "https://github.com/UmayTrade/MyTV",
         "fileSize": 10566,
         "status": 1,
         "language": "en",
@@ -90,14 +128,14 @@
         ],
         "version": 1,
         "internalName": "SineWix",
-        "description": "Watch latest football full match replay of Premier League, Champions League, LaLiga, Serie A, Bundesliga, Ligue 1, Europa League, and more...",
+        "description": "SineWix | Film - Dizi - Anime \u0130zleme Uygulamas\u0131.",
         "url": "https://raw.githubusercontent.com/UmayTrade/MyTV/builds/SineWix.cs3",
         "name": "SineWix"
     },
             {
         "iconUrl": "https://www.google.com/s2/favicons?domain=www.fullreplays.com&sz=%size%",
         "apiVersion": 1,
-        "repositoryUrl": "https://github.com/Kraptor123/Cs-Karma",
+        "repositoryUrl": "https://github.com/UmayTrade/MyTV",
         "fileSize": 10566,
         "status": 1,
         "language": "en",
@@ -114,9 +152,9 @@
         "name": "SezonlukDizi"
     },
     {
-        "iconUrl": "https://www.google.com/s2/favicons?domain=www.fullreplays.com&sz=%size%",
+        "iconUrl": "https://www.google.com/s2/favicons?domain=selcukflix.com&sz=%size%",
         "apiVersion": 1,
-        "repositoryUrl": "https://github.com/Kraptor123/Cs-Karma",
+        "repositoryUrl": "https://github.com/UmayTrade/MyTV",
         "fileSize": 10566,
         "status": 1,
         "language": "en",
@@ -128,14 +166,14 @@
         ],
         "version": 1,
         "internalName": "SelcukFlix",
-        "description": "Watch latest football full match replay of Premier League, Champions League, LaLiga, Serie A, Bundesliga, Ligue 1, Europa League, and more...",
+        "description": "Selcukflix'te her t\u00fcrden en yeni ve en pop\u00fcler dizi ve filmleri izlemenin keyfini \u00e7\u0131kar\u0131n. Aksiyondan romanti\u011fe, bilim kurgudan dramaya, geni\u015f k\u00fct\u00fcphanemizde herkes i\u00e7in bir \u015fey var.",
         "url": "https://raw.githubusercontent.com/UmayTrade/MyTV/builds/SelcukFlix.cs3",
         "name": "SelcukFlix"
     },
     {
         "iconUrl": "https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://streamed.pk/&size=128",
         "apiVersion": 1,
-        "repositoryUrl": "https://github.com/Kraptor123/Cs-Karma",
+        "repositoryUrl": "https://github.com/UmayTrade/MyTV",
         "fileSize": 31481,
         "status": 1,
         "language": "un",
