@@ -70,10 +70,29 @@
             "Movie"
         ],
         "version": 1,
-        "internalName": "FullReplays",
+        "internalName": "DiziMom",
         "description": "Watch latest football full match replay of Premier League, Champions League, LaLiga, Serie A, Bundesliga, Ligue 1, Europa League, and more...",
-        "url": "https://raw.githubusercontent.com/Kraptor123/Cs-Karma/builds/FullReplays.cs3",
-        "name": "FullReplays"
+        "url": "https://raw.githubusercontent.com/UmayTrade/MyTV/builds/DiziMom.cs3",
+        "name": "DiziMom"
+    },
+        {
+        "iconUrl": "https://www.google.com/s2/favicons?domain=www.fullreplays.com&sz=%size%",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/Kraptor123/Cs-Karma",
+        "fileSize": 10566,
+        "status": 1,
+        "language": "en",
+        "authors": [
+            "kerimmkirac"
+        ],
+        "tvTypes": [
+            "Movie"
+        ],
+        "version": 1,
+        "internalName": "DiziMag",
+        "description": "Watch latest football full match replay of Premier League, Champions League, LaLiga, Serie A, Bundesliga, Ligue 1, Europa League, and more...",
+        "url": "https://raw.githubusercontent.com/UmayTrade/MyTV/builds/DiziMag.cs3",
+        "name": "DiziMag"
     },
     {
         "iconUrl": "https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://streamed.pk/&size=128",
