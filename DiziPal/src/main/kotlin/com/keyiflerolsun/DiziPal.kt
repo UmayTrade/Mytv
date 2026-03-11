@@ -10,7 +10,7 @@ import com.lagradost.cloudstream3.utils.*
 import org.jsoup.nodes.Element
 
 class DiziPal : MainAPI() {
-    override var mainUrl              = "https://dizipal2031.com"
+    override var mainUrl              = "https://dizipal2031.com"  // ! Güncel domain
     override var name                 = "DiziPal"
     override val hasMainPage          = true
     override var lang                 = "tr"
@@ -18,9 +18,7 @@ class DiziPal : MainAPI() {
     override val supportedTypes       = setOf(TvType.TvSeries, TvType.Movie)
 
     // ! CloudFlare bypass
-    override var sequentialMainPage = true        // * https://recloudstream.github.io/dokka/-cloudstream/com.lagradost.cloudstream3/-main-a-p-i/index.html#-2049735995%2FProperties%2F101969414
-    // override var sequentialMainPageDelay       = 250L // ? 0.25 saniye
-    // override var sequentialMainPageScrollDelay = 250L // ? 0.25 saniye
+    override var sequentialMainPage = true
 
     override val mainPage = mainPageOf(
         "${mainUrl}/diziler/son-bolumler"                          to "Son Bölümler",
@@ -43,31 +41,10 @@ class DiziPal : MainAPI() {
         "${mainUrl}/tur/belgesel"                                  to "Belgesel Filmleri",
         "${mainUrl}/diziler?kelime=&durum=&tur=25&type=&siralama=" to "Erotik Diziler",
         "${mainUrl}/tur/erotik"                                    to "Erotik Filmler",
-        // "${mainUrl}/diziler?kelime=&durum=&tur=1&type=&siralama="  to "Aile",            // ! Fazla kategori olduğu için geç yükleniyor..
-        // "${mainUrl}/diziler?kelime=&durum=&tur=2&type=&siralama="  to "Aksiyon",
-        // "${mainUrl}/diziler?kelime=&durum=&tur=3&type=&siralama="  to "Animasyon",
-        // "${mainUrl}/diziler?kelime=&durum=&tur=4&type=&siralama="  to "Belgesel",
-        // "${mainUrl}/diziler?kelime=&durum=&tur=6&type=&siralama="  to "Biyografi",
-        // "${mainUrl}/diziler?kelime=&durum=&tur=7&type=&siralama="  to "Dram",
-        // "${mainUrl}/diziler?kelime=&durum=&tur=8&type=&siralama="  to "Fantastik",
-        // "${mainUrl}/diziler?kelime=&durum=&tur=9&type=&siralama="  to "Gerilim",
-        // "${mainUrl}/diziler?kelime=&durum=&tur=10&type=&siralama=" to "Gizem",
-        // "${mainUrl}/diziler?kelime=&durum=&tur=12&type=&siralama=" to "Korku",
-        // "${mainUrl}/diziler?kelime=&durum=&tur=13&type=&siralama=" to "Macera",
-        // "${mainUrl}/diziler?kelime=&durum=&tur=14&type=&siralama=" to "Müzik",
-        // "${mainUrl}/diziler?kelime=&durum=&tur=16&type=&siralama=" to "Romantik",
-        // "${mainUrl}/diziler?kelime=&durum=&tur=17&type=&siralama=" to "Savaş",
-        // "${mainUrl}/diziler?kelime=&durum=&tur=24&type=&siralama=" to "Yerli",
-        // "${mainUrl}/diziler?kelime=&durum=&tur=18&type=&siralama=" to "Spor",
-        // "${mainUrl}/diziler?kelime=&durum=&tur=19&type=&siralama=" to "Suç",
-        // "${mainUrl}/diziler?kelime=&durum=&tur=20&type=&siralama=" to "Tarih",
-        // "${mainUrl}/diziler?kelime=&durum=&tur=21&type=&siralama=" to "Western",
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
-        val document = app.get(
-            request.data,
-        ).document
+        val document = app.get(request.data).document
         val home     = if (request.data.contains("/diziler/son-bolumler")) {
             document.select("div.episode-item").mapNotNull { it.sonBolumler() } 
         } else {
@@ -124,99 +101,143 @@ class DiziPal : MainAPI() {
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
-        val responseRaw = app.post(
-            "${mainUrl}/api/search-autocomplete",
-            headers     = mapOf(
-                "Accept"           to "application/json, text/javascript, */*; q=0.01",
-                "X-Requested-With" to "XMLHttpRequest"
-            ),
-            referer     = "${mainUrl}/",
-            data        = mapOf(
-                "query" to query
+        try {
+            val responseRaw = app.post(
+                "${mainUrl}/api/search-autocomplete",
+                headers     = mapOf(
+                    "Accept"           to "application/json, text/javascript, */*; q=0.01",
+                    "X-Requested-With" to "XMLHttpRequest",
+                    "Content-Type"     to "application/x-www-form-urlencoded; charset=UTF-8",
+                    "Referer"          to "${mainUrl}/"
+                ),
+                referer     = "${mainUrl}/",
+                data        = mapOf("query" to query)
             )
-        )
 
-        val searchItemsMap = jacksonObjectMapper().readValue<Map<String, SearchItem>>(responseRaw.text)
+            if (responseRaw.text.isBlank() || responseRaw.text == "null") {
+                Log.w("DZP", "Arama sonucu boş döndü")
+                return emptyList()
+            }
 
-        val searchResponses = mutableListOf<SearchResponse>()
+            val searchItemsMap = jacksonObjectMapper().readValue<Map<String, SearchItem>>(responseRaw.text)
 
-        for ((_, searchItem) in searchItemsMap) {
-            searchResponses.add(searchItem.toPostSearchResult())
+            val searchResponses = mutableListOf<SearchResponse>()
+
+            for ((_, searchItem) in searchItemsMap) {
+                searchResponses.add(searchItem.toPostSearchResult())
+            }
+
+            return searchResponses
+        } catch (e: Exception) {
+            Log.e("DZP", "Arama hatası: ${e.message}")
+            return emptyList()
         }
-
-        return searchResponses
     }
 
     override suspend fun quickSearch(query: String): List<SearchResponse> = search(query)
 
     override suspend fun load(url: String): LoadResponse? {
-        val document = app.get(url).document
+        try {
+            val document = app.get(url).document
 
-        val poster      = fixUrlNull(document.selectFirst("[property='og:image']")?.attr("content"))
-        val year        = document.selectXpath("//div[text()='Yapım Yılı']//following-sibling::div").text().trim().toIntOrNull()
-        val description = document.selectFirst("div.summary p")?.text()?.trim()
-        val tags        = document.selectXpath("//div[text()='Türler']//following-sibling::div").text().trim().split(" ").map { it.trim() }
-        val rating      = document.selectXpath("//div[text()='IMDB Puanı']//following-sibling::div").text().trim()
-        val duration    = Regex("(\\d+)").find(document.selectXpath("//div[text()='Ortalama Süre']//following-sibling::div").text())?.value?.toIntOrNull()
+            val poster      = fixUrlNull(document.selectFirst("[property='og:image']")?.attr("content"))
+            val year        = document.selectXpath("//div[text()='Yapım Yılı']//following-sibling::div").text().trim().toIntOrNull()
+            val description = document.selectFirst("div.summary p")?.text()?.trim()
+            val tags        = document.selectXpath("//div[text()='Türler']//following-sibling::div").text().trim().split(" ").map { it.trim() }.filter { it.isNotEmpty() }
+            val rating      = document.selectXpath("//div[text()='IMDB Puanı']//following-sibling::div").text().trim()
+            val duration    = Regex("(\\d+)").find(document.selectXpath("//div[text()='Ortalama Süre']//following-sibling::div").text())?.value?.toIntOrNull()
 
-        if (url.contains("/dizi/")) {
-            val title       = document.selectFirst("div.cover h5")?.text() ?: return null
+            if (url.contains("/dizi/")) {
+                val title       = document.selectFirst("div.cover h5")?.text() ?: return null
 
-            val episodes    = document.select("div.episode-item").mapNotNull {
-                val epName    = it.selectFirst("div.name")?.text()?.trim() ?: return@mapNotNull null
-                val epHref    = fixUrlNull(it.selectFirst("a")?.attr("href")) ?: return@mapNotNull null
-                val epEpisode = it.selectFirst("div.episode")?.text()?.trim()?.split(" ")?.get(2)?.replace(".", "")?.toIntOrNull()
-                val epSeason  = it.selectFirst("div.episode")?.text()?.trim()?.split(" ")?.get(0)?.replace(".", "")?.toIntOrNull()
+                val episodes    = document.select("div.episode-item").mapNotNull {
+                    val epName    = it.selectFirst("div.name")?.text()?.trim() ?: return@mapNotNull null
+                    val epHref    = fixUrlNull(it.selectFirst("a")?.attr("href")) ?: return@mapNotNull null
+                    val epEpisode = it.selectFirst("div.episode")?.text()?.trim()?.split(" ")?.get(2)?.replace(".", "")?.toIntOrNull()
+                    val epSeason  = it.selectFirst("div.episode")?.text()?.trim()?.split(" ")?.get(0)?.replace(".", "")?.toIntOrNull()
 
-                newEpisode(epHref) {
-                    this.name    = epName
-                    this.episode = epEpisode
-                    this.season  = epSeason
+                    newEpisode(epHref) {
+                        this.name    = epName
+                        this.episode = epEpisode
+                        this.season  = epSeason
+                    }
+                }
+
+                return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodes) {
+                    this.posterUrl = poster
+                    this.year      = year
+                    this.plot      = description
+                    this.tags      = tags
+                    this.score     = Score.from10(rating)
+                    this.duration  = duration
+                }
+            } else { 
+                val title = document.selectXpath("//div[@class='g-title'][2]/div").text().trim()
+
+                return newMovieLoadResponse(title, url, TvType.Movie, url) {
+                    this.posterUrl = poster
+                    this.year      = year
+                    this.tags      = tags
+                    this.score     = Score.from10(rating)
+                    this.duration  = duration
                 }
             }
-
-            return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodes) {
-                this.posterUrl = poster
-                this.year      = year
-                this.plot      = description
-                this.tags      = tags
-                this.score = Score.from10(rating)
-                this.duration  = duration
-            }
-        } else { 
-            val title = document.selectXpath("//div[@class='g-title'][2]/div").text().trim()
-
-            return newMovieLoadResponse(title, url, TvType.Movie, url) {
-                this.posterUrl = poster
-                this.year      = year
-                this.plot      = description
-                this.tags      = tags
-                this.score = Score.from10(rating)
-                this.duration  = duration
-            }
+        } catch (e: Exception) {
+            Log.e("DZP", "Yükleme hatası: ${e.message}")
+            return null
         }
     }
 
     override suspend fun loadLinks(data: String, isCasting: Boolean, subtitleCallback: (SubtitleFile) -> Unit, callback: (ExtractorLink) -> Unit): Boolean {
         Log.d("DZP", "data » $data")
-        val document = app.get(data).document
-        val iframe   = document.selectFirst(".series-player-container iframe")?.attr("src") ?: document.selectFirst("div#vast_new iframe")?.attr("src") ?: return false
-        Log.d("DZP", "iframe » $iframe")
+        
+        try {
+            val document = app.get(data).document
+            
+            // ! Güncellenmiş iframe seçicileri - site yapısı değişmiş olabilir
+            val iframe = document.selectFirst(".series-player-container iframe")?.attr("src") 
+                ?: document.selectFirst("div#vast_new iframe")?.attr("src")
+                ?: document.selectFirst("iframe[src*=\"player\"]")?.attr("src")
+                ?: document.selectFirst("div.player iframe")?.attr("src")
+                ?: return false
+                
+            Log.d("DZP", "iframe » $iframe")
 
-        val iSource = app.get(iframe, referer="${mainUrl}/").text
-        val m3uLink = Regex("""file:"([^"]+)""").find(iSource)?.groupValues?.get(1)
-        if (m3uLink == null) {
-            Log.d("DZP", "iSource » $iSource")
-            return loadExtractor(iframe, "${mainUrl}/", subtitleCallback, callback)
-        }
+            val iSource = app.get(iframe, referer="${mainUrl}/").text
+            
+            // ! Güncellenmiş regex pattern'leri
+            val m3uLink = Regex("""file["']?\s*:\s*["']([^"']+\.m3u8[^"']*)["']""").find(iSource)?.groupValues?.get(1)
+                ?: Regex("""file["']?\s*:\s*["']([^"']+)["']""").find(iSource)?.groupValues?.get(1)
+                ?: Regex("""src=["']([^"']+\.m3u8[^"']*)["']""").find(iSource)?.groupValues?.get(1)
 
-        val subtitles = Regex(""""subtitle":"([^"]+)""").find(iSource)?.groupValues?.get(1)
-        Log.d("DZPAL", "Altyazi: ${subtitles}")
-        if (subtitles != null) {
-            if (subtitles.contains(",")) {
-                subtitles.split(",").forEach {
-                    val subLang = it.substringAfter("[").substringBefore("]")
-                    val subUrl  = it.replace("[${subLang}]", "")
+            if (m3uLink == null) {
+                Log.d("DZP", "M3U8 link bulunamadı, extractor deneniyor...")
+                Log.d("DZP", "iSource » ${iSource.take(500)}...")
+                return loadExtractor(iframe, "${mainUrl}/", subtitleCallback, callback)
+            }
+
+            // ! Altyazı parsing - güncellenmiş
+            val subtitles = Regex("""subtitle["']?\s*:\s*["']([^"']+)["']""").find(iSource)?.groupValues?.get(1)
+                ?: Regex("""tracks.*?file["']?\s*:\s*["']([^"']+)["']""").find(iSource)?.groupValues?.get(1)
+            
+            Log.d("DZPAL", "Altyazi: ${subtitles}")
+            
+            if (subtitles != null) {
+                if (subtitles.contains(",")) {
+                    subtitles.split(",").forEach {
+                        val subLang = it.substringAfter("[").substringBefore("]")
+                        val subUrl  = it.replace("[${subLang}]", "")
+
+                        subtitleCallback.invoke(
+                            SubtitleFile(
+                                lang = subLang,
+                                url  = fixUrl(subUrl)
+                            )
+                        )
+                    }
+                } else {
+                    val subLang = subtitles.substringAfter("[").substringBefore("]")
+                    val subUrl  = subtitles.replace("[${subLang}]", "")
 
                     subtitleCallback.invoke(
                         SubtitleFile(
@@ -225,31 +246,24 @@ class DiziPal : MainAPI() {
                         )
                     )
                 }
-            } else {
-                val subLang = subtitles.substringAfter("[").substringBefore("]")
-                val subUrl  = subtitles.replace("[${subLang}]", "")
-
-                subtitleCallback.invoke(
-                    SubtitleFile(
-                        lang = subLang,
-                        url  = fixUrl(subUrl)
-                    )
-                )
             }
+
+            callback.invoke(
+                newExtractorLink(
+                    source = this.name,
+                    name = this.name,
+                    url = m3uLink,
+                    type = ExtractorLinkType.M3U8
+                ) {
+                    headers = mapOf("Referer" to "${mainUrl}/")
+                    quality = Qualities.Unknown.value
+                }
+            )
+
+            return true
+        } catch (e: Exception) {
+            Log.e("DZP", "Link yükleme hatası: ${e.message}")
+            return false
         }
-
-        callback.invoke(
-            newExtractorLink(
-                source = this.name,
-                name = this.name,
-                url = m3uLink,
-                type = ExtractorLinkType.M3U8 // isM3u8 = true yerine bu türü belirtiyoruz
-            ) {
-                headers = mapOf("Referer" to "${mainUrl}/") // Referer burada ayarlandı
-                quality = Qualities.Unknown.value // Kalite ayarlandı
-            }
-        )
-
-        return true
     }
 }
