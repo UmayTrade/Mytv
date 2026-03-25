@@ -9,14 +9,14 @@ import org.json.JSONObject
 
 class DiziYoUltimate : MainAPI() {
 
-    override var name = "DiziYo Ultimate"
+    override var name = "DiziYo"
     override var lang = "tr"
     override val hasMainPage = true
     override val supportedTypes = setOf(TvType.Movie, TvType.TvSeries, TvType.Anime)
 
     // 🔥 DOMAIN HAVUZU (AUTO SWITCH)
     private val domains = listOf(
-        "https://www.diziyo.nl",
+        "https://www.diziyo.so",
         "https://www.diziyo.cx",
         "https://www.diziyo.sx",
         "https://www.diziyo.xyz"
