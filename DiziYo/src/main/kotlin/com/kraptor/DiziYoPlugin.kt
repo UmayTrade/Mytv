@@ -7,7 +7,7 @@ import android.content.Context
 @CloudstreamPlugin
 class DiziYoPlugin : Plugin() {
     override fun load(context: Context) {
-        // DiziYoUltimate olarak değiştirildi
+        // DiziYo olarak değiştirildi
         registerMainAPI(DiziYoUltimate())
     }
 }
