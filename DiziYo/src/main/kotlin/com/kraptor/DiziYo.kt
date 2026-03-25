@@ -1,4 +1,4 @@
-// ! ULTIMATE DiziYo Plugin - EFSANE VERSION
+// ! DiziYo Ultimate - FINAL (Cloudflare FIX + Stabil)
 
 package com.kraptor
 
@@ -39,7 +39,10 @@ class DiziYo : MainAPI() {
 
         val doc = app.get(
             buildUrl(request.data, page),
-            interceptor = CloudflareKiller()
+            headers = mapOf(
+                "User-Agent" to USER_AGENT,
+                "Referer" to mainUrl
+            )
         ).document
 
         val home = doc.select("div.items > article, article")
@@ -72,7 +75,11 @@ class DiziYo : MainAPI() {
     // ================= SEARCH =================
 
     override suspend fun search(query: String): List<SearchResponse> {
-        val doc = app.get("$mainUrl/?s=$query").document
+        val doc = app.get(
+            "$mainUrl/?s=$query",
+            headers = mapOf("User-Agent" to USER_AGENT)
+        ).document
+
         return doc.select("div.result-item article")
             .mapNotNull { it.toSearchFix() }
     }
@@ -81,9 +88,13 @@ class DiziYo : MainAPI() {
 
     override suspend fun load(url: String): LoadResponse? {
 
-        val doc = app.get(url).document
+        val doc = app.get(
+            url,
+            headers = mapOf("User-Agent" to USER_AGENT)
+        ).document
 
         val title = doc.selectFirst("h1")?.text() ?: return null
+
         val poster = fixUrlNull(
             doc.selectFirst("div.poster img")?.attr("data-src")
                 ?: doc.selectFirst("div.poster img")?.attr("src")
@@ -113,7 +124,7 @@ class DiziYo : MainAPI() {
         }
     }
 
-    // ================= ULTIMATE LINK ENGINE =================
+    // ================= LINK ENGINE =================
 
     override suspend fun loadLinks(
         data: String,
@@ -124,7 +135,10 @@ class DiziYo : MainAPI() {
 
         try {
 
-            val doc = app.get(data).document
+            val doc = app.get(
+                data,
+                headers = mapOf("User-Agent" to USER_AGENT)
+            ).document
 
             val postId = Regex("postid-(\\d+)")
                 .find(doc.html())
@@ -141,11 +155,11 @@ class DiziYo : MainAPI() {
                 ),
                 headers = mapOf(
                     "X-Requested-With" to "XMLHttpRequest",
-                    "Referer" to data
+                    "Referer" to data,
+                    "User-Agent" to USER_AGENT
                 )
             ).text
 
-            // MULTI IFRAME BUL
             val iframes = Regex("""src="(https?:\/\/[^"]+)"""")
                 .findAll(ajaxRes)
                 .map { it.groupValues[1] }
@@ -167,12 +181,12 @@ class DiziYo : MainAPI() {
                         ),
                         headers = mapOf(
                             "X-Requested-With" to "XMLHttpRequest",
-                            "Referer" to iframe
+                            "Referer" to iframe,
+                            "User-Agent" to USER_AGENT
                         )
                     ).text
 
                     val obj = JSONObject(json)
-
                     val sources = obj.getJSONArray("videoSources")
 
                     for (i in 0 until sources.length()) {
@@ -183,28 +197,34 @@ class DiziYo : MainAPI() {
 
                             val master = app.get(file).text
                             val base = file.substringBeforeLast("/") + "/"
+                            val lines = master.lines()
 
-                            master.lines().forEachIndexed { index, line ->
+                            for (j in lines.indices) {
 
-                                if (line.contains("RESOLUTION") && index + 1 < master.lines().size) {
+                                if (lines[j].contains("RESOLUTION") && j + 1 < lines.size) {
 
                                     val quality = when {
-                                        line.contains("1920x1080") -> Qualities.P1080.value
-                                        line.contains("1280x720") -> Qualities.P720.value
+                                        lines[j].contains("1920x1080") -> Qualities.P1080.value
+                                        lines[j].contains("1280x720") -> Qualities.P720.value
+                                        lines[j].contains("854x480") -> Qualities.P480.value
+                                        lines[j].contains("640x360") -> Qualities.P360.value
                                         else -> Qualities.Unknown.value
                                     }
 
-                                    val video = base + master.lines()[index + 1]
+                                    val video = base + lines[j + 1]
 
                                     callback.invoke(
                                         newExtractorLink(
                                             source = name,
-                                            name = "🔥 ${name} ${quality}p",
+                                            name = "$name ${quality}p",
                                             url = video,
                                             type = ExtractorLinkType.M3U8
                                         ) {
                                             this.quality = quality
-                                            this.headers = mapOf("Referer" to iframe)
+                                            this.headers = mapOf(
+                                                "Referer" to iframe,
+                                                "User-Agent" to USER_AGENT
+                                            )
                                         }
                                     )
                                 }
@@ -212,18 +232,17 @@ class DiziYo : MainAPI() {
                         }
                     }
 
-                    // SUBTITLE VARSA ÇEK
+                    // SUBTITLE
                     if (obj.has("tracks")) {
                         val tracks = obj.getJSONArray("tracks")
 
                         for (i in 0 until tracks.length()) {
                             val sub = tracks.getJSONObject(i)
-                            val file = sub.getString("file")
 
                             subtitleCallback.invoke(
                                 SubtitleFile(
                                     sub.getString("label"),
-                                    file
+                                    sub.getString("file")
                                 )
                             )
                         }
