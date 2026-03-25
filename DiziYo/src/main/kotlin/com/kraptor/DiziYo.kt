@@ -1,4 +1,4 @@
-// ! PRO DiziYo Plugin - FULL FIXED
+// ! ULTIMATE DiziYo Plugin - EFSANE VERSION
 
 package com.kraptor
 
@@ -11,7 +11,7 @@ import org.json.JSONObject
 class DiziYo : MainAPI() {
 
     override var mainUrl = "https://www.diziyo.so"
-    override var name = "DiziYo"
+    override var name = "DiziYo Ultimate"
     override val hasMainPage = true
     override var lang = "tr"
 
@@ -24,27 +24,21 @@ class DiziYo : MainAPI() {
     // ================= MAIN PAGE =================
 
     override val mainPage = mainPageOf(
-        "$mainUrl/filmdil/turkce-dublaj-film-izle/?sf_paged=" to "Dublaj Filmler",
-        "$mainUrl/dil/turkce-altyazi-dizi-izle/page" to "Diziler",
-        "$mainUrl/dil/turkce-altyazi-anime-izle/page" to "Anime"
+        "$mainUrl/filmdil/turkce-dublaj-film-izle/?sf_paged=" to "🔥 Dublaj",
+        "$mainUrl/dil/turkce-altyazi-dizi-izle/page" to "📺 Diziler",
+        "$mainUrl/dil/turkce-altyazi-anime-izle/page" to "🍥 Anime"
     )
 
     private fun buildUrl(base: String, page: Int): String {
         return if (base.contains("sf_paged=")) {
             base.replace(Regex("sf_paged=\\d+"), "sf_paged=$page")
-        } else if (base.endsWith("/")) {
-            "$base$page/"
-        } else {
-            "$base/$page/"
-        }
+        } else "$base$page/"
     }
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
 
-        val url = buildUrl(request.data, page)
-
         val doc = app.get(
-            url,
+            buildUrl(request.data, page),
             interceptor = CloudflareKiller()
         ).document
 
@@ -56,20 +50,18 @@ class DiziYo : MainAPI() {
 
     private fun Element.toSearchFix(): SearchResponse? {
 
-        val link = fixUrlNull(
-            this.selectFirst("a")?.attr("href")
-        ) ?: return null
+        val link = fixUrlNull(selectFirst("a")?.attr("href")) ?: return null
 
-        val title = this.selectFirst("h3, h2, .data, .title")
+        val title = selectFirst("h3, h2, .data, .title")
             ?.text()
             ?.replace("izle", "", true)
             ?.trim()
             ?: return null
 
         val poster = fixUrlNull(
-            this.selectFirst("img")?.attr("data-src")
-                ?: this.selectFirst("img")?.attr("data-lazy-src")
-                ?: this.selectFirst("img")?.attr("src")
+            selectFirst("img")?.attr("data-src")
+                ?: selectFirst("img")?.attr("data-lazy-src")
+                ?: selectFirst("img")?.attr("src")
         )
 
         return newMovieSearchResponse(title, link, TvType.Movie) {
@@ -81,7 +73,6 @@ class DiziYo : MainAPI() {
 
     override suspend fun search(query: String): List<SearchResponse> {
         val doc = app.get("$mainUrl/?s=$query").document
-
         return doc.select("div.result-item article")
             .mapNotNull { it.toSearchFix() }
     }
@@ -99,14 +90,13 @@ class DiziYo : MainAPI() {
         )
 
         val desc = doc.selectFirst("div.wp-content p")?.text()
-
         val isSeries = doc.selectFirst("#episodes") != null
 
         return if (isSeries) {
 
             val episodes = doc.select("#episodes li a").map {
                 newEpisode(fixUrlNull(it.attr("href"))) {
-                    this.name = it.text()
+                    name = it.text()
                 }
             }
 
@@ -123,7 +113,7 @@ class DiziYo : MainAPI() {
         }
     }
 
-    // ================= LINK ÇEKME =================
+    // ================= ULTIMATE LINK ENGINE =================
 
     override suspend fun loadLinks(
         data: String,
@@ -141,10 +131,8 @@ class DiziYo : MainAPI() {
                 ?.groupValues?.get(1)
                 ?: return false
 
-            val ajax = "$mainUrl/wp-admin/admin-ajax.php"
-
             val ajaxRes = app.post(
-                ajax,
+                "$mainUrl/wp-admin/admin-ajax.php",
                 data = mapOf(
                     "action" to "doo_player_ajax",
                     "post" to postId,
@@ -157,70 +145,99 @@ class DiziYo : MainAPI() {
                 )
             ).text
 
-            val iframe = Regex("""src="(https?:\/\/[^"]+)"""")
-                .find(ajaxRes)
-                ?.groupValues?.get(1)
-                ?: return false
+            // MULTI IFRAME BUL
+            val iframes = Regex("""src="(https?:\/\/[^"]+)"""")
+                .findAll(ajaxRes)
+                .map { it.groupValues[1] }
+                .toList()
 
-            val hash = Regex("""video\/([a-zA-Z0-9]+)""")
-                .find(iframe)
-                ?.groupValues?.get(1)
-                ?: return false
+            iframes.forEach { iframe ->
 
-            val json = app.post(
-                "$iframe?do=getVideo",
-                data = mapOf(
-                    "hash" to hash,
-                    "r" to mainUrl
-                ),
-                headers = mapOf(
-                    "X-Requested-With" to "XMLHttpRequest",
-                    "Referer" to iframe
-                )
-            ).text
+                try {
 
-            Log.d("DIZIYO", json)
+                    val hash = Regex("""video\/([a-zA-Z0-9]+)""")
+                        .find(iframe)
+                        ?.groupValues?.get(1) ?: return@forEach
 
-            val file = JSONObject(json)
-                .getJSONArray("videoSources")
-                .getJSONObject(0)
-                .getString("file")
+                    val json = app.post(
+                        "$iframe?do=getVideo",
+                        data = mapOf(
+                            "hash" to hash,
+                            "r" to mainUrl
+                        ),
+                        headers = mapOf(
+                            "X-Requested-With" to "XMLHttpRequest",
+                            "Referer" to iframe
+                        )
+                    ).text
 
-            val master = app.get(file).text
-            val base = file.substringBeforeLast("/") + "/"
-            val lines = master.lines()
+                    val obj = JSONObject(json)
 
-            for (i in lines.indices) {
-                if (lines[i].contains("RESOLUTION") && i + 1 < lines.size) {
+                    val sources = obj.getJSONArray("videoSources")
 
-                    val quality = when {
-                        lines[i].contains("1920x1080") -> Qualities.P1080.value
-                        lines[i].contains("1280x720") -> Qualities.P720.value
-                        lines[i].contains("854x480") -> Qualities.P480.value
-                        lines[i].contains("640x360") -> Qualities.P360.value
-                        else -> Qualities.Unknown.value
+                    for (i in 0 until sources.length()) {
+
+                        val file = sources.getJSONObject(i).getString("file")
+
+                        if (file.contains(".m3u8")) {
+
+                            val master = app.get(file).text
+                            val base = file.substringBeforeLast("/") + "/"
+
+                            master.lines().forEachIndexed { index, line ->
+
+                                if (line.contains("RESOLUTION") && index + 1 < master.lines().size) {
+
+                                    val quality = when {
+                                        line.contains("1920x1080") -> Qualities.P1080.value
+                                        line.contains("1280x720") -> Qualities.P720.value
+                                        else -> Qualities.Unknown.value
+                                    }
+
+                                    val video = base + master.lines()[index + 1]
+
+                                    callback.invoke(
+                                        newExtractorLink(
+                                            source = name,
+                                            name = "🔥 ${name} ${quality}p",
+                                            url = video,
+                                            type = ExtractorLinkType.M3U8
+                                        ) {
+                                            this.quality = quality
+                                            this.headers = mapOf("Referer" to iframe)
+                                        }
+                                    )
+                                }
+                            }
+                        }
                     }
 
-                    val video = base + lines[i + 1]
+                    // SUBTITLE VARSA ÇEK
+                    if (obj.has("tracks")) {
+                        val tracks = obj.getJSONArray("tracks")
 
-                    callback.invoke(
-                        newExtractorLink(
-                            source = name,
-                            name = "$name ${quality}p",
-                            url = video,
-                            type = ExtractorLinkType.M3U8
-                        ) {
-                            this.quality = quality
-                            this.headers = mapOf("Referer" to iframe)
+                        for (i in 0 until tracks.length()) {
+                            val sub = tracks.getJSONObject(i)
+                            val file = sub.getString("file")
+
+                            subtitleCallback.invoke(
+                                SubtitleFile(
+                                    sub.getString("label"),
+                                    file
+                                )
+                            )
                         }
-                    )
+                    }
+
+                } catch (e: Exception) {
+                    Log.e("DIZIYO_IFRAME", "ERR", e)
                 }
             }
 
             return true
 
         } catch (e: Exception) {
-            Log.e("DIZIYO", "ERROR", e)
+            Log.e("DIZIYO", "FATAL", e)
             return false
         }
     }
