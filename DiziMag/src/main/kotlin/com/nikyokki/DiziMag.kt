@@ -19,10 +19,9 @@ class DiziMag : MainAPI() {
     override val hasDownloadSupport = true
     override val supportedTypes = setOf(TvType.TvSeries, TvType.Movie)
 
-    // CloudFlare & İstek Ayarları
     override var sequentialMainPage = true
     override var sequentialMainPageDelay = 100L
-    
+
     private val commonHeaders = mapOf(
         "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         "Accept" to "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
@@ -41,17 +40,10 @@ class DiziMag : MainAPI() {
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
-        val url = if (request.name.contains("Yeni Eklenen")) {
-            "${request.data}/${page}"
-        } else {
-            // Kategorilerde sayfalama genellikle sonuna /1, /2 eklenerek yapılır
-            "${request.data}/${page}"
-        }
-
+        val url = if (page <= 1) request.data else "${request.data}/${page}"
         val response = app.get(url, headers = commonHeaders)
         val document = Jsoup.parse(response.body.string())
         
-        // Sitenin farklı sayfalarında farklı grid yapıları (filter-result-box veya listeler) kullanılabiliyor.
         val home = document.select("div.filter-result-box, li.w-1\\/2, div.grid-items > li, div.series-list li").mapNotNull { 
             it.diziler() 
         }
@@ -60,12 +52,10 @@ class DiziMag : MainAPI() {
     }
 
     private fun Element.diziler(): SearchResponse? {
-        // Başlık genellikle h2 veya h3 içinde olur
         val title = this.selectFirst("h2, h3, span.truncate")?.text() ?: return null
         val anchor = this.selectFirst("a") ?: return null
         val href = fixUrlNull(anchor.attr("href")) ?: return null
         
-        // Poster çekme (data-src yoksa src'ye bak)
         val img = this.selectFirst("img")
         val posterUrl = fixUrlNull(img?.attr("data-src")?.ifEmpty { img.attr("src") } ?: img?.attr("src"))
 
@@ -149,9 +139,7 @@ class DiziMag : MainAPI() {
         callback: (ExtractorLink) -> Unit
     ): Boolean {
         val response = app.get(data, headers = commonHeaders)
-        val ciSession = response.cookies["ci_session"] ?: ""
         val document = response.document
-
         val iframe = fixUrlNull(document.selectFirst("div#tv-spoox2 iframe")?.attr("src")) ?: return false
 
         val iframeRes = app.get(iframe, headers = commonHeaders, referer = data).document
@@ -175,23 +163,21 @@ class DiziMag : MainAPI() {
                         val decrypt = key?.let { CryptoJS.decrypt(it, cipherData.ct, cipherData.iv, cipherData.s) }
                         val jsonData = ObjectMapper().readValue(decrypt, JsonData::class.java)
 
-                        // Altyazılar
                         jsonData.strSubtitles?.forEach { sub ->
                             subtitleCallback.invoke(
                                 SubtitleFile(sub.label.toString(), "https://epikplayer.xyz${sub.file}")
                             )
                         }
 
-                        // Video Linki
                         if (!jsonData.videoLocation.isNullOrEmpty()) {
                             callback.invoke(
-                                ExtractorLink(
-                                    this.name,
-                                    this.name,
-                                    jsonData.videoLocation!!,
+                                newExtractorLink(
+                                    source = this.name,
+                                    name = this.name,
+                                    url = jsonData.videoLocation!!,
                                     referer = iframe,
-                                    quality = Qualities.Unknown.value,
-                                    type = ExtractorLinkType.M3U8
+                                    type = ExtractorLinkType.M3U8,
+                                    quality = Qualities.Unknown.value
                                 )
                             )
                         }
@@ -204,7 +190,6 @@ class DiziMag : MainAPI() {
         return true
     }
 
-    // Yardımcı sınıflar (JSON Parser için)
     data class SearchResult(val success: Boolean, val theme: Any?)
     data class Cipher(val ct: String, val iv: String, val s: String)
     data class JsonData(
