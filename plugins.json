@@ -38,6 +38,25 @@
         "name": "4KFilmIzleme"
     },
         {
+        "iconUrl": "https://www.google.com/s2/favicons?domain=dizimag.net&sz=%size%",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/UmayTrade/MyTV",
+        "fileSize": 9787,
+        "status": 1,
+        "language": "tr",
+        "authors": [
+            "Umay"
+        ],
+        "tvTypes": [
+            "Live"
+        ],
+        "version": 5,
+        "internalName": "DiziMag",
+        "description": "En son \u00e7\u0131kan yabanc\u0131 dizi ve filmleri DiziMag fark\u0131yla full hd 1080p kalitede izle. Dizimag Geni\u015f ve g\u00fcncel ar\u015fiviyle dizi ve filmlerin tad\u0131n\u0131 \u00e7\u0131kart\u0131n.",
+        "url": "https://raw.githubusercontent.com/UmayTrade/MyTV/builds/DiziMag.cs3",
+        "name": "DiziMag"
+    },
+        {
         "iconUrl": "https://www.google.com/s2/favicons?domain=belgeselx.com&sz=%size%",
         "apiVersion": 1,
         "repositoryUrl": "https://github.com/UmayTrade/MyTV",
