@@ -8,15 +8,11 @@ import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.utils.*
 import com.lagradost.cloudstream3.LoadResponse.Companion.addActors
 import com.lagradost.cloudstream3.LoadResponse.Companion.addTrailer
-import com.lagradost.cloudstream3.network.CloudflareKiller
 import com.lagradost.cloudstream3.network.DdosGuardKiller
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import okhttp3.Interceptor
-import okhttp3.Response
 import org.json.JSONObject
 import org.jsoup.Jsoup
-import java.net.URLDecoder
 
 class Dizist : MainAPI() {
     override var mainUrl = "https://dizist.live"
@@ -48,40 +44,35 @@ class Dizist : MainAPI() {
 
             try {
                 val resp = app.get("$mainUrl/", headers = defaultHeaders, timeout = 120)
-                val newCookies = resp.cookies
-                
-                if (newCookies.isNullOrEmpty()) {
-                    Log.e("kraptor_Dizist", "⚠️ Uyarı: Çerezler boş döndü, devam ediliyor.")
-                }
-                
-                cookieler = newCookies
+                cookieler = resp.cookies
 
                 val document = resp.document
                 cKey = document.selectFirst("input[name=cKey]")?.`val`()
                 cValue = document.selectFirst("input[name=cValue]")?.`val`()
 
-                Log.d("kraptor_Dizist", "cKey: $cKey, cValue: $cValue")
+                Log.d("kraptor_Dizist", "Oturum Hazır: cKey=$cKey")
             } catch (e: Exception) {
-                Log.e("kraptor_Dizist", "Oturum başlatma hatası: ${e.message}")
+                Log.e("kraptor_Dizist", "Oturum Hatası: ${e.message}")
             }
         }
     }
 
     override val mainPage = mainPageOf(
-        "$mainUrl/bolumler" to "Yeni Eklenen Bölümler",
-        "$mainUrl/diziler" to "Diziler",
+        "$mainUrl/" to "Yeni Eklenen Bölümler",
+        "$mainUrl/diziler" to "Yabancı Diziler",
         "$mainUrl/animeler" to "Animeler",
-        "$mainUrl/bolumler" to "Bölümler",
+        "$mainUrl/bolumler" to "Son Bölümler",
         "$mainUrl/turkce-altyazi" to "Türkçe Altyazı",
         "$mainUrl/turkce-dublaj" to "Türkçe Dublaj",
-        "$mainUrl/dil/yerli" to "Yerli Diziler",
         "$mainUrl/asyadizileri" to "Asya Dizileri",
+        "$mainUrl/dil/yerli" to "Yerli Diziler",
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
         initSession()
-        val cookies: Map<String, String> = cookieler ?: emptyMap()
+        val cookies = cookieler ?: emptyMap()
         
+        // Sayfa 1 ise direkt data, değilse /page/x formatı
         val url = if (page <= 1) {
             request.data
         } else {
@@ -91,28 +82,33 @@ class Dizist : MainAPI() {
         val response = app.get(url, cookies = cookies, headers = defaultHeaders, interceptor = ddosGuardKiller)
         val document = response.document
 
-        // Kategorilere göre farklı selector'lar kullanarak çekim yapıyoruz
-        val home = if (request.name.contains("Yeni Eklenen Bölümler")) {
-            document.select("div.poster-xs, div.poster-small").mapNotNull { it.toMainPageResult() }
+        // Seçicileri (selector) daha esnek hale getirdik
+        val items = if (request.name.contains("Yeni Eklenen Bölümler")) {
+            document.select("div.poster-xs, div.poster-small")
         } else {
-            // .w-full takısını kaldırdık, daha genel poster seçici kullanıyoruz
-            document.select("div.poster-long, div[class*='poster-long'], div.relative.overflow-hidden.group").mapNotNull { it.toMainPageResult() }
+            // poster-long içeren veya genel kart yapısında olan tüm divler
+            document.select("div.poster-long, div[class*='poster-long'], div.relative.group.overflow-hidden")
         }
 
+        val home = items.mapNotNull { it.toMainPageResult() }
         val hasNext = home.isNotEmpty() && !request.name.contains("Yeni Eklenen Bölümler")
+        
         return newHomePageResponse(request.name, home, hasNext = hasNext)
     }
 
     private fun Element.toMainPageResult(): SearchResponse? {
+        // Linki bul, yoksa kendisi link mi kontrol et
         val a = this.selectFirst("a") ?: (if (this.tagName() == "a") this else return null)
-        val title = a.attr("title").ifEmpty { this.selectFirst("img")?.attr("alt") } ?: return null
-        
         val rawHref = a.attr("href")
         if (rawHref.isEmpty()) return null
         
-        // Bölüm linkini dizi ana sayfasına yönlendiriyoruz
+        // Dizi ana sayfasına yönlendirme (bölüm sayfasından kaçınmak için)
         val href = fixUrlNull(rawHref.replace("/izle/", "/dizi/").replace(Regex("-[0-9]+-bolum.*$"), "")) ?: return null
         
+        // Başlığı bul (title attribute veya img alt tag)
+        val title = a.attr("title").ifEmpty { this.selectFirst("img")?.attr("alt") } ?: "Bilinmeyen Dizi"
+        
+        // Poster çekme
         val img = this.selectFirst("img")
         val posterUrl = fixUrlNull(
             img?.attr("data-srcset")?.substringBefore(" ") 
@@ -127,7 +123,7 @@ class Dizist : MainAPI() {
 
     override suspend fun search(query: String): List<SearchResponse> {
         initSession()
-        val cookies: Map<String, String> = cookieler ?: emptyMap()
+        val cookies = cookieler ?: emptyMap()
         val apiResponse = app.post(
             "$mainUrl/bg/searchcontent", 
             cookies = cookies, 
@@ -154,11 +150,7 @@ class Dizist : MainAPI() {
         val title = a.selectFirst("span.truncate")?.text()?.trim() ?: return null
         val href = fixUrlNull(a.attr("href")) ?: return null
         val img = a.selectFirst("img")
-        val poster = fixUrlNull(
-            img?.attr("data-srcset")?.substringBefore(" 1x") 
-            ?: img?.attr("data-src") 
-            ?: img?.attr("src")
-        )
+        val poster = fixUrlNull(img?.attr("data-srcset")?.substringBefore(" 1x") ?: img?.attr("src"))
             
         return newTvSeriesSearchResponse(title, href, TvType.TvSeries) {
             this.posterUrl = poster
@@ -169,7 +161,7 @@ class Dizist : MainAPI() {
 
     override suspend fun load(url: String): LoadResponse? {
         initSession()
-        val cookies: Map<String, String> = cookieler ?: emptyMap()
+        val cookies = cookieler ?: emptyMap()
         val urlget = app.get(url, cookies = cookies, headers = defaultHeaders, interceptor = ddosGuardKiller)
         val document = urlget.document
         val text = urlget.text
@@ -180,6 +172,8 @@ class Dizist : MainAPI() {
         val year = document.selectFirst("li.sm\\:w-1\\/5:nth-child(5) > p:nth-child(2)")?.text()?.trim()?.toIntOrNull()
         val tags = document.select("span.block a").map { it.text() }
         val rating = document.selectFirst("strong.color-imdb")?.text()?.trim()
+        
+        // Öneriler kısmında da selector'ı genişlettik
         val recommendations = document.select("div.poster-long, div[class*='poster-long']").mapNotNull { it.toRecommendationResult() }
         
         val duration = document.selectFirst("li.sm\\:w-1\\/5:nth-child(2) > p:nth-child(2)")?.text()?.replace(" dk", "")
@@ -249,10 +243,10 @@ class Dizist : MainAPI() {
         callback: (ExtractorLink) -> Unit
     ): Boolean {
         initSession()
-        val cookies: Map<String, String> = cookieler ?: emptyMap()
+        val cookies = cookieler ?: emptyMap()
         val document = app.get(data, cookies = cookies, headers = defaultHeaders).document
 
-        val kaynakLinkleri = document.select("div.series-watch-alternatives.series-watch-alternatives-active.mb-5 li a.focus\\:outline-none")
+        val kaynakLinkleri = document.select("div.series-watch-alternatives li a.focus\\:outline-none")
 
         kaynakLinkleri.forEach { linkElem ->
             val href = linkElem.attr("href")
@@ -268,10 +262,9 @@ class Dizist : MainAPI() {
                     loadExtractor(iframeSrc, "$mainUrl/", subtitleCallback, callback)
                 }
             } catch (e: Exception) {
-                Log.e("kraptor_Dizist", "Link yükleme hatası: ${e.message}")
+                Log.e("kraptor_Dizist", "Link Hatası: ${e.message}")
             }
         }
-
         return true
     }
 }
