@@ -36,22 +36,26 @@ class Dizist : MainAPI() {
     )
 
     private suspend fun initSession() {
-        if (cookieler != null && cKey != null && cValue != null) return
+        if (cookieler != null) return
         initMutex.withLock {
-            if (cookieler != null && cKey != null && cValue != null) return@withLock
+            if (cookieler != null) return@withLock
             try {
                 val resp = app.get("$mainUrl/", headers = defaultHeaders, timeout = 120)
-                cookieler = resp.cookies
+                // Çerezler boş olsa bile null hatası almamak için boş map atıyoruz
+                cookieler = resp.cookies ?: emptyMap()
+                
                 val document = resp.document
                 cKey = document.selectFirst("input[name=cKey]")?.`val`()
                 cValue = document.selectFirst("input[name=cValue]")?.`val`()
+                
+                Log.d("kraptor_Dizist", "Oturum başlatıldı, çerezler: ${cookieler?.size}")
             } catch (e: Exception) {
                 Log.e("kraptor_Dizist", "Oturum Hatası: ${e.message}")
+                cookieler = emptyMap() // Hata olsa da null bırakmıyoruz
             }
         }
     }
 
-    // URL'leri sitenin tam kategori yollarına göre güncelledim
     override val mainPage = mainPageOf(
         "$mainUrl/" to "Yeni Eklenen Bölümler",
         "$mainUrl/yabanci-diziler" to "Yabancı Diziler",
@@ -65,53 +69,46 @@ class Dizist : MainAPI() {
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
         initSession()
+        val currentCookies = cookieler ?: emptyMap()
         
-        // Kategori sayfaları için URL oluşturma
         val url = if (request.data == "$mainUrl/" || request.data == "$mainUrl") {
             if (page <= 1) request.data else return newHomePageResponse(request.name, emptyList(), false)
         } else {
             if (page <= 1) request.data else "${request.data.removeSuffix("/")}/page/$page"
         }
 
-        val response = app.get(url, cookies = cookieler ?: emptyMap(), headers = defaultHeaders, interceptor = ddosGuardKiller)
+        val response = app.get(url, cookies = currentCookies, headers = defaultHeaders, interceptor = ddosGuardKiller)
         val document = response.document
 
-        // CSS Seçicileri: Sitenin tüm grid varyasyonlarını kapsayacak şekilde genişletildi
         val items = if (request.name == "Yeni Eklenen Bölümler") {
-            // Küçük posterler
             document.select("div.poster-xs, div.poster-small, [class*='poster-xs']")
         } else {
-            // Büyük posterler ve kategori gridleri
+            // "dolmadı" dediğin kısımlar için genişletilmiş seçici
             document.select("div.poster-long, div[class*='poster-long'], div.relative.group.overflow-hidden, div.w-full.relative.group")
         }
 
         val home = items.mapNotNull { it.toMainPageResult() }
         
-        // Bazı sayfalar boş gelirse bir de en genel seçiciyi dene
+        // Fail-safe: Eğer hala boşsa genel grid yapısını dene
         val finalHome = if (home.isEmpty()) {
-            document.select("div.grid div.relative").mapNotNull { it.toMainPageResult() }
+            document.select("div.grid div.relative, div.flex.flex-wrap div.relative").mapNotNull { it.toMainPageResult() }
         } else home
 
         val hasNext = finalHome.isNotEmpty() && request.name != "Yeni Eklenen Bölümler"
-        
         return newHomePageResponse(request.name, finalHome, hasNext = hasNext)
     }
 
     private fun Element.toMainPageResult(): SearchResponse? {
-        // A etiketini bul (İçinde veya kendisi olabilir)
         val a = this.selectFirst("a") ?: (if (this.tagName() == "a") this else return null)
         val rawHref = a.attr("href")
         if (rawHref.isEmpty() || rawHref == "#") return null
         
-        // Link temizleme (Bölümden diziye)
         val href = fixUrlNull(rawHref.replace("/izle/", "/dizi/").replace(Regex("-[0-9]+-bolum.*$"), "")) ?: return null
         
-        // Başlık: title attr, img alt veya span text'ine bak
         val title = a.attr("title").ifEmpty { 
             this.selectFirst("img")?.attr("alt") ?: this.selectFirst("span")?.text() 
         } ?: return null
         
-        // Poster: srcset ilk öncelik, sonra src
         val img = this.selectFirst("img")
         val posterUrl = fixUrlNull(
             img?.attr("data-srcset")?.substringBefore(" ") 
