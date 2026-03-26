@@ -175,10 +175,11 @@ class DiziMag : MainAPI() {
                                     source = this.name,
                                     name = this.name,
                                     url = jsonData.videoLocation!!,
-                                    referer = iframe,
-                                    type = ExtractorLinkType.M3U8,
-                                    quality = Qualities.Unknown.value
-                                )
+                                    type = ExtractorLinkType.M3U8
+                                ) {
+                                    this.referer = iframe
+                                    this.quality = Qualities.Unknown.value
+                                }
                             )
                         }
                     } catch (e: Exception) {
