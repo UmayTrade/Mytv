@@ -68,7 +68,7 @@ class Dizist : MainAPI() {
     }
 
     override val mainPage = mainPageOf(
-        "$mainUrl/" to "Yeni Eklenen Bölümler",
+        "$mainUrl/bolumler" to "Yeni Eklenen Bölümler",
         "$mainUrl/diziler" to "Diziler",
         "$mainUrl/animeler" to "Animeler",
         "$mainUrl/bolumler" to "Bölümler",
