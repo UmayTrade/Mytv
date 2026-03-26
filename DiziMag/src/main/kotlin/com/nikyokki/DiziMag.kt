@@ -20,10 +20,10 @@ class DiziMag : MainAPI() {
     override val supportedTypes = setOf(TvType.TvSeries, TvType.Movie)
 
     override var sequentialMainPage = true
-    override var sequentialMainPageDelay = 200L // Bloklanmamak için süreyi biraz artırdık
+    override var sequentialMainPageDelay = 100L
 
     private val commonHeaders = mapOf(
-        "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+        "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         "Accept" to "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
         "Referer" to "$mainUrl/"
     )
@@ -40,27 +40,38 @@ class DiziMag : MainAPI() {
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
-        val url = if (page <= 1) request.data else "${request.data}/${page}"
+        val url = if (page <= 1) request.data else "${request.data}/page/${page}"
         val response = app.get(url, headers = commonHeaders)
         val document = Jsoup.parse(response.body.string())
         
-        // Seçicileri (Selectors) genişlettik; site hangi yapıyı kullanırsa kullansın yakalar.
-        val items = document.select("div.filter-result-box, li.w-1\\/2, div.grid-items > li, div.series-list li, .movie-item")
+        // HTML yapına göre ana içerik seçicileri
+        val items = document.select("a.favo1222, li.item-li, div.filter-result-box")
         val home = items.mapNotNull { it.diziler() }
 
         return newHomePageResponse(request.name, home, hasNext = home.isNotEmpty())
     }
 
     private fun Element.diziler(): SearchResponse? {
-        // h2, h3 veya doğrudan link metni içinden başlığı çek
-        val title = this.selectFirst("h2, h3, .series-title, span.truncate")?.text() ?: return null
-        val anchor = this.selectFirst("a") ?: return null
-        val href = fixUrlNull(anchor.attr("href")) ?: return null
+        val isBox = this.hasClass("favo1222")
+        
+        val title = if (isBox) {
+            this.selectFirst("h1")?.text() ?: this.attr("title")
+        } else {
+            val anchor = this.selectFirst("a")
+            anchor?.attr("title") ?: anchor?.text()
+        } ?: return null
+
+        val href = if (isBox) {
+            fixUrlNull(this.attr("href"))
+        } else {
+            fixUrlNull(this.selectFirst("a")?.attr("href"))
+        } ?: return null
         
         val img = this.selectFirst("img")
+        // LiteSpeed lazy load için data-src veya src kontrolü
         val posterUrl = fixUrlNull(img?.attr("data-src")?.ifEmpty { img.attr("src") } ?: img?.attr("src"))
 
-        return if (href.contains("/dizi/")) {
+        return if (href.contains("/dizi/") || href.contains("/bolum/")) {
             newTvSeriesSearchResponse(title, href, TvType.TvSeries) {
                 this.posterUrl = posterUrl
             }
@@ -75,13 +86,14 @@ class DiziMag : MainAPI() {
         val searchReq = app.post(
             "${mainUrl}/search",
             data = mapOf("query" to query),
-            headers = commonHeaders.plus("X-Requested-With" to "XMLHttpRequest")
+            headers = commonHeaders.plus("X-Requested-With" to "XMLHttpRequest"),
+            referer = "${mainUrl}/"
         ).parsedSafe<SearchResult>()
 
         if (searchReq?.success != true) return emptyList()
 
         val document = Jsoup.parse(searchReq.theme.toString())
-        return document.select("li").mapNotNull { it.diziler() }
+        return document.select("li, a.favo1222").mapNotNull { it.diziler() }
     }
 
     override suspend fun load(url: String): LoadResponse? {
