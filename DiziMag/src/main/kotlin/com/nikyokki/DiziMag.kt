@@ -20,10 +20,10 @@ class DiziMag : MainAPI() {
     override val supportedTypes = setOf(TvType.TvSeries, TvType.Movie)
 
     override var sequentialMainPage = true
-    override var sequentialMainPageDelay = 100L
+    override var sequentialMainPageDelay = 200L // Bloklanmamak için süreyi biraz artırdık
 
     private val commonHeaders = mapOf(
-        "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
         "Accept" to "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
         "Referer" to "$mainUrl/"
     )
@@ -44,15 +44,16 @@ class DiziMag : MainAPI() {
         val response = app.get(url, headers = commonHeaders)
         val document = Jsoup.parse(response.body.string())
         
-        val home = document.select("div.filter-result-box, li.w-1\\/2, div.grid-items > li, div.series-list li").mapNotNull { 
-            it.diziler() 
-        }
+        // Seçicileri (Selectors) genişlettik; site hangi yapıyı kullanırsa kullansın yakalar.
+        val items = document.select("div.filter-result-box, li.w-1\\/2, div.grid-items > li, div.series-list li, .movie-item")
+        val home = items.mapNotNull { it.diziler() }
 
         return newHomePageResponse(request.name, home, hasNext = home.isNotEmpty())
     }
 
     private fun Element.diziler(): SearchResponse? {
-        val title = this.selectFirst("h2, h3, span.truncate")?.text() ?: return null
+        // h2, h3 veya doğrudan link metni içinden başlığı çek
+        val title = this.selectFirst("h2, h3, .series-title, span.truncate")?.text() ?: return null
         val anchor = this.selectFirst("a") ?: return null
         val href = fixUrlNull(anchor.attr("href")) ?: return null
         
@@ -74,8 +75,7 @@ class DiziMag : MainAPI() {
         val searchReq = app.post(
             "${mainUrl}/search",
             data = mapOf("query" to query),
-            headers = commonHeaders.plus("X-Requested-With" to "XMLHttpRequest"),
-            referer = "${mainUrl}/"
+            headers = commonHeaders.plus("X-Requested-With" to "XMLHttpRequest")
         ).parsedSafe<SearchResult>()
 
         if (searchReq?.success != true) return emptyList()
