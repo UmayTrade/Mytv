@@ -58,8 +58,8 @@ class Dizist : MainAPI() {
         "$mainUrl/yabanci-diziler" to "Yabancı Diziler",
         "$mainUrl/animeler" to "Animeler",
         "$mainUrl/bolumler" to "Son Bölümler",
-        "$mainUrl/turkce-altyazi" to "Türkçe Altyazı",
-        "$mainUrl/turkce-dublaj" to "Türkçe Dublaj",
+        "$mainUrl/dil/turkce-altyazi" to "Türkçe Altyazı",
+        "$mainUrl/dil/turkce-dublaj" to "Türkçe Dublaj",
         "$mainUrl/asyadizileri" to "Asya Dizileri",
         "$mainUrl/dil/yerli" to "Yerli Diziler",
     )
