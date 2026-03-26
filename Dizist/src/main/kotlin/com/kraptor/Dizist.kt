@@ -71,8 +71,12 @@ class Dizist : MainAPI() {
 
     override val mainPage = mainPageOf(
         "$mainUrl/" to "Yeni Eklenen Bölümler",
-        "$mainUrl/yabanci-diziler" to "Yabancı Diziler",
+        "$mainUrl/diziler" to "Diziler",
         "$mainUrl/animeler" to "Animeler",
+        "$mainUrl/bolumler" to "Bolumler",
+        "$mainUrl/turkce-altyazi" to "Turkce-altyazi",
+        "$mainUrl/turkce-dublaj" to "Turkce-dublaj",
+        "$mainUrl/dil/yerli" to "Yerli",
         "$mainUrl/asyadizileri" to "Asya Dizileri",
     )
 
