@@ -14,73 +14,87 @@ class DiziYoUltimate : MainAPI() {
     override val hasMainPage = true
     override val supportedTypes = setOf(TvType.Movie, TvType.TvSeries, TvType.Anime)
 
-    // 🔥 ÇALIŞAN DOMAIN
     override var mainUrl = "https://diziyo.so"
-
-    // 🔥 USER-AGENT (Tarayıcı gibi görün)
-    private val userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.0"
-
-    // 🔥 CLOUDFLARE KILLER (Bir kez oluştur, her yerde kullan)
     private val cfKiller = CloudflareKiller()
-
-    // 🔥 HEADER'LAR
-    private val headers = mapOf(
-        "User-Agent" to userAgent,
-        "Accept" to "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-        "Accept-Language" to "tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7",
-        "Accept-Encoding" to "gzip, deflate, br",
-        "Connection" to "keep-alive",
-        "Upgrade-Insecure-Requests" to "1"
-    )
 
     // ================= MAIN PAGE =================
 
     override val mainPage = mainPageOf(
-        "/filmler/page/" to "Filmler",
-        "/diziler/page/" to "Diziler",
-        "/anime/page/" to "Anime"
+        "/filmler/" to "Filmler",
+        "/diziler/" to "Diziler",
+        "/anime/" to "Anime"
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
         
         val url = "$mainUrl${request.data}$page/"
-        Log.d("DIZIYO", "📄 Yükleniyor: $url")
+        Log.d("DIZIYO", "📄 URL: $url")
 
-        // 🔥 TIMEOUT 30 SANİYE + HEADER'LAR
-        val doc = app.get(
-            url = url,
-            headers = headers,
-            timeout = 30,  // 30 saniye bekle
-            interceptor = cfKiller
-        ).document
+        val doc = app.get(url, timeout = 30, interceptor = cfKiller).document
 
-        // 🔥 DİZİYO.SO SEÇİCİLERİ (item sınıfı)
-        val items = doc.select("div.item, article.item, .movie-item, .video-item")
+        // 🔥 TÜM OLASI SEÇİCİLER (En yaygından nadir olana)
+        val selectors = listOf(
+            "div.item",           // En yaygın
+            "article.item",       // WordPress
+            ".movie-item",        // Film temaları
+            ".video-item",        // Video temaları
+            ".post-item",         // Blog temaları
+            ".card",              // Bootstrap
+            ".content-item",      // Dooplay
+            ".poster",            // Basit temalar
+            "article",            // Genel
+            ".result-item"        // Arama sonuçları
+        )
 
-        Log.d("DIZIYO", "🎬 Bulunan: ${items.size} adet")
+        var items = emptyList<SearchResponse>()
+        
+        // Çalışan seçiciyi bul
+        for (selector in selectors) {
+            val elements = doc.select(selector)
+            Log.d("DIZIYO", "🔍 $selector: ${elements.size} adet")
+            
+            if (elements.isNotEmpty()) {
+                items = elements.mapNotNull { it.toSearchResult() }
+                if (items.isNotEmpty()) {
+                    Log.d("DIZIYO", "✅ Çalışan seçici: $selector")
+                    break
+                }
+            }
+        }
 
-        val list = items.mapNotNull { it.toSearchResult() }
+        // Hiçbiri çalışmadıysa tüm HTML'i logla
+        if (items.isEmpty()) {
+            Log.e("DIZIYO", "❌ Hiçbir seçici çalışmadı!")
+            Log.d("DIZIYO", "HTML: ${doc.html().take(500)}")
+        }
 
-        return newHomePageResponse(request.name, list)
+        return newHomePageResponse(request.name, items)
     }
 
     private fun Element.toSearchResult(): SearchResponse? {
-        // Başlık
-        val titleElement = selectFirst("h3, h2, .title, a[title]")
-        val title = titleElement?.text()?.trim() 
-            ?: titleElement?.attr("title")?.trim() 
-            ?: return null
+        // Başlık (tüm olasılıklar)
+        val title = selectFirst("h3 a, h2 a, h3, h2, .title a, .title, a[title], .name")?.let {
+            it.text().ifEmpty { it.attr("title") }
+        }?.trim() ?: return null
 
         // Link
         val href = selectFirst("a")?.attr("href") ?: return null
-        val link = fixUrl(href)
+        val link = when {
+            href.startsWith("http") -> href
+            href.startsWith("/") -> "$mainUrl$href"
+            else -> "$mainUrl/$href"
+        }
 
         // Poster
-        val poster = fixUrlNull(
-            selectFirst("img")?.attr("data-src")
-            ?: selectFirst("img")?.attr("data-original")
-            ?: selectFirst("img")?.attr("src")
-        )
+        val poster = selectFirst("img")?.let { img ->
+            img.attr("data-src").ifEmpty { 
+                img.attr("data-original").ifEmpty {
+                    img.attr("src")
+                }
+            }
+        }?.let { fixUrl(it) }
+
+        Log.d("DIZIYO", "🎬 $title")
 
         // Tür belirle
         val type = when {
@@ -88,8 +102,6 @@ class DiziYoUltimate : MainAPI() {
             link.contains("/anime/") -> TvType.Anime
             else -> TvType.Movie
         }
-
-        Log.d("DIZIYO", "✅ $title")
 
         return if (type == TvType.TvSeries || type == TvType.Anime) {
             newTvSeriesSearchResponse(title, link, type) {
@@ -106,48 +118,29 @@ class DiziYoUltimate : MainAPI() {
 
     override suspend fun search(query: String): List<SearchResponse> {
         val url = "$mainUrl/?s=${query.replace(" ", "+")}"
+        val doc = app.get(url, timeout = 30, interceptor = cfKiller).document
         
-        val doc = app.get(
-            url = url,
-            headers = headers,
-            timeout = 30,
-            interceptor = cfKiller
-        ).document
-
-        return doc.select("div.item, article.item, .result-item").mapNotNull { 
+        return doc.select("div.item, article.item, .result-item, .video-item").mapNotNull { 
             it.toSearchResult() 
         }
     }
 
-    // ================= LOAD (Detay Sayfası) =================
+    // ================= LOAD =================
 
     override suspend fun load(url: String): LoadResponse? {
         Log.d("DIZIYO", "📥 Detay: $url")
+        
+        val doc = app.get(url, timeout = 30, interceptor = cfKiller).document
 
-        val doc = app.get(
-            url = url,
-            headers = headers,
-            timeout = 30,
-            interceptor = cfKiller
-        ).document
+        val title = doc.selectFirst("h1[data-name], h1.title, h1")?.let {
+            it.attr("data-name").ifEmpty { it.text() }
+        }?.trim() ?: return null
 
-        // Başlık
-        val title = doc.selectFirst("h1[data-name], h1.title, h1")?.attr("data-name")
-            ?: doc.selectFirst("h1")?.text()?.trim()
-            ?: return null
+        val poster = doc.selectFirst(".poster img, .thumb img, img")?.attr("src")?.let { fixUrl(it) }
+        val desc = doc.selectFirst(".description, .summary, .plot, .content")?.text()
 
-        // Poster
-        val poster = fixUrlNull(
-            doc.selectFirst(".poster img")?.attr("src")
-            ?: doc.selectFirst("meta[property=og:image]")?.attr("content")
-        )
-
-        // Açıklama
-        val desc = doc.selectFirst(".description, .summary, .plot")?.text()
-            ?: doc.selectFirst("meta[property=og:description]")?.attr("content")
-
-        // Bölümleri kontrol et
-        val episodes = doc.select("div#episodes a, .episode-list a, .episodes a").mapIndexed { index, element ->
+        // Bölümler
+        val episodes = doc.select("#episodes a, .episode-list a, .episodes a").mapIndexed { index, element ->
             val epName = element.text().trim().ifEmpty { "Bölüm ${index + 1}" }
             val epUrl = fixUrl(element.attr("href"))
             newEpisode(epUrl) {
@@ -157,13 +150,11 @@ class DiziYoUltimate : MainAPI() {
         }
 
         return if (episodes.isNotEmpty()) {
-            // Dizi/Anime
             newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodes) {
                 this.posterUrl = poster
                 this.plot = desc
             }
         } else {
-            // Film
             newMovieLoadResponse(title, url, TvType.Movie, url) {
                 this.posterUrl = poster
                 this.plot = desc
@@ -171,7 +162,7 @@ class DiziYoUltimate : MainAPI() {
         }
     }
 
-    // ================= LOAD LINKS (Video Oynatma) =================
+    // ================= LOAD LINKS =================
 
     override suspend fun loadLinks(
         data: String,
@@ -182,86 +173,67 @@ class DiziYoUltimate : MainAPI() {
         Log.d("DIZIYO", "▶️ Link: $data")
 
         return try {
-            val doc = app.get(
-                url = data,
-                headers = headers,
-                timeout = 30,
-                interceptor = cfKiller
-            ).document
+            val doc = app.get(data, timeout = 30, interceptor = cfKiller).document
 
             // Post ID bul
             val postId = Regex("""postid-(\d+)""").find(doc.html())?.groupValues?.get(1)
                 ?: Regex("""data-id=["']?(\d+)["']?""").find(doc.html())?.groupValues?.get(1)
                 ?: return false
 
-            Log.d("DIZIYO", "🆔 Post ID: $postId")
-
-            // AJAX isteği
-            val ajaxUrl = "$mainUrl/wp-admin/admin-ajax.php"
             val type = if (data.contains("/dizi/") || data.contains("/anime/")) "tv" else "movie"
 
             val response = app.post(
-                url = ajaxUrl,
+                "$mainUrl/wp-admin/admin-ajax.php",
                 data = mapOf(
                     "action" to "doo_player_ajax",
                     "post" to postId,
                     "nume" to "1",
                     "type" to type
                 ),
-                headers = headers + mapOf(
+                headers = mapOf(
                     "X-Requested-With" to "XMLHttpRequest",
-                    "Referer" to data,
-                    "Content-Type" to "application/x-www-form-urlencoded; charset=UTF-8",
-                    "Origin" to mainUrl
+                    "Referer" to data
                 ),
                 timeout = 30,
                 interceptor = cfKiller
             ).text
 
-            Log.d("DIZIYO", "📡 Cevap: ${response.take(100)}")
+            // iframe bul
+            val iframe = Regex("""src=["']([^"']+)["']""").find(response)?.groupValues?.get(1)
+                ?.replace("\\/", "/") ?: return false
 
-            // iframe src bul
-            val iframeUrl = Regex("""src=["']([^"']+)["']""").find(response)?.groupValues?.get(1)
-                ?.replace("\\/", "/")
-                ?: return false
+            Log.d("DIZIYO", "🌐 iframe: $iframe")
 
-            Log.d("DIZIYO", "🌐 iframe: $iframeUrl")
-
-            // Direkt m3u8 mi?
-            if (iframeUrl.contains(".m3u8")) {
+            // m3u8 mi?
+            if (iframe.contains(".m3u8")) {
                 callback.invoke(
-                    newExtractorLink(name, "Direct", iframeUrl, ExtractorLinkType.M3U8) {
-                        this.referer = mainUrl
+                    newExtractorLink(name, "Direct", iframe, ExtractorLinkType.M3U8) {
+                        referer = mainUrl
                     }
                 )
                 return true
             }
 
-            // Hash sistemini dene
-            val hash = Regex("""video/([a-zA-Z0-9]+)""").find(iframeUrl)?.groupValues?.get(1)
+            // Hash sistemi
+            val hash = Regex("""video/([a-zA-Z0-9]+)""").find(iframe)?.groupValues?.get(1)
             if (hash != null) {
-                val videoResponse = app.post(
-                    url = "$iframeUrl?do=getVideo",
+                val json = app.post(
+                    "$iframe?do=getVideo",
                     data = mapOf("hash" to hash, "r" to mainUrl),
-                    headers = mapOf("Referer" to iframeUrl),
+                    headers = mapOf("Referer" to iframe),
                     timeout = 30,
                     interceptor = cfKiller
                 ).text
 
-                val json = JSONObject(videoResponse)
-                val sources = json.optJSONArray("videoSources") ?: return false
-
+                val sources = JSONObject(json).getJSONArray("videoSources")
                 for (i in 0 until sources.length()) {
-                    val source = sources.getJSONObject(i)
-                    val file = source.getString("file")
-                    
-                    M3u8Helper.generateM3u8(name, file, iframeUrl).forEach(callback)
+                    val file = sources.getJSONObject(i).getString("file")
+                    M3u8Helper.generateM3u8(name, file, iframe).forEach(callback)
                 }
                 return true
             }
 
-            // Fallback: Extractor dene
-            loadExtractor(iframeUrl, data, subtitleCallback, callback)
+            loadExtractor(iframe, data, subtitleCallback, callback)
 
         } catch (e: Exception) {
             Log.e("DIZIYO", "❌ Hata: ${e.message}")
