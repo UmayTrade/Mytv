@@ -36,7 +36,6 @@ class Dizist : MainAPI() {
     private var cValue: String? = null
     private val initMutex = Mutex()
 
-    // Standart header'lar ekleyerek sitenin bizi bot olarak reddetme ihtimalini düşürüyoruz
     private val defaultHeaders = mapOf(
         "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         "Referer" to "$mainUrl/"
@@ -51,9 +50,8 @@ class Dizist : MainAPI() {
                 val resp = app.get("$mainUrl/", headers = defaultHeaders, timeout = 120)
                 val newCookies = resp.cookies
                 
-                // Hata fırlatmak yerine log basıp devam ediyoruz, bazen çerezsiz de içerik gelebilir
                 if (newCookies.isNullOrEmpty()) {
-                    Log.e("kraptor_Dizist", "⚠️ Uyarı: Çerezler boş döndü, yine de devam ediliyor.")
+                    Log.e("kraptor_Dizist", "⚠️ Uyarı: Çerezler boş döndü, devam ediliyor.")
                 }
                 
                 cookieler = newCookies
@@ -73,39 +71,58 @@ class Dizist : MainAPI() {
         "$mainUrl/" to "Yeni Eklenen Bölümler",
         "$mainUrl/diziler" to "Diziler",
         "$mainUrl/animeler" to "Animeler",
-        "$mainUrl/bolumler" to "Bolumler",
-        "$mainUrl/turkce-altyazi" to "Turkce-altyazi",
-        "$mainUrl/turkce-dublaj" to "Turkce-dublaj",
-        "$mainUrl/dil/yerli" to "Yerli",
+        "$mainUrl/bolumler" to "Bölümler",
+        "$mainUrl/turkce-altyazi" to "Türkçe Altyazı",
+        "$mainUrl/turkce-dublaj" to "Türkçe Dublaj",
+        "$mainUrl/dil/yerli" to "Yerli Diziler",
         "$mainUrl/asyadizileri" to "Asya Dizileri",
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
         initSession()
         val cookies: Map<String, String> = cookieler ?: emptyMap()
-        val document = if (request.name.contains("Yeni Eklenen Bölümler")) {
-            app.get(request.data, cookies = cookies, headers = defaultHeaders, interceptor = ddosGuardKiller).document
+        
+        val url = if (page <= 1) {
+            request.data
         } else {
-            app.get("${request.data}/page/$page", cookies = cookies, headers = defaultHeaders, interceptor = ddosGuardKiller).document
+            "${request.data.removeSuffix("/")}/page/$page"
         }
 
+        val response = app.get(url, cookies = cookies, headers = defaultHeaders, interceptor = ddosGuardKiller)
+        val document = response.document
+
+        // Kategorilere göre farklı selector'lar kullanarak çekim yapıyoruz
         val home = if (request.name.contains("Yeni Eklenen Bölümler")) {
-            document.select("div.poster-xs").mapNotNull { it.toMainPageResult() }
+            document.select("div.poster-xs, div.poster-small").mapNotNull { it.toMainPageResult() }
         } else {
-            document.select("div.poster-long.w-full").mapNotNull { it.toMainPageResult() }
+            // .w-full takısını kaldırdık, daha genel poster seçici kullanıyoruz
+            document.select("div.poster-long, div[class*='poster-long'], div.relative.overflow-hidden.group").mapNotNull { it.toMainPageResult() }
         }
 
-        val hasNext = !request.name.contains("Yeni Eklenen Bölümler")
+        val hasNext = home.isNotEmpty() && !request.name.contains("Yeni Eklenen Bölümler")
         return newHomePageResponse(request.name, home, hasNext = hasNext)
     }
 
     private fun Element.toMainPageResult(): SearchResponse? {
-        val a = this.selectFirst("a") ?: return null
-        val title = a.attr("title") ?: return null
-        val href = fixUrlNull(a.attr("href")?.replace("/izle/", "/dizi/")?.replace(Regex("-[0-9]+.*$"), "")) ?: return null
-        val posterUrl = fixUrlNull(this.selectFirst("img")?.attr("data-srcset")?.substringBefore(" "))
+        val a = this.selectFirst("a") ?: (if (this.tagName() == "a") this else return null)
+        val title = a.attr("title").ifEmpty { this.selectFirst("img")?.attr("alt") } ?: return null
+        
+        val rawHref = a.attr("href")
+        if (rawHref.isEmpty()) return null
+        
+        // Bölüm linkini dizi ana sayfasına yönlendiriyoruz
+        val href = fixUrlNull(rawHref.replace("/izle/", "/dizi/").replace(Regex("-[0-9]+-bolum.*$"), "")) ?: return null
+        
+        val img = this.selectFirst("img")
+        val posterUrl = fixUrlNull(
+            img?.attr("data-srcset")?.substringBefore(" ") 
+            ?: img?.attr("data-src") 
+            ?: img?.attr("src")
+        )
 
-        return newTvSeriesSearchResponse(title, href, TvType.TvSeries) { this.posterUrl = posterUrl }
+        return newTvSeriesSearchResponse(title, href, TvType.TvSeries) { 
+            this.posterUrl = posterUrl 
+        }
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
@@ -136,10 +153,12 @@ class Dizist : MainAPI() {
         val a = this.selectFirst("a") ?: return null
         val title = a.selectFirst("span.truncate")?.text()?.trim() ?: return null
         val href = fixUrlNull(a.attr("href")) ?: return null
-        val poster = a.selectFirst("img")?.attr("data-srcset")
-            ?.substringBefore(" 1x")
-            ?.trim()
-            ?.let { fixUrlNull(it) }
+        val img = a.selectFirst("img")
+        val poster = fixUrlNull(
+            img?.attr("data-srcset")?.substringBefore(" 1x") 
+            ?: img?.attr("data-src") 
+            ?: img?.attr("src")
+        )
             
         return newTvSeriesSearchResponse(title, href, TvType.TvSeries) {
             this.posterUrl = poster
@@ -161,7 +180,8 @@ class Dizist : MainAPI() {
         val year = document.selectFirst("li.sm\\:w-1\\/5:nth-child(5) > p:nth-child(2)")?.text()?.trim()?.toIntOrNull()
         val tags = document.select("span.block a").map { it.text() }
         val rating = document.selectFirst("strong.color-imdb")?.text()?.trim()
-        val recommendations = document.select("div.poster-long.w-full").mapNotNull { it.toRecommendationResult() }
+        val recommendations = document.select("div.poster-long, div[class*='poster-long']").mapNotNull { it.toRecommendationResult() }
+        
         val duration = document.selectFirst("li.sm\\:w-1\\/5:nth-child(2) > p:nth-child(2)")?.text()?.replace(" dk", "")
             ?.split(" ")?.first()?.trim()?.toIntOrNull()
             
