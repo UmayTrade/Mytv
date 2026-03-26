@@ -51,9 +51,9 @@ class DiziYoUltimate : MainAPI() {
     // ================= MAIN PAGE =================
 
     override val mainPage = mainPageOf(
-        "/diziler/page/" to "Yeni Diziler",
-        "/dil/turkce-dublaj/page/" to "Dublaj Diziler",
-        "/dil/turkce-altyazi/page/" to "Altyazılı Diziler"
+        "/diziler/sayfa/" to "Yeni Diziler",
+        "/dil/turkce-dublaj/sayfa/" to "Dublaj Diziler",
+        "/dil/turkce-altyazi/sayfa/" to "Altyazılı Diziler"
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
