@@ -23,9 +23,7 @@ class Dizist : MainAPI() {
     override val supportedTypes = setOf(TvType.TvSeries)
     
     override var sequentialMainPage = true
-    override var sequentialMainPageDelay = 250L
-    override var sequentialMainPageScrollDelay = 250L
-    
+    override var sequentialMainPageDelay = 200L
     private var ddosGuardKiller = DdosGuardKiller(true)
     private var cookieler: Map<String, String>? = null
     private var cKey: String? = null
@@ -33,7 +31,7 @@ class Dizist : MainAPI() {
     private val initMutex = Mutex()
 
     private val defaultHeaders = mapOf(
-        "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
         "Referer" to "$mainUrl/"
     )
 
@@ -53,22 +51,23 @@ class Dizist : MainAPI() {
         }
     }
 
+    // URL'leri sitenin tam kategori yollarına göre güncelledim
     override val mainPage = mainPageOf(
         "$mainUrl/" to "Yeni Eklenen Bölümler",
         "$mainUrl/yabanci-diziler" to "Yabancı Diziler",
         "$mainUrl/animeler" to "Animeler",
         "$mainUrl/bolumler" to "Son Bölümler",
+        "$mainUrl/asyadizileri" to "Asya Dizileri",
         "$mainUrl/dil/turkce-altyazi" to "Türkçe Altyazı",
         "$mainUrl/dil/turkce-dublaj" to "Türkçe Dublaj",
-        "$mainUrl/asyadizileri" to "Asya Dizileri",
         "$mainUrl/dil/yerli" to "Yerli Diziler",
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
         initSession()
         
-        // Sayfalama mantığını düzelttik: Ana sayfa için page/x eklemiyoruz, kategoriler için ekliyoruz.
-        val url = if (request.data == "$mainUrl/") {
+        // Kategori sayfaları için URL oluşturma
+        val url = if (request.data == "$mainUrl/" || request.data == "$mainUrl") {
             if (page <= 1) request.data else return newHomePageResponse(request.name, emptyList(), false)
         } else {
             if (page <= 1) request.data else "${request.data.removeSuffix("/")}/page/$page"
@@ -77,32 +76,42 @@ class Dizist : MainAPI() {
         val response = app.get(url, cookies = cookieler ?: emptyMap(), headers = defaultHeaders, interceptor = ddosGuardKiller)
         val document = response.document
 
-        // CSS Seçicilerini (Selector) Dizist'in yeni grid yapısına göre güncelledik
+        // CSS Seçicileri: Sitenin tüm grid varyasyonlarını kapsayacak şekilde genişletildi
         val items = if (request.name == "Yeni Eklenen Bölümler") {
-            document.select("div.poster-xs, div.poster-small")
+            // Küçük posterler
+            document.select("div.poster-xs, div.poster-small, [class*='poster-xs']")
         } else {
-            // "Diziler", "Animeler" vb. kategoriler için poster-long ya da genel kart yapısı
-            document.select("div.poster-long, div.poster-long.w-full, div.relative.group.overflow-hidden")
+            // Büyük posterler ve kategori gridleri
+            document.select("div.poster-long, div[class*='poster-long'], div.relative.group.overflow-hidden, div.w-full.relative.group")
         }
 
         val home = items.mapNotNull { it.toMainPageResult() }
         
-        // Yeni eklenenler sayfası tek sayfa, diğerlerinde hasNext kontrolü
-        val hasNext = home.isNotEmpty() && request.name != "Yeni Eklenen Bölümler"
+        // Bazı sayfalar boş gelirse bir de en genel seçiciyi dene
+        val finalHome = if (home.isEmpty()) {
+            document.select("div.grid div.relative").mapNotNull { it.toMainPageResult() }
+        } else home
+
+        val hasNext = finalHome.isNotEmpty() && request.name != "Yeni Eklenen Bölümler"
         
-        return newHomePageResponse(request.name, home, hasNext = hasNext)
+        return newHomePageResponse(request.name, finalHome, hasNext = hasNext)
     }
 
     private fun Element.toMainPageResult(): SearchResponse? {
-        val a = this.selectFirst("a") ?: return null
-        val rawHref = a.attr("href") ?: ""
-        if (rawHref.isEmpty()) return null
+        // A etiketini bul (İçinde veya kendisi olabilir)
+        val a = this.selectFirst("a") ?: (if (this.tagName() == "a") this else return null)
+        val rawHref = a.attr("href")
+        if (rawHref.isEmpty() || rawHref == "#") return null
         
-        // URL'yi temizle ve dizi ana sayfasına yönlendir
+        // Link temizleme (Bölümden diziye)
         val href = fixUrlNull(rawHref.replace("/izle/", "/dizi/").replace(Regex("-[0-9]+-bolum.*$"), "")) ?: return null
         
-        val title = a.attr("title").ifEmpty { this.selectFirst("img")?.attr("alt") } ?: "Bilinmeyen"
+        // Başlık: title attr, img alt veya span text'ine bak
+        val title = a.attr("title").ifEmpty { 
+            this.selectFirst("img")?.attr("alt") ?: this.selectFirst("span")?.text() 
+        } ?: return null
         
+        // Poster: srcset ilk öncelik, sonra src
         val img = this.selectFirst("img")
         val posterUrl = fixUrlNull(
             img?.attr("data-srcset")?.substringBefore(" ") 
@@ -110,7 +119,7 @@ class Dizist : MainAPI() {
             ?: img?.attr("src")
         )
 
-        return newTvSeriesSearchResponse(title, href, TvType.TvSeries) { 
+        return newTvSeriesSearchResponse(title.trim(), href, TvType.TvSeries) { 
             this.posterUrl = posterUrl 
         }
     }
@@ -165,7 +174,7 @@ class Dizist : MainAPI() {
         val tags = document.select("span.block a").map { it.text() }
         val rating = document.selectFirst("strong.color-imdb")?.text()?.trim()
         
-        val recommendations = document.select("div.poster-long, div[class*='poster-long']").mapNotNull { it.toRecommendationResult() }
+        val recommendations = document.select("div.poster-long, [class*='poster-long']").mapNotNull { it.toRecommendationResult() }
         
         val duration = document.selectFirst("li.sm\\:w-1\\/5:nth-child(2) > p:nth-child(2)")?.text()?.replace(" dk", "")
             ?.split(" ")?.first()?.trim()?.toIntOrNull()
