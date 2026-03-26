@@ -1,7 +1,4 @@
-
-# Düzeltilmiş kodu oluşturalım - kritik değişiklikleri vurgulayarak
-
-fixed_code = '''// ! Bu araç @Kraptor123 tarafından | @kekikanime için yazılmıştır.
+// ! Bu araç @Kraptor123 tarafından | @kekikanime için yazılmıştır.
 
 package com.kraptor
 
@@ -28,6 +25,7 @@ class Dizist : MainAPI() {
     override var lang = "tr"
     override val hasQuickSearch = false
     override val supportedTypes = setOf(TvType.TvSeries)
+    
     override var sequentialMainPage = true
     override var sequentialMainPageDelay = 250L
     override var sequentialMainPageScrollDelay = 250L
@@ -37,105 +35,70 @@ class Dizist : MainAPI() {
     private var cKey: String? = null
     private var cValue: String? = null
     private val initMutex = Mutex()
-    
-    // 🔄 YENİ: Retry mekanizması için sayaç
-    private var retryCount = 0
-    private val maxRetries = 3
-    
+
+    // Standart header'lar ekleyerek sitenin bizi bot olarak reddetme ihtimalini düşürüyoruz
+    private val defaultHeaders = mapOf(
+        "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Referer" to "$mainUrl/"
+    )
+
     private suspend fun initSession() {
         if (cookieler != null && cKey != null && cValue != null) return
-        
         initMutex.withLock {
-            if (!cookieler.isNullOrEmpty() && cKey != null && cValue != null) return@withLock
+            if (cookieler != null && cKey != null && cValue != null) return@withLock
 
             try {
-                // 🔄 YENİ: Daha uzun timeout ve redirect izni
-                val resp = app.get(
-                    "${mainUrl}/",  
-                    timeout = 60,
-                    interceptor = ddosGuardKiller  // 🔄 YENİ: Interceptor burada da eklendi
-                )
-
-                cookieler = resp.cookies
-
-                // 🟢 DÜZELTME 1: Boş çerez kontrolü - hata fırlatma, retry yap
-                if (cookieler.isNullOrEmpty()) {
-                    retryCount++
-                    if (retryCount <= maxRetries) {
-                        Log.w("kraptor_Dizist", "⚠️ Çerezler boş, retry $retryCount/$maxRetries")
-                        // Çerezleri sıfırla ve tekrar dene
-                        cookieler = null
-                        cKey = null
-                        cValue = null
-                        // Kısa bekleme
-                        kotlinx.coroutines.delay(1000L * retryCount)
-                        initMutex.unlock()
-                        initSession()
-                        return@withLock
-                    } else {
-                        Log.e("kraptor_Dizist", "❌ Max retry aşıldı, boş çerezlerle devam ediliyor")
-                        // Boş map olarak devam et, belki çalışır
-                        cookieler = emptyMap()
-                    }
-                } else {
-                    retryCount = 0 // Başarılı oldu, sayacı sıfırla
+                val resp = app.get("$mainUrl/", headers = defaultHeaders, timeout = 120)
+                val newCookies = resp.cookies
+                
+                // Hata fırlatmak yerine log basıp devam ediyoruz, bazen çerezsiz de içerik gelebilir
+                if (newCookies.isNullOrEmpty()) {
+                    Log.e("kraptor_Dizist", "⚠️ Uyarı: Çerezler boş döndü, yine de devam ediliyor.")
                 }
+                
+                cookieler = newCookies
 
                 val document = resp.document
                 cKey = document.selectFirst("input[name=cKey]")?.`val`()
                 cValue = document.selectFirst("input[name=cValue]")?.`val`()
 
-                Log.d("kraptor_Dizist", "✅ cKey: $cKey, cValue: ${cValue?.take(10)}...")
-                
+                Log.d("kraptor_Dizist", "cKey: $cKey, cValue: $cValue")
             } catch (e: Exception) {
-                Log.e("kraptor_Dizist", "❌ initSession hatası: ${e.message}")
-                // 🟢 DÜZELTME 2: Exception da olsa boş değerlerle devam et
-                cookieler = emptyMap()
-                cKey = ""
-                cValue = ""
+                Log.e("kraptor_Dizist", "Oturum başlatma hatası: ${e.message}")
             }
         }
     }
 
     override val mainPage = mainPageOf(
-        "${mainUrl}/" to "Yeni Eklenen Bölümler",
-        "${mainUrl}/yabanci-diziler" to "Yabancı Diziler",
-        "${mainUrl}/animeler" to "Animeler",
-        "${mainUrl}/asyadizileri" to "Asya Dizileri",
+        "$mainUrl/" to "Yeni Eklenen Bölümler",
+        "$mainUrl/yabanci-diziler" to "Yabancı Diziler",
+        "$mainUrl/animeler" to "Animeler",
+        "$mainUrl/asyadizileri" to "Asya Dizileri",
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
         initSession()
-        val cookies: Map<String, String> = cookieler ?: emptyMap()  // 🟢 DÜZELTME 3: Null safety
-        
-        val document = try {
-            if (request.name.contains("Yeni Eklenen Bölümler")) {
-                app.get("${request.data}", cookies = cookies, interceptor = ddosGuardKiller).document
-            } else {
-                app.get("${request.data}/page/$page", cookies = cookies, interceptor = ddosGuardKiller).document
-            }
-        } catch (e: Exception) {
-            Log.e("kraptor_Dizist", "getMainPage hatası: ${e.message}")
-            // Boş response dön
-            return newHomePageResponse(request.name, emptyList(), hasNext = false)
-        }
-        
-        val home = if (request.name.contains("Yeni Eklenen Bölümler")) {
-            document.select("div.poster-xs")
-                .mapNotNull { it.toMainPageResult() }
+        val cookies: Map<String, String> = cookieler ?: emptyMap()
+        val document = if (request.name.contains("Yeni Eklenen Bölümler")) {
+            app.get(request.data, cookies = cookies, headers = defaultHeaders, interceptor = ddosGuardKiller).document
         } else {
-            document.select("div.poster-long.w-full")
-                .mapNotNull { it.toMainPageResult() }
+            app.get("${request.data}/page/$page", cookies = cookies, headers = defaultHeaders, interceptor = ddosGuardKiller).document
+        }
+
+        val home = if (request.name.contains("Yeni Eklenen Bölümler")) {
+            document.select("div.poster-xs").mapNotNull { it.toMainPageResult() }
+        } else {
+            document.select("div.poster-long.w-full").mapNotNull { it.toMainPageResult() }
         }
 
         val hasNext = !request.name.contains("Yeni Eklenen Bölümler")
-
         return newHomePageResponse(request.name, home, hasNext = hasNext)
     }
 
     private fun Element.toMainPageResult(): SearchResponse? {
-        val title = this.selectFirst("a")?.attr("title") ?: return null
-        val href = fixUrlNull(this.selectFirst("a")?.attr("href")?.replace("/izle/", "/dizi/")?.replace(Regex("-[0-9]+.*$"), "")) ?: return null
+        val a = this.selectFirst("a") ?: return null
+        val title = a.attr("title") ?: return null
+        val href = fixUrlNull(a.attr("href")?.replace("/izle/", "/dizi/")?.replace(Regex("-[0-9]+.*$"), "")) ?: return null
         val posterUrl = fixUrlNull(this.selectFirst("img")?.attr("data-srcset")?.substringBefore(" "))
 
         return newTvSeriesSearchResponse(title, href, TvType.TvSeries) { this.posterUrl = posterUrl }
@@ -143,32 +106,24 @@ class Dizist : MainAPI() {
 
     override suspend fun search(query: String): List<SearchResponse> {
         initSession()
-        val cookies: Map<String, String> = cookieler ?: emptyMap()  // 🟢 DÜZELTME 4: Null safety
-        
-        // 🟢 DÜZELTME 5: cKey/cValue null kontrolü
-        val currentCKey = cKey ?: ""
-        val currentCValue = cValue ?: ""
+        val cookies: Map<String, String> = cookieler ?: emptyMap()
+        val apiResponse = app.post(
+            "$mainUrl/bg/searchcontent", 
+            cookies = cookies, 
+            headers = defaultHeaders,
+            data = mapOf(
+                "cKey" to (cKey ?: ""),
+                "cValue" to (cValue ?: ""),
+                "searchTerm" to query
+            )
+        )
         
         return try {
-            val apiResponse = app.post(
-                "$mainUrl/bg/searchcontent", 
-                cookies = cookies, 
-                data = mapOf(
-                    "cKey"       to currentCKey,
-                    "cValue"     to currentCValue,
-                    "searchTerm" to query
-                ),
-                interceptor = ddosGuardKiller  // 🟢 DÜZELTME 6: Search'e de interceptor ekle
-            )
-            
             val dataObj = JSONObject(apiResponse.text).getJSONObject("data")
             val html = dataObj.getString("html")
             val doc = Jsoup.parseBodyFragment(html)
-            doc.select("ul.flex.flex-wrap li").mapNotNull { li ->
-                li.toSearchResult()
-            }
+            doc.select("ul.flex.flex-wrap li").mapNotNull { it.toSearchResult() }
         } catch (e: Exception) {
-            Log.e("kraptor_Dizist", "Search hatası: ${e.message}")
             emptyList()
         }
     }
@@ -181,7 +136,8 @@ class Dizist : MainAPI() {
             ?.substringBefore(" 1x")
             ?.trim()
             ?.let { fixUrlNull(it) }
-        return newTvSeriesSearchResponse(title, href, TvType.Movie) {
+            
+        return newTvSeriesSearchResponse(title, href, TvType.TvSeries) {
             this.posterUrl = poster
         }
     }
@@ -190,15 +146,8 @@ class Dizist : MainAPI() {
 
     override suspend fun load(url: String): LoadResponse? {
         initSession()
-        val cookies: Map<String, String> = cookieler ?: emptyMap()  // 🟢 DÜZELTME 7: Null safety
-        
-        val urlget = try {
-            app.get(url, cookies = cookies, interceptor = ddosGuardKiller)
-        } catch (e: Exception) {
-            Log.e("kraptor_Dizist", "Load hatası: ${e.message}")
-            return null
-        }
-        
+        val cookies: Map<String, String> = cookieler ?: emptyMap()
+        val urlget = app.get(url, cookies = cookies, headers = defaultHeaders, interceptor = ddosGuardKiller)
         val document = urlget.document
         val text = urlget.text
 
@@ -211,35 +160,34 @@ class Dizist : MainAPI() {
         val recommendations = document.select("div.poster-long.w-full").mapNotNull { it.toRecommendationResult() }
         val duration = document.selectFirst("li.sm\\:w-1\\/5:nth-child(2) > p:nth-child(2)")?.text()?.replace(" dk", "")
             ?.split(" ")?.first()?.trim()?.toIntOrNull()
+            
         val actors = document.select("li.w-auto.md\\:w-full.flex-shrink-0").mapNotNull { aktor ->
             val aktorIsim = aktor.selectFirst("p.truncate")?.text()?.trim() ?: return@mapNotNull null
             val aktorResim = fixUrlNull(aktor.selectFirst("img")?.attr("data-srcset"))?.substringBefore(" ")
             Actor(name = aktorIsim, fixUrlNull(aktorResim))
         }
-        val trailer = Regex("""embed\\/(.*)\\?rel""").find(document.html())?.groupValues?.get(1)
+        
+        val trailer = Regex("""embed\/(.*)\?rel""").find(document.html())?.groupValues?.get(1)
             ?.let { "https://www.youtube.com/embed/$it" }
+            
         val regex = Regex(
             pattern = ",\"url\":\"([^\"]*)\",\"dateModified\":\"[^\"]*\"",
             options = setOf(RegexOption.IGNORE_CASE)
         )
+        
         val bolumListesi: List<Episode> = regex.findAll(text)
             .map { match ->
-                val raw = match.groupValues[1].replace("\\\\", "")
+                val raw = match.groupValues[1].replace("\\", "")
                 val fullHref = if (!raw.contains("-bolum")) {
                     raw.replace("/sezon/", "/izle/").trimEnd('/') + "-1-bolum"
                 } else {
                     raw
                 }
+
                 val href = fixUrlNull(fullHref)
-                val bolumSayisi = href
-                    ?.substringBefore("-bolum")
-                    ?.substringAfterLast("-")
-                    ?.toIntOrNull()
-                val sezonSayisi = href
-                    ?.substringBefore("-sezon")
-                    ?.substringAfterLast("-")
-                    ?.replace("-","")
-                    ?.toIntOrNull()
+                val bolumSayisi = href?.substringBefore("-bolum")?.substringAfterLast("-")?.toIntOrNull()
+                val sezonSayisi = href?.substringBefore("-sezon")?.substringAfterLast("-")?.replace("-","")?.toIntOrNull()
+                
                 newEpisode(href) {
                     episode = bolumSayisi
                     name = "Bölüm"
@@ -262,10 +210,12 @@ class Dizist : MainAPI() {
     }
 
     private fun Element.toRecommendationResult(): SearchResponse? {
-        val title = this.selectFirst("a")?.attr("title") ?: return null
-        val href = fixUrlNull(this.selectFirst("a")?.attr("href")) ?: return null
+        val a = this.selectFirst("a") ?: return null
+        val title = a.attr("title") ?: return null
+        val href = fixUrlNull(a.attr("href")) ?: return null
         val posterUrl = fixUrlNull(this.selectFirst("img")?.attr("data-srcset")?.substringBefore(" "))
-        return newTvSeriesSearchResponse(title, href, TvType.Movie) { this.posterUrl = posterUrl }
+
+        return newTvSeriesSearchResponse(title, href, TvType.TvSeries) { this.posterUrl = posterUrl }
     }
 
     override suspend fun loadLinks(
@@ -275,69 +225,29 @@ class Dizist : MainAPI() {
         callback: (ExtractorLink) -> Unit
     ): Boolean {
         initSession()
-        val cookies: Map<String, String> = cookieler ?: emptyMap()  // 🟢 DÜZELTME 8: Null safety
-        
-        Log.d("kraptor_$name", "data = ${data}")
-        
-        val document = try {
-            app.get(data, cookies = cookies, interceptor = ddosGuardKiller).document
-        } catch (e: Exception) {
-            Log.e("kraptor_Dizist", "loadLinks hatası: ${e.message}")
-            return false
-        }
+        val cookies: Map<String, String> = cookieler ?: emptyMap()
+        val document = app.get(data, cookies = cookies, headers = defaultHeaders).document
 
-        val kaynakLinkleri = document
-            .select("div.series-watch-alternatives.series-watch-alternatives-active.mb-5 li a.focus\\:outline-none")
+        val kaynakLinkleri = document.select("div.series-watch-alternatives.series-watch-alternatives-active.mb-5 li a.focus\\:outline-none")
 
         kaynakLinkleri.forEach { linkElem ->
+            val href = linkElem.attr("href")
             try {
-                val href = linkElem.attr("href")
-                Log.d("kraptor_$name", "kaynak = $href")
-
                 val iframeSrc = if (href.contains("player=0")) {
-                    fixUrlNull(document.selectFirst("iframe")?.attr("src")) ?: return@forEach
+                    fixUrlNull(document.selectFirst("iframe")?.attr("src")).toString()
                 } else {
-                    val yeniDoc = app.get(href, interceptor = ddosGuardKiller).document  // 🟢 DÜZELTME 9: Interceptor ekle
-                    fixUrlNull(yeniDoc.selectFirst("iframe")?.attr("src")) ?: return@forEach
+                    val yeniDoc = app.get(href, headers = defaultHeaders).document
+                    fixUrlNull(yeniDoc.selectFirst("iframe")?.attr("src")).toString()
                 }
 
-                Log.d("kraptor_$name", "iframe = $iframeSrc")
-                loadExtractor(iframeSrc, "$mainUrl/", subtitleCallback, callback)
+                if (iframeSrc.isNotEmpty() && iframeSrc != "null") {
+                    loadExtractor(iframeSrc, "$mainUrl/", subtitleCallback, callback)
+                }
             } catch (e: Exception) {
-                Log.e("kraptor_Dizist", "Link işleme hatası: ${e.message}")
+                Log.e("kraptor_Dizist", "Link yükleme hatası: ${e.message}")
             }
         }
 
         return true
     }
-}'''
-
-print("✅ Düzeltilmiş kod oluşturuldu!")
-print("\n" + "="*60)
-print("📝 YAPILAN KRİTİK DEĞİŞİKLİKLER:")
-print("="*60)
-print("""
-1️⃣  SATIR 50 - IllegalStateException KALDIRILDI
-    • throw IllegalStateException("Çerezler boş olamaz") silindi
-    • Yerine retry mekanizması ve graceful fallback eklendi
-
-2️⃣  RETRY MEKANİZMASI EKLENDI
-    • Boş çerez gelirse 3 kere tekrar deniyor (exponential backoff)
-    • Max retry aşılırsa boş çerezlerle devam ediyor (crash olmuyor)
-
-3️⃣  NULL SAFETY EKLENDI
-    • Tüm cookieler ?: emptyMap() olarak güncellendi
-    • cKey/cValue null kontrolleri eklendi
-
-4️⃣  TRY-CATCH BLOKLARI EKLENDI
-    • Tüm network çağrıları try-catch içine alındı
-    • Hata durumunda boş liste/null dönülüyor, crash olmuyor
-
-5️⃣  DDOSGUARDKILLER GENİŞLETİLDİ
-    • initSession() içine de interceptor eklendi
-    • Search ve loadLinks endpointlerine de eklendi
-
-6️⃣  TIMEOUT OPTİMİZASYONU
-    • 120 saniye → 60 saniye (çok uzun timeout sorun yaratabilir)
-""")
-print("="*60)
+}
