@@ -1,5 +1,8 @@
 name: Build
 
+permissions:
+  contents: write   # 🔥 BU ŞART
+
 concurrency:
   group: "build"
   cancel-in-progress: true
@@ -9,55 +12,46 @@ on:
     branches:
       - main
       - master
-    paths-ignore:
-      - '*.md'
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      # 📥 Source çek
-      - name: Checkout source
+      - name: Checkout Source
         uses: actions/checkout@v4
 
-      # 📁 builds klasörü oluştur
-      - name: Prepare builds folder
-        run: mkdir -p builds
+      - name: Checkout Builds Branch
+        uses: actions/checkout@v4
+        with:
+          ref: builds
+          path: builds
+          token: ${{ secrets.GITHUB_TOKEN }}   # 🔥 önemli
 
-      # 🧹 eski build temizle
       - name: Clean old builds
         run: rm -f builds/*.cs3
 
-      # ☕ Java
-      - name: Setup JDK 21
+      - name: Setup JDK
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 21
-          cache: gradle
 
-      # 📱 Android
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v2
+      - name: Setup Android
+        uses: android-actions/setup-android@v3
 
-      # 🔨 Build
-      - name: Build Plugins
+      - name: Build
         run: |
-          chmod +x gradlew || true
+          chmod +x gradlew
           ./gradlew make makePluginsJson
-          cp **/build/*.cs3 builds || true
+          find . -name "*.cs3" -exec cp {} builds \;
           cp build/plugins.json builds || true
 
-      # 🚀 builds branch oluştur + push
       - name: Push builds
         run: |
           cd builds
-          git init
-          git checkout -b builds
+          git config user.name "github-actions"
           git config user.email "actions@github.com"
-          git config user.name "GitHub Actions"
           git add .
-          git commit -m "Build $GITHUB_SHA" || exit 0
-          git remote add origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
-          git push origin builds --force
+          git commit -m "Build $GITHUB_SHA" || echo "No changes"
+          git push origin builds
