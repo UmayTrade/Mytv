@@ -1,9 +1,10 @@
-version = 9
+// ! Bu araç @SAKLImavi tarafından | @UmayTrade için yazılmıştır.
+version = 1
 
 cloudstream {
-    authors     = listOf("keyiflerolsun","JustRelaxable")
+    authors     = listOf("UmayTrade")
     language    = "tr"
-    description = "Güncel ve eski dizileri en iyi görüntü kalitesiyle bulabileceğiniz yabancı dizi izleme siteniz."
+    description = "Güncel ve eski dizileri en iyi görüntü kalitesiyle bulabileceğiniz yabancı dizi izleme siteniz"
 
     /**
      * Status int as the following:
