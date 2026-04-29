@@ -1,7 +1,8 @@
-version = 8
+// ! Bu araç @SAKLImavi tarafından | @UmayTrade için yazılmıştır.
+version = 1
 
 cloudstream {
-    authors     = listOf("keyiflerolsun")
+    authors     = listOf("UmayTrade")
     language    = "tr"
     description = "ÇizgiMax ile Çizgi Film izlemek artık daha kolay, donmadan full hd ve reklamsız bir sitedir, içerisinde 700 den fazla çizgi film olan, Bu site bu işi profesyonelce yapıyor."
 
