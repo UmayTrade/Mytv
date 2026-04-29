@@ -1,7 +1,8 @@
-version = 21
+// ! Bu araç @SAKLImavi tarafından | @UmayTrade için yazılmıştır.
+version = 1
 
 cloudstream {
-    authors     = listOf("keyiflerolsun", "inatchii", "JustRelaxable")
+    authors     = listOf("UmayTrade")
     language    = "tr"
     description = "AnimeciX, animeleri keşfedebileceğiniz ve animeler hakkında her şeyi öğrenebileceğiniz bir paylaşım platformudur."
 
