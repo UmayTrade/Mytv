@@ -1,9 +1,10 @@
-version = 39  // ! ARTTIRILDI: Versiyon güncellendi
+// ! Bu araç @SAKLImavi tarafından | @UmayTrade için yazılmıştır.
+version = 1
 
 cloudstream {
-    authors     = listOf("keyiflerolsun", "muratcesmecioglu")
+    authors     = listOf("UmayTrade")
     language    = "tr"
-    description = "DiziPal - Güncel domain (dizipal1541.com) - en yeni dizileri güvenli ve hızlı şekilde sunar."
+    description = "DiziPal."
 
     /**
      * Status int as the following:
@@ -12,7 +13,7 @@ cloudstream {
      * 2: Slow
      * 3: Beta only
     **/
-    status  = 1
-    tvTypes = listOf("TvSeries", "Movie")
-    iconUrl = "https://www.google.com/s2/favicons?domain=https://dizipal1541.com&sz=%size%"  // ! GÜNCELLENDİ
+    status  = 1 // will be 3 if unspecified
+    tvTypes = listOf("TvSeries")
+    iconUrl = "https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://dizipal932.com&size=128"
 }
