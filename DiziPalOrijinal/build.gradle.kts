@@ -1,8 +1,8 @@
-// ! Bu araç @Kraptor123 tarafından | @kekikanime için yazılmıştır.
-version = 25
+// ! Bu araç @SAKLImavi tarafından | @UmayTrade için yazılmıştır.
+version = 1
 
 cloudstream {
-    authors     = listOf("kraptor")
+    authors     = listOf("UmayTrade")
     language    = "tr"
     description = "DiziPal Orijinal."
 
@@ -14,6 +14,6 @@ cloudstream {
      * 3: Beta only
     **/
     status  = 1 // will be 3 if unspecified
-    tvTypes = listOf("TvSeries") //Movie, AnimeMovie, TvSeries, Cartoon, Anime, OVA, Torrent, Documentary, AsianDrama, Live, NSFW, Others, Music, AudioBook, CustomMedia, Audio, Podcast,
+    tvTypes = listOf("TvSeries")
     iconUrl = "https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://dizipal932.com&size=128"
 }
