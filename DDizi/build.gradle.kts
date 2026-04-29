@@ -1,10 +1,11 @@
-version = 10
+// ! Bu araç @SAKLImavi tarafından | @UmayTrade için yazılmıştır.
+version = 1
 
 cloudstream {
-    authors     = listOf("keyiflerolsun")
+    authors     = listOf("UmayTrade")
     language    = "tr"
-    description = "DDizi.im için Cloudstream eklentisi"
-    
+    description = "DDizi.im için Cloudstream eklentisi."
+
     /**
      * Status int as the following:
      * 0: Down
