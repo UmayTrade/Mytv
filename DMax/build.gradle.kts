@@ -1,9 +1,10 @@
-version = 2
+// ! Bu araç @SAKLImavi tarafından | @UmayTrade için yazılmıştır.
+version = 1
 
 cloudstream {
-    authors     = listOf("nikyokki")
+    authors     = listOf("UmayTrade")
     language    = "tr"
-    description = "DMAX dizi ve programlarını takip etmek için ziyaret edin. DMAX dizi ve programlarını tek parça ve hd kalitesiyle izleyin."
+    description = "DMAX dizi ve programlarını takip etmek için ziyaret edin. DMAX dizi ve programlarını tek parça ve hd kalitesiyle izleyin.."
 
     /**
      * Status int as the following:
