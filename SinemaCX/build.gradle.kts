@@ -1,7 +1,8 @@
-version = 23
+// ! Bu araç @SAKLImavi tarafından | @UmayTrade için yazılmıştır.
+version = 1
 
 cloudstream {
-    authors     = listOf("keyiflerolsun")
+    authors     = listOf("UmayTrade")
     language    = "tr"
     description = "Güncel ve en iyi yabancı filmleri yüksek görüntü kalitesinde, Türkçe dublaj ve altyazı seçenekleriyle filmleri full izleyin."
 
