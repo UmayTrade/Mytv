@@ -1,7 +1,8 @@
-version = 3
+// ! Bu araç @SAKLImavi tarafından | @UmayTrade için yazılmıştır.
+version = 1
 
 cloudstream {
-    authors     = listOf("nikyokki")
+    authors     = listOf("UmayTrade")
     language    = "tr"
     description = "SineWix | Film - Dizi - Anime İzleme Uygulaması"
 
