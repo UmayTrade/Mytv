@@ -1,7 +1,8 @@
-version = 102
+// ! Bu araç @SAKLImavi tarafından | @UmayTrade için yazılmıştır.
+version = 1
 
 cloudstream {
-    authors     = listOf("keyiflerolsun", "yusiqo", "inatchii", "JustRelaxable")
+    authors     = listOf("UmayTrade")
     language    = "tr"
     description = "RecTv APK, Türkiye’deki en popüler Çevrimiçi Medya Akış platformlarından biridir. Filmlerin, Canlı Sporların, Web Dizilerinin ve çok daha fazlasının keyfini ücretsiz çıkarın."
 
