@@ -1,0 +1,370 @@
+[
+    {
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/AnimeciX.cs3",
+        "status": 1,
+        "version": 1,
+        "name": "AnimeciX",
+        "internalName": "AnimeciX",
+        "authors": [
+            "UmayTrade"
+        ],
+        "description": "AnimeciX, animeleri ke\u015ffedebilece\u011finiz ve animeler hakk\u0131nda her \u015feyi \u00f6\u011frenebilece\u011finiz bir payla\u015f\u0131m platformudur.",
+        "fileSize": 26011,
+        "repositoryUrl": "https://github.com/UmayTrade/Mytv",
+        "language": "tr",
+        "tvTypes": [
+            "Anime"
+        ],
+        "iconUrl": "https://anm.cx/favicon.ico",
+        "apiVersion": 1,
+        "fileHash": "sha256-60c22524f70090965e96d2cba91e001ee6504d16684349ff3e9aa551341e4152"
+    },
+    {
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/CinemaCity.cs3",
+        "status": 1,
+        "version": 1,
+        "name": "CinemaCity",
+        "internalName": "CinemaCity",
+        "authors": [
+            "UmayTrade"
+        ],
+        "description": "Cinema City.",
+        "fileSize": 21544,
+        "repositoryUrl": "https://github.com/UmayTrade/Mytv",
+        "language": "en",
+        "tvTypes": [
+            "Movie",
+            "TvSeries",
+            "Cartoon"
+        ],
+        "iconUrl": "https://i.imgur.com/A87j6ue.png",
+        "apiVersion": 1,
+        "fileHash": "sha256-568aab47921ea7b7938369a21ccf0949bb55b1b4bf0c3e6f567d98606194abad"
+    },
+    {
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/CizgiMax.cs3",
+        "status": 1,
+        "version": 1,
+        "name": "CizgiMax",
+        "internalName": "CizgiMax",
+        "authors": [
+            "UmayTrade"
+        ],
+        "description": "\u00c7izgiMax ile \u00c7izgi Film izlemek art\u0131k daha kolay, donmadan full hd ve reklams\u0131z bir sitedir, i\u00e7erisinde 700 den fazla \u00e7izgi film olan, Bu site bu i\u015fi profesyonelce yap\u0131yor.",
+        "fileSize": 20778,
+        "repositoryUrl": "https://github.com/UmayTrade/Mytv",
+        "language": "tr",
+        "tvTypes": [
+            "Cartoon"
+        ],
+        "iconUrl": "https://www.google.com/s2/favicons?domain=cizgimax.online&sz=%size%",
+        "apiVersion": 1,
+        "fileHash": "sha256-65593845de8eadba612acb1e79b06cfb56687c29c717fd0d0a704de3bfa8b041"
+    },
+    {
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/DDizi.cs3",
+        "status": 1,
+        "version": 1,
+        "name": "DDizi",
+        "internalName": "DDizi",
+        "authors": [
+            "UmayTrade"
+        ],
+        "description": "DDizi.im i\u00e7in Cloudstream eklentisi.",
+        "fileSize": 20152,
+        "repositoryUrl": "https://github.com/UmayTrade/Mytv",
+        "language": "tr",
+        "tvTypes": [
+            "TvSeries"
+        ],
+        "iconUrl": "https://www.ddizi.im/favicon.ico",
+        "apiVersion": 1,
+        "fileHash": "sha256-dc7781d4c68e8ca12acb5101215441825cf97368545ad3d90e49fa23b0d05489"
+    },
+    {
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/DiziBox.cs3",
+        "status": 1,
+        "version": 1,
+        "name": "DiziBox",
+        "internalName": "DiziBox",
+        "authors": [
+            "UmayTrade"
+        ],
+        "description": "Yabanc\u0131 Dizi izle, T\u00fcm yabanc\u0131 dizilerin yeni ve eski sezonlar\u0131n\u0131 full hd izleyebilece\u011finiz elit site..",
+        "fileSize": 25549,
+        "repositoryUrl": "https://github.com/UmayTrade/Mytv",
+        "language": "tr",
+        "tvTypes": [
+            "Movie"
+        ],
+        "iconUrl": "https://www.google.com/s2/favicons?domain=www.dizibox.de&sz=%size%",
+        "apiVersion": 1,
+        "fileHash": "sha256-23e4b36b681710f0fa8f96935ae56a779958a3fc71d7da4b7010aef381ea2b5d"
+    },
+    {
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/DiziGom.cs3",
+        "status": 1,
+        "version": 1,
+        "name": "DiziGom",
+        "internalName": "DiziGom",
+        "authors": [
+            "UmayTrade"
+        ],
+        "description": "T\u00fcrk\u00e7e altyaz\u0131l\u0131 yabanc\u0131 dizi izle, T\u00fcm yabanc\u0131, kore, netflix dizilerin yeni ve eski sezonlar\u0131n\u0131 orijinal dilinde dizigom1 alt yaz\u0131l\u0131 film izleyebilir, sadece t\u00fcrk\u00e7e altyaz\u0131l\u0131 en iyi yabanc\u0131 diziler ve filmler hakk\u0131nda yorum yapabilirsiniz.",
+        "fileSize": 19930,
+        "repositoryUrl": "https://github.com/UmayTrade/Mytv",
+        "language": "tr",
+        "tvTypes": [
+            "Movie"
+        ],
+        "iconUrl": "https://www.google.com/s2/favicons?domain=dizigom1.co&sz=%size%",
+        "apiVersion": 1,
+        "fileHash": "sha256-87c0c3f65b805d3859c057bf8b601e092a7a25a56e661186087c8c3a3ffd61aa"
+    },
+    {
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/DiziPal.cs3",
+        "status": 1,
+        "version": 1,
+        "name": "DiziPal",
+        "internalName": "DiziPal",
+        "authors": [
+            "UmayTrade"
+        ],
+        "description": "DiziPal.",
+        "fileSize": 18268,
+        "repositoryUrl": "https://github.com/UmayTrade/Mytv",
+        "language": "tr",
+        "tvTypes": [
+            "TvSeries"
+        ],
+        "iconUrl": "https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://dizipal932.com&size=128",
+        "apiVersion": 1,
+        "fileHash": "sha256-710f50256b41cc22a139e2ff984a246e1e09b3c1a36a4c1e6f0b729fa5df26c1"
+    },
+    {
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/DiziPalOrijinal.cs3",
+        "status": 1,
+        "version": 1,
+        "name": "DiziPalOrijinal",
+        "internalName": "DiziPalOrijinal",
+        "authors": [
+            "UmayTrade"
+        ],
+        "description": "DiziPal Orijinal.",
+        "fileSize": 48520,
+        "repositoryUrl": "https://github.com/UmayTrade/Mytv",
+        "language": "tr",
+        "tvTypes": [
+            "TvSeries"
+        ],
+        "iconUrl": "https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://dizipal932.com&size=128",
+        "apiVersion": 1,
+        "fileHash": "sha256-70d2214b26d397c82f655cbf5a71eb281010c2b37909d5032467971106bc8881"
+    },
+    {
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/DMax.cs3",
+        "status": 1,
+        "version": 1,
+        "name": "DMax",
+        "internalName": "DMax",
+        "authors": [
+            "UmayTrade"
+        ],
+        "description": "DMAX dizi ve programlar\u0131n\u0131 takip etmek i\u00e7in ziyaret edin. DMAX dizi ve programlar\u0131n\u0131 tek par\u00e7a ve hd kalitesiyle izleyin..",
+        "fileSize": 14484,
+        "repositoryUrl": "https://github.com/UmayTrade/Mytv",
+        "language": "tr",
+        "tvTypes": [
+            "TvSeries"
+        ],
+        "iconUrl": "https://www.dmax.com.tr/favicon.ico",
+        "apiVersion": 1,
+        "fileHash": "sha256-e53184d33b813292b0f0ee0cbead057d9898dc63a7830339850101c135862d37"
+    },
+    {
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/Filmatek.cs3",
+        "status": 1,
+        "version": 1,
+        "name": "Filmatek",
+        "internalName": "Filmatek",
+        "authors": [
+            "UmayTrade"
+        ],
+        "description": "Sosyalizmin sinemas\u0131n\u0131n veritaban\u0131.",
+        "fileSize": 15276,
+        "repositoryUrl": "https://github.com/UmayTrade/Mytv",
+        "language": "tr",
+        "tvTypes": [
+            "Movie"
+        ],
+        "iconUrl": "https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://filmatek.net/&size=128",
+        "apiVersion": 1,
+        "fileHash": "sha256-0c8021a1a6636023cd0026b516a3d35f63225f895de0204da14b19c922c7a790"
+    },
+    {
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/Full4kizle.cs3",
+        "status": 1,
+        "version": 1,
+        "name": "Full4kizle",
+        "internalName": "Full4kizle",
+        "authors": [
+            "UmayTrade"
+        ],
+        "description": "Filmci Baba, film izleme sitesi 4k Full film izle, 1080p ve 4k (yalan) kalite de sinema filmleri ve dizileri, tek par\u00e7a hd kalitede t\u00fcrk\u00e7e dublajl\u0131 filmler seyret.",
+        "fileSize": 19757,
+        "repositoryUrl": "https://github.com/UmayTrade/Mytv",
+        "language": "tr",
+        "tvTypes": [
+            "Movie",
+            "AsianDrama"
+        ],
+        "iconUrl": "https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://full4kizle.cc/&size=128",
+        "apiVersion": 1,
+        "fileHash": "sha256-89f65eb5acf96dbc8a388c30b8460c3f8054cea0bed0a2c7b31826a8537bcff9"
+    },
+    {
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/RecTV.cs3",
+        "status": 1,
+        "version": 1,
+        "name": "RecTV",
+        "internalName": "RecTV",
+        "authors": [
+            "UmayTrade"
+        ],
+        "description": "RecTv APK, T\u00fcrkiye\u2019deki en pop\u00fcler \u00c7evrimi\u00e7i Medya Ak\u0131\u015f platformlar\u0131ndan biridir. Filmlerin, Canl\u0131 Sporlar\u0131n, Web Dizilerinin ve \u00e7ok daha fazlas\u0131n\u0131n keyfini \u00fccretsiz \u00e7\u0131kar\u0131n.",
+        "fileSize": 26043,
+        "repositoryUrl": "https://github.com/UmayTrade/Mytv",
+        "language": "tr",
+        "tvTypes": [
+            "Movie",
+            "Live",
+            "TvSeries"
+        ],
+        "iconUrl": "https://rectvapp.com.tr/wp-content/uploads/2024/08/cropped-cropped-Screenshot_2023-08-31_at_11.02.55_PM-removebg-preview-32x32.webp",
+        "apiVersion": 1,
+        "fileHash": "sha256-eb388ae3ac5ae84fd3b5f504be4e3f7be5ba2bbe1702f62bd12096b328cfb051"
+    },
+    {
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/SelcukFlix.cs3",
+        "status": 1,
+        "version": 1,
+        "name": "SelcukFlix",
+        "internalName": "SelcukFlix",
+        "authors": [
+            "UmayTrade"
+        ],
+        "description": "Selcukflix'te her t\u00fcrden en yeni ve en pop\u00fcler dizi ve filmleri izlemenin keyfini \u00e7\u0131kar\u0131n. Aksiyondan romanti\u011fe, bilim kurgudan dramaya, geni\u015f k\u00fct\u00fcphanemizde herkes i\u00e7in bir \u015fey var",
+        "fileSize": 31691,
+        "repositoryUrl": "https://github.com/UmayTrade/Mytv",
+        "language": "tr",
+        "tvTypes": [
+            "Movie",
+            "TvSeries"
+        ],
+        "iconUrl": "https://www.google.com/s2/favicons?domain=selcukflix.com&sz=%size%",
+        "apiVersion": 1,
+        "fileHash": "sha256-e22920026cbc5a53aaea47a289aa9d21bf132d20d5b75417f42e0a8736c465f9"
+    },
+    {
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/SezonlukDizi.cs3",
+        "status": 1,
+        "version": 1,
+        "name": "SezonlukDizi",
+        "internalName": "SezonlukDizi",
+        "authors": [
+            "UmayTrade"
+        ],
+        "description": "G\u00fcncel ve eski dizileri en iyi g\u00f6r\u00fcnt\u00fc kalitesiyle bulabilece\u011finiz yabanc\u0131 dizi izleme siteniz",
+        "fileSize": 21846,
+        "repositoryUrl": "https://github.com/UmayTrade/Mytv",
+        "language": "tr",
+        "tvTypes": [
+            "TvSeries"
+        ],
+        "iconUrl": "https://www.google.com/s2/favicons?domain=sezonlukdizi6.com&sz=%size%",
+        "apiVersion": 1,
+        "fileHash": "sha256-5f12197118218bf189e6b45855c66735e2b99a05073f8935e31de276e0f85542"
+    },
+    {
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/SinemaCX.cs3",
+        "status": 1,
+        "version": 1,
+        "name": "SinemaCX",
+        "internalName": "SinemaCX",
+        "authors": [
+            "UmayTrade"
+        ],
+        "description": "G\u00fcncel ve en iyi yabanc\u0131 filmleri y\u00fcksek g\u00f6r\u00fcnt\u00fc kalitesinde, T\u00fcrk\u00e7e dublaj ve altyaz\u0131 se\u00e7enekleriyle filmleri full izleyin.",
+        "fileSize": 16744,
+        "repositoryUrl": "https://github.com/UmayTrade/Mytv",
+        "language": "tr",
+        "tvTypes": [
+            "Movie"
+        ],
+        "iconUrl": "https://www.google.com/s2/favicons?domain=www.sinema.cx&sz=%size%",
+        "apiVersion": 1,
+        "fileHash": "sha256-e6c273918c07926238c5172cb311ff9bccdaa801c5e2a79c15ee7db641e069dc"
+    },
+    {
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/SineWix.cs3",
+        "status": 1,
+        "version": 1,
+        "name": "SineWix",
+        "internalName": "SineWix",
+        "authors": [
+            "UmayTrade"
+        ],
+        "description": "SineWix | Film - Dizi - Anime \u0130zleme Uygulamas\u0131",
+        "fileSize": 29723,
+        "repositoryUrl": "https://github.com/UmayTrade/Mytv",
+        "language": "tr",
+        "tvTypes": [
+            "Movie",
+            "TvSeries",
+            "Anime"
+        ],
+        "iconUrl": "https://www.google.com/s2/favicons?domain=https://www.sinewix.com/&sz=%size%",
+        "apiVersion": 1,
+        "fileHash": "sha256-8ec07460efd4a90302c35c4d6d141e213a6aa1a855d450c38bed394a0996bb54"
+    },
+    {
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/Streamed.cs3",
+        "status": 1,
+        "version": 1,
+        "name": "Streamed",
+        "internalName": "Streamed",
+        "authors": [
+            "UmayTrade"
+        ],
+        "description": "Streamed ile Canl\u0131 Spor Yay\u0131nlar\u0131n\u0131 \u0130zleyebilirsiniz.",
+        "fileSize": 31825,
+        "repositoryUrl": "https://github.com/UmayTrade/Mytv",
+        "language": "en",
+        "tvTypes": [
+            "Live"
+        ],
+        "iconUrl": "https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://streamed.pk/&size=128",
+        "apiVersion": 1,
+        "fileHash": "sha256-f4f24d53b2f6e5036f5814518e43c13d94cffcb59168ab0a7c27cfb724c56b49"
+    },
+    {
+        "url": "https://raw.githubusercontent.com/UmayTrade/Mytv/builds/TLC.cs3",
+        "status": 1,
+        "version": 1,
+        "name": "TLC",
+        "internalName": "TLC",
+        "authors": [
+            "nikyokki"
+        ],
+        "description": "TLC TV dizi ve programlar\u0131n\u0131 takip etmek i\u00e7in ziyaret edin. TLC TV dizi ve programlar\u0131n\u0131 tek par\u00e7a ve hd kalitesiyle izleyin.",
+        "fileSize": 14495,
+        "repositoryUrl": "https://github.com/UmayTrade/Mytv",
+        "language": "tr",
+        "tvTypes": [
+            "TvSeries"
+        ],
+        "iconUrl": "https://www.tlctv.com.tr/favicon.ico",
+        "apiVersion": 1,
+        "fileHash": "sha256-455deb5b6d9c57a293edf53496e1e7bfab1579f931797cca2b9b1f2ac6d22bfd"
+    }
+]
