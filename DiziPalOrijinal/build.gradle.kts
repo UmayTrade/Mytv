@@ -1,5 +1,5 @@
 // ! Bu araç @SAKLImavi tarafından | @UmayTrade için yazılmıştır.
-version = 12
+version = 13
 
 cloudstream {
     authors     = listOf("UmayTrade")
