@@ -1,5 +1,4 @@
-package com.UmayTrade.extractors
-
+package com.UmayTrade
 import android.util.Log
 import com.lagradost.cloudstream3.SubtitleFile
 import com.lagradost.cloudstream3.app
