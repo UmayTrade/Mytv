@@ -11,49 +11,36 @@ import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.ExtractorLinkType
 import com.lagradost.cloudstream3.utils.Qualities
 import com.lagradost.cloudstream3.utils.getAndUnpack
-import com.lagradost.cloudstream3.utils.loadExtractor
 import com.lagradost.cloudstream3.utils.newExtractorLink
 import org.jsoup.nodes.Element
 
-
 class FilmMakinesi : MainAPI() {
-    override var mainUrl              = "https://filmmakinesi.to"
+    override var mainUrl              = "https://filmmakinesi.to" // Güncel domain
     override var name                 = "FilmMakinesi"
     override val hasMainPage          = true
     override var lang                 = "tr"
     override val hasQuickSearch       = false
     override val supportedTypes       = setOf(TvType.Movie)
 
-    // ! CloudFlare bypass
-    override var sequentialMainPage            = true // * https://recloudstream.github.io/dokka/-cloudstream/com.lagradost.cloudstream3/-main-a-p-i/index.html#-2049735995%2FProperties%2F101969414
-    override var sequentialMainPageDelay       = 50L  // ? 0.05 saniye
-    override var sequentialMainPageScrollDelay = 50L  // ? 0.05 saniye
+    override var sequentialMainPage            = true
+    override var sequentialMainPageDelay       = 50L
+    override var sequentialMainPageScrollDelay = 50L
 
     override val mainPage = mainPageOf(
         "${mainUrl}/"                            to "Son Filmler",
-        "${mainUrl}/kanal/netflix/"                          to "Netflix",
-        "${mainUrl}/kanal/disney/"                           to "Disney",
-        "${mainUrl}/kanal/amazon/"                           to "Amazon",
-        "${mainUrl}/film-izle/olmeden-izlenmesi-gerekenler/" to "Ölmeden İzle",
-        "${mainUrl}/film-izle/aksiyon-filmleri-izle/"        to "Aksiyon",
-        "${mainUrl}/film-izle/bilim-kurgu-filmi-izle/"       to "Bilim Kurgu",
-        "${mainUrl}/film-izle/macera-filmleri/"              to "Macera",
-        "${mainUrl}/film-izle/komedi-filmi-izle/"            to "Komedi",
-        "${mainUrl}/film-izle/romantik-filmler-izle/"        to "Romantik",
-        "${mainUrl}/film-izle/belgesel/"                     to "Belgesel",
-        "${mainUrl}/film-izle/fantastik-filmler-izle/"       to "Fantastik",
-        "${mainUrl}/film-izle/polisiye-filmleri-izle/"       to "Polisiye Suç",
-        "${mainUrl}/film-izle/korku-filmleri-izle-hd/"       to "Korku",
-        // "${mainUrl}/film-izle/savas/page/"                        to "Tarihi ve Savaş",
-        // "${mainUrl}/film-izle/gerilim-filmleri-izle/page/"        to "Gerilim Heyecan",
-        // "${mainUrl}/film-izle/gizemli/page/"                      to "Gizem",
-        // "${mainUrl}/film-izle/aile-filmleri/page/"                to "Aile",
-        // "${mainUrl}/film-izle/animasyon-filmler/page/"            to "Animasyon",
-        // "${mainUrl}/film-izle/western/page/"                      to "Western",
-        // "${mainUrl}/film-izle/biyografi/page/"                    to "Biyografik",
-        // "${mainUrl}/film-izle/dram/page/"                         to "Dram",
-        // "${mainUrl}/film-izle/muzik/page/"                        to "Müzik",
-        // "${mainUrl}/film-izle/spor/page/"                         to "Spor"
+        "${mainUrl}/kanal/netflix-fm1/"          to "Netflix",
+        "${mainUrl}/kanal/disney-fm2/"           to "Disney",
+        "${mainUrl}/kanal/amazon/"               to "Amazon",
+        "${mainUrl}/film-izle/olmeden-izlenmesi-gerekenler-fm1/" to "Ölmeden İzle",
+        "${mainUrl}/tur/aksiyon-fmy54y/film/"    to "Aksiyon",
+        "${mainUrl}/tur/bilim-kurgu-fm3/film/"   to "Bilim Kurgu",
+        "${mainUrl}/tur/macera-fm1/film/"        to "Macera",
+        "${mainUrl}/tur/komedi-fm1/film/"        to "Komedi",
+        "${mainUrl}/tur/romantik-fm1/film/"      to "Romantik",
+        "${mainUrl}/tur/belgesel/film/"          to "Belgesel",
+        "${mainUrl}/tur/fantastik-fm1/film/"     to "Fantastik",
+        "${mainUrl}/tur/polisiye/film/"          to "Polisiye Suç",
+        "${mainUrl}/tur/korku-fm2/film/"         to "Korku"
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
@@ -102,29 +89,28 @@ class FilmMakinesi : MainAPI() {
         val poster          = fixUrlNull(document.selectFirst("[property='og:image']")?.attr("content"))
         val description     = document.select("div.info-description p").last()?.text()?.trim()
         val tags            = document.select("div.type a").map { it.text() }
-        val imdbScore          = document.selectFirst("div.info b")?.text()?.trim()
+        val imdbScore       = document.selectFirst("div.info b")?.text()?.trim()
         val year            = document.selectFirst("span.date a")?.text()?.trim()?.toIntOrNull()
 
         val durationText = document.selectFirst("div.time")?.text()?.trim() ?: ""
         val duration = if (durationText.startsWith("Süre:")) {
-            // "Süre: 155 Dakika" gibi bir metni işliyoruz
             val durationValue = durationText.removePrefix("Süre:").trim().split(" ")[0]
             durationValue.toIntOrNull() ?: 0
         } else {
             0
         }
         val recommendations = document.select("div.item-relative").mapNotNull { it.toRecommendResult() }
-        val actors = document.select("div.content a.cast")  // Tüm a.cast öğelerini al
-            .map { Actor(it.text().trim()) }  // Her birini Actor nesnesine dönüştür
+        val actors = document.select("div.content a.cast")
+            .map { Actor(it.text().trim()) }
 
-        val trailer         = fixUrlNull(document.selectXpath("//iframe[@title='Fragman']").attr("data-src"))
+        val trailer = fixUrlNull(document.selectXpath("//iframe[@title='Fragman']").attr("data-src"))
 
         return newMovieLoadResponse(title, url, TvType.Movie, url) {
             this.posterUrl       = poster
             this.year            = year
             this.plot            = description
             this.tags            = tags
-            this.score = Score.from10(imdbScore)
+            this.score           = Score.from10(imdbScore)
             this.duration        = duration
             this.recommendations = recommendations
             addActors(actors)
@@ -132,54 +118,21 @@ class FilmMakinesi : MainAPI() {
         }
     }
 
-
     override suspend fun loadLinks(data: String, isCasting: Boolean, subtitleCallback: (SubtitleFile) -> Unit, callback: (ExtractorLink) -> Unit): Boolean {
         Log.d("kraptor_$name", "data » $data")
-        val document      = app.get(data).document
-//        Log.d("kraptor_$name", "document = $document")
-        val iframe = document.selectFirst("iframe")?.attr("data-src") ?: ""
+        val document = app.get(data).document
+
+        // ! DÜZELTME: iframe, div.after-player içinde ve data-src attribute'unda
+        val iframe = document.selectFirst("div.after-player iframe")?.attr("data-src") ?: ""
         Log.d("kraptor_$name", "iframe = $iframe")
-        val iframeGet = app.get(iframe, referer = "${mainUrl}/").document
-        val scriptAl  = iframeGet.select("script[type=text/javascript]")[1].data().trim()
-        val scriptUnpack = getAndUnpack(scriptAl)
-        val regex = Regex("""dc_hello\("([^"]+)"""")
-        val match = regex.find(scriptUnpack)
-        val b64 = match?.groupValues[1].toString()
-        Log.d("kraptor_$name", "b64 = $b64")
-        val m3u8Url = decodeDcHello(b64)
-        Log.d("kraptor_$name", "m3u8Url = $m3u8Url")
 
-        callback.invoke(newExtractorLink(
-            source = this.name,
-            name = this.name,
-            url = m3u8Url,
-            type = ExtractorLinkType.M3U8,
-            {
-                this.referer = "https://closeload.filmmakinesi.de/"
-                quality = Qualities.Unknown.value
-            }
-        ))
+        if (iframe.isBlank()) {
+            Log.e("kraptor_$name", "Iframe bulunamadı!")
+            return false
+        }
 
+        // ! DÜZELTME: CloseLoadFm extractor'ını kullan
+        loadExtractor(iframe, "${mainUrl}/", subtitleCallback, callback)
         return true
     }
-}
-
-fun decodeDcHello(input: String): String {
-    // 1. atob(_0x37934e)
-    val firstDecoded = String(Base64.decode(input, Base64.DEFAULT))
-    Log.d("kraptor_FilmMakinesi", "firstDecoded = $firstDecoded")
-    // reverse ve tekrar atob işlemi
-    val reversed = firstDecoded.reversed()
-    Log.d("kraptor_FilmMakinesi", "reversed = $reversed")
-    val secondDecoded = String(Base64.decode(reversed, Base64.DEFAULT))
-    Log.d("kraptor_FilmMakinesi", "secondDecoded = $secondDecoded")
-    // ikinci decode sonucu "xxx|URL" formatında geliyor, URL ikinci parçadadır
-    val linkimiz = if (secondDecoded.contains("+")){
-        secondDecoded.substringAfterLast("+")
-    } else if (secondDecoded.contains("|")) {
-        secondDecoded.split("|")[1]
-    } else {
-        secondDecoded
-    }
-    return linkimiz
 }
