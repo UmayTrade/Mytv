@@ -10,94 +10,120 @@ import com.lagradost.cloudstream3.utils.*
 
 open class CloseLoadFm : ExtractorApi() {
     override val name            = "CloseLoadFm"
-    override val mainUrl         = "https://closeload.filmmakinesi.to" // Güncel domain
+    override val mainUrl         = "https://closeload.filmmakinesi.to"
     override val requiresReferer = true
 
-    override suspend fun getUrl(url: String, referer: String?, subtitleCallback: (SubtitleFile) -> Unit, callback: (ExtractorLink) -> Unit) {
-        val extRef = referer ?: ""
+    override suspend fun getUrl(
+        url: String,
+        referer: String?,
+        subtitleCallback: (SubtitleFile) -> Unit,
+        callback: (ExtractorLink) -> Unit
+    ) {
+        val extRef = referer ?: "$mainUrl/"
         Log.d("CloseLoadFm", "url » $url")
+        Log.d("CloseLoadFm", "referer » $extRef")
 
-        val iSource = app.get(url, referer = extRef)
+        // 1) Iframe sayfasını al
+        val iSource  = app.get(url, referer = extRef)
         val document = iSource.document
 
-        // Altyazıları çek
-        document.select("track").forEach {
-            val lang = it.attr("label").let { label ->
-                when (label) {
-                    "Turkish" -> "Turkish"
-                    "English" -> "English"
-                    "French"  -> "French"
-                    else -> label
-                }
-            }
-            subtitleCallback.invoke(
-                SubtitleFile(
-                    lang = lang,
-                    url  = fixUrl(it.attr("src"))
-                )
-            )
+        // 2) Altyazıları çek
+        document.select("track").forEach { track ->
+            val lang = track.attr("label").ifBlank { "Unknown" }
+            val src  = fixUrlNull(track.attr("src")) ?: return@forEach
+            subtitleCallback.invoke(SubtitleFile(lang, src))
         }
 
-        // ! DÜZELTME: Script'ler içinde dc_hello fonksiyonunu ara
-        val scripts = document.select("script[type=text/javascript]")
-        var m3uLink: String? = null
+        // 3) dc_hello base64 string'ini bul
+        var b64: String? = null
 
-        for (script in scripts) {
-            val scriptData = script.data()
+        // Önce tüm script'lerin içinde dc_hello ara
+        val allScripts = document.select("script").map { it.data() }
+        for (scriptData in allScripts) {
             if (scriptData.contains("dc_hello")) {
-                // dc_hello("base64string") formatını regex ile yakala
-                val regex = Regex("""dc_hello\("([^"]+)"""")
-                val match = regex.find(scriptData)
+                val match = Regex("""dc_hello\(\s*["']([^"']+)["']\s*\)""").find(scriptData)
                 if (match != null) {
-                    val b64 = match.groupValues[1]
-                    Log.d("CloseLoadFm", "b64 = $b64")
-                    m3uLink = decodeDcHello(b64)
-                    Log.d("CloseLoadFm", "m3uLink = $m3uLink")
+                    b64 = match.groupValues[1]
+                    Log.d("CloseLoadFm", "b64 (direct) » $b64")
                     break
                 }
             }
         }
 
-        if (m3uLink.isNullOrBlank()) {
-            Log.e("CloseLoadFm", "m3uLink bulunamadı!")
+        // Bulunamazsa, getAndUnpack ile packed script'leri aç
+        if (b64.isNullOrBlank()) {
+            for (script in document.select("script[type=text/javascript]")) {
+                val raw = script.data().trim()
+                if (raw.contains("eval(function(p,a,c,k,e,d)")) {
+                    try {
+                        val unpacked = getAndUnpack(raw)
+                        val match = Regex("""dc_hello\(\s*["']([^"']+)["']\s*\)""").find(unpacked)
+                        if (match != null) {
+                            b64 = match.groupValues[1]
+                            Log.d("CloseLoadFm", "b64 (unpacked) » $b64")
+                            break
+                        }
+                    } catch (e: Exception) {
+                        Log.e("CloseLoadFm", "unpack hata: ${e.message}")
+                    }
+                }
+            }
+        }
+
+        if (b64.isNullOrBlank()) {
+            Log.e("CloseLoadFm", "dc_hello base64 bulunamadı!")
+            return
+        }
+
+        // 4) m3u8 linkini decode et
+        val m3uLink = decodeDcHello(b64)
+        Log.d("CloseLoadFm", "m3uLink » $m3uLink")
+
+        if (m3uLink.isBlank()) {
+            Log.e("CloseLoadFm", "m3uLink boş!")
             return
         }
 
         callback.invoke(
             newExtractorLink(
                 source = this.name,
-                name = this.name,
-                url = m3uLink,
-                type = ExtractorLinkType.M3U8
+                name   = this.name,
+                url    = m3uLink,
+                type   = ExtractorLinkType.M3U8
             ) {
                 this.referer = "$mainUrl/"
                 this.quality = Qualities.Unknown.value
                 this.headers = mapOf(
+                    "Referer"    to "$mainUrl/",
                     "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
                 )
             }
         )
     }
 
+    /**
+     * dc_hello decode:
+     *   base64(str1) -> ters çevir -> base64 decode -> "xxx|URL"
+     */
     private fun decodeDcHello(input: String): String {
-        // 1. Base64 decode
-        val firstDecoded = String(Base64.decode(input, Base64.DEFAULT))
-        Log.d("CloseLoadFm", "firstDecoded = $firstDecoded")
+        return try {
+            val first  = String(Base64.decode(input, Base64.DEFAULT))
+            Log.d("CloseLoadFm", "first  » $first")
 
-        // 2. Reverse ve tekrar Base64 decode
-        val reversed = firstDecoded.reversed()
-        Log.d("CloseLoadFm", "reversed = $reversed")
+            val reversed = first.reversed()
+            Log.d("CloseLoadFm", "reversed » $reversed")
 
-        val secondDecoded = String(Base64.decode(reversed, Base64.DEFAULT))
-        Log.d("CloseLoadFm", "secondDecoded = $secondDecoded")
+            val second = String(Base64.decode(reversed, Base64.DEFAULT))
+            Log.d("CloseLoadFm", "second » $second")
 
-        // 3. "xxx|URL" formatından URL'yi al
-        return if (secondDecoded.contains("|")) {
-            secondDecoded.split("|")[1]
-        } else if (secondDecoded.contains("+")) {
-            secondDecoded.substringAfterLast("+")
-        } else {
-            secondDecoded
+            when {
+                second.contains("|") -> second.split("|")[1]
+                second.contains("+") -> second.substringAfterLast("+")
+                else                 -> second
+            }
+        } catch (e: Exception) {
+            Log.e("CloseLoadFm", "decode hata: ${e.message}")
+            ""
         }
     }
 }
