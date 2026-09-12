@@ -15,9 +15,9 @@ class FullHDFilmizleseneProvider : MainAPI() {
 
     override val mainPage = mainPageOf(
         "" to "Son Eklenen Filmler",
-        "filmizle/1080p-filmler-2" to "1080p Filmler",
-        "filmizle/imdb-puani-yuksek-filmler" to "IMDb Puani Yuksek",
-        "filmizle/turkce-dublaj-filmler-1" to "Turkce Dublaj Filmler"
+        "${mainUrl}/filmizle/1080p-filmler-2" to "1080p Filmler",
+        "${mainUrl}/filmizle/imdb-puani-yuksek-filmler" to "IMDb Puani Yuksek",
+        "${mainUrl}/filmizle/turkce-dublaj-filmler-1" to "Turkce Dublaj Filmler"
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
