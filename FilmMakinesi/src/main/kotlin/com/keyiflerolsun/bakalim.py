@@ -12,12 +12,12 @@ oturum.headers.update({
     "Referer": "https://filmmakinesi.to/"
 })
 
-film_link = "https://filmmakinesi.to/film/band-of-brothers-legacy-2026/"
+film_link = "https://filmmakinesi.to/film/haydi-takim-2026/"
 
-istek = oturum.get(film_link)
+istek  = oturum.get(film_link)
 secici = Selector(istek.text)
 
-# ! DÜZELTME: iframe, div.after-player içinde ve data-src attribute'unda
+# Iframe URL'sini al — div.after-player içindeki iframe
 iframe = secici.css("div.after-player iframe::attr(data-src)").get()
 konsol.print(f"Iframe: {iframe}")
 
@@ -25,35 +25,46 @@ if not iframe:
     konsol.print("[red]Iframe bulunamadı![/red]")
     exit(1)
 
-i_source = oturum.get(iframe, headers={"Referer": film_link})
+# Iframe sayfasını al
+i_source   = oturum.get(iframe, headers={"Referer": film_link})
 i_selector = Selector(i_source.text)
 
-# ! DÜZELTME: dc_hello fonksiyonunu ara
-m3u_link = None
-for script in i_selector.css("script[type=text/javascript]").getall():
+# dc_hello base64 string'ini ara
+b64_str = None
+for script in i_selector.css("script").getall():
     if "dc_hello" in script:
-        match = findall(r'dc_hello\("([^"]+)"\)', script)
+        match = findall(r'dc_hello\(\s*["\']([^"\']+)["\']\s*\)', script)
         if match:
             b64_str = match[0]
-            konsol.print(f"Base64: {b64_str}")
-            # Base64 decode işlemi
-            if padding_needed := len(b64_str) % 4:
-                b64_str += "=" * (4 - padding_needed)
-            first_decode = b64decode(b64_str).decode("utf-8")
-            konsol.print(f"First decode: {first_decode}")
-            reversed_str = first_decode[::-1]
-            konsol.print(f"Reversed: {reversed_str}")
-            if padding_needed := len(reversed_str) % 4:
-                reversed_str += "=" * (4 - padding_needed)
-            second_decode = b64decode(reversed_str).decode("utf-8")
-            konsol.print(f"Second decode: {second_decode}")
-            if "|" in second_decode:
-                m3u_link = second_decode.split("|")[1]
-            elif "+" in second_decode:
-                m3u_link = second_decode.split("+")[-1]
-            else:
-                m3u_link = second_decode
+            konsol.print(f"Base64 bulundu: {b64_str}")
             break
+
+if not b64_str:
+    konsol.print("[red]dc_hello base64 bulunamadı![/red]")
+    exit(1)
+
+# Base64 decode (ters çevir → tekrar decode)
+if padding_needed := len(b64_str) % 4:
+    b64_str += "=" * (4 - padding_needed)
+
+first_decode = b64decode(b64_str).decode("utf-8")
+konsol.print(f"First decode: {first_decode}")
+
+reversed_str = first_decode[::-1]
+konsol.print(f"Reversed: {reversed_str}")
+
+if padding_needed := len(reversed_str) % 4:
+    reversed_str += "=" * (4 - padding_needed)
+
+second_decode = b64decode(reversed_str).decode("utf-8")
+konsol.print(f"Second decode: {second_decode}")
+
+if "|" in second_decode:
+    m3u_link = second_decode.split("|")[1]
+elif "+" in second_decode:
+    m3u_link = second_decode.split("+")[-1]
+else:
+    m3u_link = second_decode
 
 konsol.print(f"[green]M3U Link: {m3u_link}[/green]")
 
