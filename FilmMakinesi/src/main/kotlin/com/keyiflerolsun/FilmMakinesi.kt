@@ -11,8 +11,10 @@ import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.ExtractorLinkType
 import com.lagradost.cloudstream3.utils.Qualities
 import com.lagradost.cloudstream3.utils.getAndUnpack
+import com.lagradost.cloudstream3.utils.loadExtractor   // ← EKLENDİ
 import com.lagradost.cloudstream3.utils.newExtractorLink
 import org.jsoup.nodes.Element
+
 
 class FilmMakinesi : MainAPI() {
     override var mainUrl              = "https://filmmakinesi.to" // Güncel domain
