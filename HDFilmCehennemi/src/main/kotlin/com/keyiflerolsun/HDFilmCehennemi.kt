@@ -42,7 +42,7 @@ import org.jsoup.nodes.Element
 
 class HDFilmCehennemi : MainAPI() {
     override var mainUrl              = "https://www.hdfilmcehennemi.nl"
-    override var name                 = "Brosvod • HDFilmCehennemi"
+    override var name                 = "HDFilmCehennemi"
     override val hasMainPage          = true
     override var lang                 = "tr"
     override val hasQuickSearch       = true
