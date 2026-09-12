@@ -2,8 +2,10 @@ package com.cloudstream.plugins
 
 import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.utils.*
+import com.lagradost.cloudstream3.utils.AppUtils.tryParseJson
 import org.jsoup.nodes.Element
 import android.util.Base64
+import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
 class HdfilmcehennemiProvider : MainAPI() {
@@ -20,17 +22,25 @@ class HdfilmcehennemiProvider : MainAPI() {
         "imdb-7-puan-uzeri-filmler-2/" to "IMDb 7+ Filmler"
     )
 
+    // SABİT referer - her yerde mainUrl kullan
+    private val playerReferer get() = mainUrl
+    private val defaultHeaders = mapOf(
+        "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
+                "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    )
+
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
         val url = if (page == 1) {
             if (request.data.isEmpty()) mainUrl else "$mainUrl/${request.data}"
         } else {
-            if (request.data.isEmpty()) "$mainUrl/page/$page/" else "$mainUrl/${request.data}page/$page/"
+            if (request.data.isEmpty()) "$mainUrl/page/$page/"
+            else "$mainUrl/${request.data}page/$page/"
         }
 
-        val doc = app.get(url).document
-        val home = doc.select("a.poster, div.poster, div.mini-poster, .poster-wrapper").mapNotNull {
-            it.toSearchResult()
-        }.distinctBy { it.url }
+        val doc = app.get(url, headers = defaultHeaders).document
+        val home = doc.select("a.poster, div.poster, div.mini-poster, .poster-wrapper")
+            .mapNotNull { it.toSearchResult() }
+            .distinctBy { it.url }
 
         return newHomePageResponse(
             list = HomePageList(
@@ -43,25 +53,30 @@ class HdfilmcehennemiProvider : MainAPI() {
     }
 
     private fun Element.toSearchResult(): SearchResponse? {
-        val linkElem = if (this.tagName() == "a") this else this.selectFirst("a[href]") ?: return null
+        val linkElem = if (this.tagName() == "a") this
+                       else this.selectFirst("a[href]") ?: return null
         val href = fixUrl(linkElem.attr("href"))
-        if (href == mainUrl || href.endsWith("/#") || href.contains("/category/") || href.contains("/tur/") || href.contains("/page/")) return null
+        if (href == mainUrl || href.endsWith("/#") ||
+            href.contains("/category/") || href.contains("/tur/") ||
+            href.contains("/page/")) return null
 
-        val title = this.selectFirst(".poster-title, .mini-poster-title, .title, h2, h3")?.text()?.trim()
-            ?.ifEmpty { null }
+        val title = this.selectFirst(".poster-title, .mini-poster-title, .title, h2, h3")
+            ?.text()?.trim()?.ifEmpty { null }
             ?: linkElem.attr("title").trim().ifEmpty { null }
             ?: linkElem.attr("aria-label").trim().ifEmpty { null }
             ?: return null
 
         val posterUrl = fixUrlNull(
-            this.selectFirst("img")?.attr("data-src")
-                ?.ifEmpty { null }
+            this.selectFirst("img")?.attr("data-src")?.ifEmpty { null }
                 ?: this.selectFirst("img")?.attr("src")
                     ?.let { if (it.startsWith("data:")) null else it }
-                ?: this.selectFirst("img")?.attr("srcset")?.split(" ")?.firstOrNull()
+                ?: this.selectFirst("img")?.attr("srcset")
+                    ?.split(" ")?.firstOrNull()
         )
 
-        val isTvSeries = href.contains("/dizi/") || this.selectFirst(".badge-dizi, .is-series, .mini-poster-meta")?.text()?.contains("Dizi", ignoreCase = true) == true
+        val isTvSeries = href.contains("/dizi/") ||
+                this.selectFirst(".badge-dizi, .is-series, .mini-poster-meta")
+                    ?.text()?.contains("Dizi", ignoreCase = true) == true
 
         return if (isTvSeries) {
             newTvSeriesSearchResponse(title, href, TvType.TvSeries) {
@@ -75,11 +90,17 @@ class HdfilmcehennemiProvider : MainAPI() {
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
-        val searchUrl = "$mainUrl/search?q=${query}"
+        // ✅ DÜZELTME: URL encode
+        val encoded = URLEncoder.encode(query, "UTF-8")
+        val searchUrl = "$mainUrl/search?q=$encoded"
+
         val jsonResp = app.get(
             searchUrl,
             referer = mainUrl,
-            headers = mapOf("X-Requested-With" to "fetch", "Accept" to "application/json")
+            headers = defaultHeaders + mapOf(
+                "X-Requested-With" to "fetch",
+                "Accept" to "application/json"
+            )
         ).text
 
         val results = mutableListOf<SearchResponse>()
@@ -88,6 +109,7 @@ class HdfilmcehennemiProvider : MainAPI() {
             .replace("\\/", "/")
             .replace("\\n", "\n")
         val fragDoc = org.jsoup.Jsoup.parse(combinedHtml)
+
         fragDoc.select("a[href*='hdfilmcehennemi']").forEach { link ->
             val href = fixUrl(link.attr("href"))
             if (!href.contains("/category/") && !href.contains("/tur/") && href != mainUrl) {
@@ -95,14 +117,19 @@ class HdfilmcehennemiProvider : MainAPI() {
                     ?: link.attr("title").trim()
                 val poster = fixUrlNull(
                     link.selectFirst("img")?.attr("data-src")
-                        ?: link.selectFirst("img")?.attr("src")?.let { if (it.startsWith("data:")) null else it }
+                        ?: link.selectFirst("img")?.attr("src")
+                            ?.let { if (it.startsWith("data:")) null else it }
                 )
                 if (title.isNotEmpty()) {
                     val isSeries = href.contains("/dizi/")
                     if (isSeries) {
-                        results.add(newTvSeriesSearchResponse(title, href, TvType.TvSeries) { this.posterUrl = poster })
+                        results.add(newTvSeriesSearchResponse(title, href, TvType.TvSeries) {
+                            this.posterUrl = poster
+                        })
                     } else {
-                        results.add(newMovieSearchResponse(title, href, TvType.Movie) { this.posterUrl = poster })
+                        results.add(newMovieSearchResponse(title, href, TvType.Movie) {
+                            this.posterUrl = poster
+                        })
                     }
                 }
             }
@@ -111,7 +138,7 @@ class HdfilmcehennemiProvider : MainAPI() {
     }
 
     override suspend fun load(url: String): LoadResponse {
-        val doc = app.get(url).document
+        val doc = app.get(url, headers = defaultHeaders).document
 
         val rawTitle = doc.selectFirst("h1, .poster-title, .movie-title")?.text()?.trim()
             ?: doc.selectFirst("meta[property='og:title']")?.attr("content")?.trim()
@@ -123,26 +150,60 @@ class HdfilmcehennemiProvider : MainAPI() {
                 ?: doc.selectFirst(".poster-media img, .movie-poster img, .poster img")?.attr("data-src")
                 ?: doc.selectFirst(".poster-media img, .movie-poster img, .poster img")?.attr("src")
         )
-        val description = doc.selectFirst(".movie-story, .story, .overview, p.description, .entry-content, .film-ozeti, .ozet, meta[name='description']")?.text()?.trim()
+        val description = doc.selectFirst(
+            ".movie-story, .story, .overview, p.description, .entry-content, " +
+                    ".film-ozeti, .ozet, meta[name='description']"
+        )?.text()?.trim()
             ?: doc.selectFirst("meta[property='og:description']")?.attr("content")?.trim()
-        val year = doc.selectFirst("a[href*='/yil/'], span.year, .release-date")?.text()?.filter { it.isDigit() }?.toIntOrNull()
-        val score = Score.from10(doc.selectFirst(".imdb-score, .rating, .score")?.text()?.trim()?.replace(",", ".")?.toDoubleOrNull())
-        val tags = doc.select("a[href*='/tur/']").map { it.text().trim() }.filter { it.isNotEmpty() }
+        val year = doc.selectFirst("a[href*='/yil/'], span.year, .release-date")
+            ?.text()?.filter { it.isDigit() }?.toIntOrNull()
+        val score = Score.from10(
+            doc.selectFirst(".imdb-score, .rating, .score")
+                ?.text()?.trim()?.replace(",", ".")?.toDoubleOrNull()
+        )
+        val tags = doc.select("a[href*='/tur/']").map { it.text().trim() }
+            .filter { it.isNotEmpty() }
 
-        val isTvSeries = url.contains("/dizi/") || doc.select(".season-wrapper, .episode-list, .season").isNotEmpty()
+        val isTvSeries = url.contains("/dizi/") ||
+                doc.select(".season-wrapper, .episode-list, .season, select#season-select")
+                    .isNotEmpty()
 
         return if (isTvSeries) {
             val episodes = mutableListOf<Episode>()
-            doc.select(".season-wrapper, .season").forEachIndexed { seasonIdx, seasonElem ->
-                val seasonNum = seasonIdx + 1
-                seasonElem.select("a[href*='/bolum/'], .episode-item a, a[href*='/dizi/']").forEachIndexed { epIdx, epElem ->
-                    val epUrl = fixUrl(epElem.attr("href"))
-                    val epName = epElem.text().trim().ifEmpty { "Bolum ${epIdx + 1}" }
+
+            // ✅ DÜZELTME: Sezonları hem select hem div'den topla
+            val seasonContainers = doc.select(".season-wrapper, .season, .episodes-list, " +
+                    "div[data-season], div.bolumler")
+
+            if (seasonContainers.isNotEmpty()) {
+                seasonContainers.forEachIndexed { seasonIdx, seasonElem ->
+                    val seasonNum = seasonElem.attr("data-season")
+                        .toIntOrNull() ?: (seasonIdx + 1)
+                    seasonElem.select("a[href*='/bolum/'], a[href*='/sezon/'], " +
+                            ".episode-item a, li a[href]").forEachIndexed { epIdx, epElem ->
+                        val epUrl = fixUrl(epElem.attr("href"))
+                        if (epUrl.isBlank() || epUrl == url) return@forEachIndexed
+                        val epName = epElem.text().trim()
+                            .ifEmpty { "Bölüm ${epIdx + 1}" }
+                        episodes.add(
+                            newEpisode(epUrl) {
+                                this.name = epName
+                                this.season = seasonNum
+                                this.episode = epIdx + 1
+                            }
+                        )
+                    }
+                }
+            } else {
+                // Fallback: sayfadaki tüm /bolum/ linkleri tek sezon kabul et
+                doc.select("a[href*='/bolum/']").forEachIndexed { idx, a ->
+                    val epUrl = fixUrl(a.attr("href"))
+                    if (epUrl.isBlank()) return@forEachIndexed
                     episodes.add(
                         newEpisode(epUrl) {
-                            this.name = epName
-                            this.season = seasonNum
-                            this.episode = epIdx + 1
+                            this.name = a.text().trim().ifEmpty { "Bölüm ${idx + 1}" }
+                            this.season = 1
+                            this.episode = idx + 1
                         }
                     )
                 }
@@ -166,12 +227,14 @@ class HdfilmcehennemiProvider : MainAPI() {
         }
     }
 
-    /**
-     * Unpack Dean Edwards packed JavaScript code p,a,c,k,e,d format
-     */
+    // ---------- JS unpacker (daha sağlam) ----------
     private fun unpackJs(packedCode: String): String {
-        val match = Regex("""\}\s*\(\s*'([\s\S]*?)'\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*'([\s\S]*?)'\.split\('\|'\)""").find(packedCode)
-            ?: return packedCode
+        val match = Regex(
+            """eval\s*\(\s*function\s*\(\s*p\s*,\s*a\s*,\s*c\s*,\s*k\s*,\s*e\s*,\s*d\s*\)\s*\{[\s\S]*?\}\s*\(\s*'([\s\S]*?)'\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*'([\s\S]*?)'\s*\.split\('\|'\)"""
+        ).find(packedCode) ?: Regex(
+            """}\s*\(\s*'([\s\S]*?)'\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*'([\s\S]*?)'\.split\('\|'\)"""
+        ).find(packedCode) ?: return packedCode
+
         val payload = match.groupValues[1]
         val radix = match.groupValues[2].toIntOrNull() ?: 36
         val syms = match.groupValues[4].split("|")
@@ -181,9 +244,7 @@ class HdfilmcehennemiProvider : MainAPI() {
             var res = 0
             for (c in word) {
                 val idx = chars.indexOf(c)
-                if (idx >= 0) {
-                    res = res * radix + idx
-                }
+                if (idx >= 0) res = res * radix + idx
             }
             return if (res < syms.size && syms[res].isNotEmpty()) syms[res] else word
         }
@@ -191,18 +252,18 @@ class HdfilmcehennemiProvider : MainAPI() {
         return Regex("""\b\w+\b""").replace(payload) { lookup(it.value) }
     }
 
-    /**
-     * Generic decoder for closeload & rplayer dc_ functions.
-     * Dynamically detects operations (reverse, atob, rot, xor) from JS function body.
-     */
+    // ---------- dc_ stream decoder (regex'ler düzeltildi) ----------
     private fun decodeStreamUrl(embedHtml: String): String? {
         val unpacked = unpackJs(embedHtml)
 
-        val callMatch = Regex("""dc_[A-Za-z0-9_]+\s*\(\s*\[(.*?)\]\s*\)""").find(unpacked) ?: return null
+        val callMatch = Regex("""dc_[A-Za-z0-9_]+\s*\(\s*\[(.*?)\]\s*\)""")
+            .find(unpacked) ?: return null
         val rawArray = callMatch.groupValues[1]
         val parts = rawArray.split(",").map { it.trim('"', '\'', ' ', ';') }
 
-        val funcMatch = Regex("""function\s+dc_[A-Za-z0-9_]+\s*\([^)]*\)\s*\{([\s\S]*?)(?:return\s+unmix;|return\s+result;)""").find(unpacked) ?: return null
+        val funcMatch = Regex(
+            """function\s+dc_[A-Za-z0-9_]+\s*\([^)]*\)\s*\{([\s\S]*?)(?:return\s+unmix;|return\s+result;)"""
+        ).find(unpacked) ?: return null
         val body = funcMatch.groupValues[1]
 
         var curr = parts.joinToString("")
@@ -210,10 +271,16 @@ class HdfilmcehennemiProvider : MainAPI() {
         data class Op(val index: Int, val type: String, val value: Any?)
         val ops = mutableListOf<Op>()
 
-        Regex("""atob\(""").findAll(body).forEach { ops.add(Op(it.range.first, "atob", null)) }
-        Regex("""reverse\(""").findAll(body).forEach { ops.add(Op(it.range.first, "reverse", null)) }
-        Regex("""replace\(/\[a-zA-Z\]/g""").findAll(body).forEach { match ->
-            val sub = body.substring(match.range.first, (match.range.first + 200).coerceAtMost(body.length))
+        Regex("""atob\s*\(""").findAll(body).forEach {
+            ops.add(Op(it.range.first, "atob", null))
+        }
+        Regex("""reverse\s*\(\s*\)""").findAll(body).forEach {
+            ops.add(Op(it.range.first, "reverse", null))
+        }
+        // ✅ DÜZELTME: doğru regex
+        Regex("""replace\s*\(\s*/\[a-zA-Z\]/g""").findAll(body).forEach { match ->
+            val sub = body.substring(match.range.first,
+                (match.range.first + 200).coerceAtMost(body.length))
             val shiftMatch = Regex("""o\s*-\s*base\s*\+\s*(\d+)""").find(sub)
             val shift = shiftMatch?.groupValues?.get(1)?.toIntOrNull() ?: 6
             ops.add(Op(match.range.first, "rot", shift))
@@ -222,9 +289,8 @@ class HdfilmcehennemiProvider : MainAPI() {
             val accMatch = Regex("""var\s+acc\s*=\s*(\d+)""").find(body)
             val stepMatch = Regex("""acc\s*=\s*\(\s*acc\s*\+\s*(\d+)\s*\)""").find(body)
             if (accMatch != null && stepMatch != null) {
-                val acc = accMatch.groupValues[1].toInt()
-                val step = stepMatch.groupValues[1].toInt()
-                ops.add(Op(match.range.first, "xor", Pair(acc, step)))
+                ops.add(Op(match.range.first, "xor",
+                    Pair(accMatch.groupValues[1].toInt(), stepMatch.groupValues[1].toInt())))
             }
         }
 
@@ -235,11 +301,10 @@ class HdfilmcehennemiProvider : MainAPI() {
                 "atob" -> {
                     val pad = (4 - curr.length % 4) % 4
                     curr += "=".repeat(pad)
-                    curr = String(Base64.decode(curr, Base64.DEFAULT), StandardCharsets.ISO_8859_1)
+                    curr = String(Base64.decode(curr, Base64.DEFAULT),
+                        StandardCharsets.ISO_8859_1)
                 }
-                "reverse" -> {
-                    curr = curr.reversed()
-                }
+                "reverse" -> curr = curr.reversed()
                 "rot" -> {
                     val shift = op.value as Int
                     curr = curr.map { c ->
@@ -251,14 +316,13 @@ class HdfilmcehennemiProvider : MainAPI() {
                     }.joinToString("")
                 }
                 "xor" -> {
-                    val pair = op.value as Pair<*, *>
-                    val startAcc = pair.first as Int
-                    val step = pair.second as Int
-                    var acc = startAcc
+                    val (startAcc, step) = op.value as Pair<*, *>
+                    var acc = startAcc as Int
+                    val st = step as Int
                     val unmix = StringBuilder()
                     for (char in curr) {
                         val byte = char.code and 0xFF
-                        acc = (acc + step) % 256
+                        acc = (acc + st) % 256
                         val plain = byte xor acc
                         acc = (acc + byte) % 256
                         unmix.append(plain.toChar())
@@ -278,149 +342,138 @@ class HdfilmcehennemiProvider : MainAPI() {
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ): Boolean {
-        val doc = app.get(data).document
-        val pageHtml = doc.html()
+        val doc = app.get(data, headers = defaultHeaders).document
+        val embedSources = mutableListOf<Pair<String, String>>()
 
-        val embedSources = mutableListOf<Pair<String, String>>() // Pair(embedUrl, label)
+        // 1) alternative-links (data-video)
+        doc.select(".alternative-links").forEach { div ->
+            val langAttr = div.attr("data-lang")
+            val langLabel = when (langAttr) {
+                "tr" -> "Türkçe Dublaj"
+                "en" -> "Türkçe Altyazılı"
+                else -> "TR-EN Dual"
+            }
 
-        // 1. Check video alternatives (data-video) grouped by language container
-        val altDivs = doc.select(".alternative-links")
-        if (altDivs.isNotEmpty()) {
-            altDivs.forEach { div ->
-                val langAttr = div.attr("data-lang")
-                val langLabel = when (langAttr) {
-                    "tr" -> "Türkçe Dublaj"
-                    "en" -> "Türkçe Altyazılı"
-                    else -> "TR-EN Dual"
-                }
+            div.select("button[data-video], a[data-video]").forEach { btn ->
+                val videoId = btn.attr("data-video")
+                val btnName = btn.text().trim().ifEmpty { "Alternatif" }
+                if (videoId.isEmpty()) return@forEach
 
-                div.select("button[data-video], a[data-video]").forEach { btn ->
-                    val videoId = btn.attr("data-video")
-                    val btnName = btn.text().trim().ifEmpty { "Alternatif" }
+                try {
+                    val jsonUrl = "$mainUrl/video/$videoId/"
+                    val jsonResp = app.get(
+                        jsonUrl,
+                        referer = data,
+                        headers = defaultHeaders + mapOf(
+                            "X-Requested-With" to "fetch",
+                            "Accept" to "application/json"
+                        )
+                    ).text
 
-                    if (videoId.isNotEmpty()) {
-                        try {
-                            // Call AJAX endpoint /video/{id}/ to fetch JSON iframe
-                            val jsonUrl = "$mainUrl/video/$videoId/"
-                            val jsonResp = app.get(
-                                jsonUrl,
-                                referer = data,
-                                headers = mapOf("X-Requested-With" to "fetch", "Accept" to "application/json")
-                            ).text
-
-                            val iframeMatch = Regex("""(?:data-src|src)\\?=\\?"([^"\\]+)""").find(jsonResp)
-                            if (iframeMatch != null) {
-                                val rawIframe = iframeMatch.groupValues[1]
-                                if (!rawIframe.isNullOrEmpty()) {
-                                    val iframeUrl = fixUrl(rawIframe.replace("\\/", "/"))
-                                    embedSources.add(Pair(iframeUrl, "$langLabel ($btnName)"))
-                                }
-                            }
-                        } catch (_: Exception) {
-                            // Ignore
-                        }
+                    // ✅ DÜZELTME: JSON içindeki HTML'i de parse et
+                    val cleaned = jsonResp.replace("\\/", "/")
+                    val iframeMatch = Regex("""(?:data-src|src)\\?=\\?["']([^"']+)""")
+                        .find(cleaned)
+                    if (iframeMatch != null) {
+                        val iframeUrl = fixUrl(iframeMatch.groupValues[1])
+                        if (iframeUrl.isNotBlank())
+                            embedSources.add(iframeUrl to "$langLabel ($btnName)")
                     }
-                }
+                } catch (_: Exception) { /* ignore */ }
             }
         }
 
-        // 2. Direct iframes in page if any
+        // 2) doğrudan iframe
         doc.select("iframe[src], iframe[data-src]").forEach {
             val src = it.attr("src").ifEmpty { it.attr("data-src") }
-            if (src.isNotEmpty() && !src.contains("youtube.com") && !src.contains("youtu.be")) {
-                embedSources.add(Pair(fixUrl(src), "Varsayılan"))
+            if (src.isNotEmpty() && !src.contains("youtube.com") &&
+                !src.contains("youtu.be")) {
+                embedSources.add(fixUrl(src) to "Varsayılan")
             }
         }
 
         for ((sourceUrl, optionLabel) in embedSources.distinctBy { it.first }) {
             try {
-                if (sourceUrl.contains("hdfilmcehennemi") || sourceUrl.contains("rapid") || sourceUrl.contains("closeload") || sourceUrl.contains("playmix") || sourceUrl.contains("rplayer")) {
-                    val embedDoc = app.get(sourceUrl, referer = data).text
+                if (sourceUrl.contains("hdfilmcehennemi") ||
+                    sourceUrl.contains("rapid") ||
+                    sourceUrl.contains("closeload") ||
+                    sourceUrl.contains("playmix") ||
+                    sourceUrl.contains("rplayer")) {
+
+                    val embedDoc = app.get(sourceUrl, referer = data,
+                        headers = defaultHeaders).text
 
                     val streamUrls = mutableListOf<String>()
 
-                    // Try dc_ decoder
-                    val decodedStream = decodeStreamUrl(embedDoc)
-                    if (decodedStream != null) {
-                        streamUrls.add(decodedStream)
-                    }
+                    decodeStreamUrl(embedDoc)?.let { streamUrls.add(it) }
 
-                    // Direct m3u8/txt URLs in embed HTML
-                    val m3u8Regex = Regex("""(https?://[^\s"'<>]+\.(?:m3u8|txt|mp4)[^\s"'<>]*)""")
-                    m3u8Regex.findAll(embedDoc).forEach { match ->
-                        val videoUrl = match.value.replace("\\/", "/")
-                        if (!videoUrl.contains("player") && !videoUrl.contains("favicon") && !videoUrl.contains(".vtt")) {
-                            streamUrls.add(videoUrl)
+                    Regex("""(https?://[^\s"'<>]+\.(?:m3u8|txt|mp4)[^\s"'<>]*)""")
+                        .findAll(embedDoc).forEach { m ->
+                            val u = m.value.replace("\\/", "/")
+                            if (!u.contains("player") && !u.contains("favicon") &&
+                                !u.contains(".vtt")) {
+                                streamUrls.add(u)
+                            }
                         }
-                    }
 
+                    // ✅ DÜZELTME: Referer = mainUrl (sabit .mobi DEĞİL)
                     val playerHeaders = mapOf(
-                        "Referer" to "https://hdfilmcehennemi.mobi/",
-                        "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                        "Referer" to playerReferer,
+                        "User-Agent" to defaultHeaders["User-Agent"]!!
                     )
 
                     for (videoUrl in streamUrls.distinct()) {
-                        val streamName = "$name - $optionLabel (Sesli Oynatıcı)"
-
-                        // 1. Emit Master M3U8 URL directly (Ensures ExoPlayer loads audio track + video)
+                        // ✅ DÜZELTME: önce M3U8 master'ı doğrudan emit et
                         val masterLink = newExtractorLink(
                             source = name,
-                            name = streamName,
+                            name = "$name - $optionLabel",
                             url = videoUrl,
                             type = ExtractorLinkType.M3U8
                         ) {
-                            this.referer = "https://hdfilmcehennemi.mobi/"
+                            this.referer = playerReferer
                             this.headers = playerHeaders
-                            this.quality = Qualities.P1080.value
+                            this.quality = Qualities.Unknown.value
                         }
                         callback.invoke(masterLink)
 
-                        // 2. Resolution sub-links as fallbacks
+                        // Alt kaliteler (opsiyonel, hata fırlatırsa yut)
                         try {
-                            val m3u8Links = M3u8Helper.generateM3u8(
-                                source = name,
-                                streamUrl = videoUrl,
-                                referer = "https://hdfilmcehennemi.mobi/",
-                                headers = playerHeaders
+                            val subs = M3u8Helper.generateM3u8(
+                                videoUrl,
+                                playerReferer,
+                                playerHeaders
                             )
-                            m3u8Links.forEach { link ->
-                                val customLink = newExtractorLink(
-                                    source = link.source,
-                                    name = "$name - $optionLabel (${link.name})",
-                                    url = link.url,
-                                    type = if (link.isM3u8) ExtractorLinkType.M3U8 else ExtractorLinkType.VIDEO
-                                ) {
-                                    this.referer = "https://hdfilmcehennemi.mobi/"
-                                    this.headers = playerHeaders
-                                    this.quality = link.quality
-                                }
-                                callback.invoke(customLink)
+                            subs.forEach { link ->
+                                callback.invoke(
+                                    newExtractorLink(
+                                        source = link.source,
+                                        name = "$name - $optionLabel (${link.name})",
+                                        url = link.url,
+                                        type = if (link.isM3u8) ExtractorLinkType.M3U8
+                                               else ExtractorLinkType.VIDEO
+                                    ) {
+                                        this.referer = playerReferer
+                                        this.headers = playerHeaders
+                                        this.quality = link.quality
+                                    }
+                                )
                             }
-                        } catch (_: Exception) {
-                            // M3u8Helper fallback
-                        }
+                        } catch (_: Exception) { /* alt kalite yoksa yok */ }
                     }
 
-                    // VTT Subtitles - flexible regex for various JSON orderings
-                    val vttRegex = Regex(""""file"\s*:\s*"([^"]+\.vtt[^"]*)".{0,50}?"label"\s*:\s*"([^"]+)"""")
-                    vttRegex.findAll(embedDoc).forEach { match ->
-                        val subUrl = match.groupValues[1].replace("\\/", "/")
-                        val subLang = match.groupValues[2]
-                            .replace("\\u00fc", "ü").replace("\\u00e7", "ç")
-                            .replace("\\u0131", "ı").replace("\\u00f6", "ö")
-                        subtitleCallback.invoke(
-                            SubtitleFile(
-                                lang = subLang,
-                                url = subUrl
-                            )
-                        )
-                    }
+                    // VTT altyazı
+                    Regex(""""file"\s*:\s*"([^"]+\.vtt[^"]*)".{0,50}?"label"\s*:\s*"([^"]+)"""")
+                        .findAll(embedDoc).forEach { m ->
+                            val subUrl = m.groupValues[1].replace("\\/", "/")
+                            val subLang = m.groupValues[2]
+                                .replace("\\u00fc", "ü").replace("\\u00e7", "ç")
+                                .replace("\\u0131", "ı").replace("\\u00f6", "ö")
+                            subtitleCallback.invoke(SubtitleFile(lang = subLang, url = subUrl))
+                        }
                 } else {
                     loadExtractor(sourceUrl, subtitleCallback, callback)
                 }
-            } catch (e: Exception) {
-                // Ignore individual embed error
-            }
+            } catch (_: Exception) { /* ignore */ }
         }
 
         return true
