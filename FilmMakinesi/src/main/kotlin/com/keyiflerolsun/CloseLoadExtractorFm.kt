@@ -1,4 +1,3 @@
-
 // ! Bu araç @keyiflerolsun tarafından | @KekikAkademi için yazılmıştır.
 
 package com.keyiflerolsun
@@ -11,7 +10,6 @@ import com.lagradost.cloudstream3.utils.ExtractorApi
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.ExtractorLinkType
 import com.lagradost.cloudstream3.utils.Qualities
-import com.lagradost.cloudstream3.utils.fixUrlNull
 import com.lagradost.cloudstream3.utils.getAndUnpack
 import com.lagradost.cloudstream3.utils.newExtractorLink
 
@@ -34,24 +32,20 @@ open class CloseLoadFm : ExtractorApi() {
         val iSource  = app.get(url, referer = extRef)
         val document = iSource.document
 
-        // 2) Altyazıları çek
+        // 2) Altyazıları çek (fixUrlNull kullanmadan manuel düzeltme)
         document.select("track").forEach { track ->
             val lang = track.attr("label").ifBlank { "Unknown" }
             val src  = track.attr("src")
             if (src.isNotBlank()) {
-                subtitleCallback.invoke(
-                    SubtitleFile(
-                        lang = lang,
-                        url  = if (src.startsWith("http")) src else "$mainUrl/${src.trimStart('/')}"
-                    )
-                )
+                val fixedSrc = if (src.startsWith("http")) src
+                               else "$mainUrl/${src.trimStart('/')}"
+                subtitleCallback.invoke(SubtitleFile(lang, fixedSrc))
             }
         }
 
         // 3) dc_hello base64 string'ini bul
         var b64: String? = null
 
-        // Direkt script'lerde ara
         for (script in document.select("script")) {
             val scriptData = script.data()
             if (scriptData.contains("dc_hello")) {
@@ -115,10 +109,6 @@ open class CloseLoadFm : ExtractorApi() {
         )
     }
 
-    /**
-     * dc_hello decode:
-     *   base64(str1) -> ters çevir -> base64 decode -> "xxx|URL"
-     */
     private fun decodeDcHello(input: String): String {
         return try {
             val first = String(Base64.decode(input, Base64.DEFAULT))
